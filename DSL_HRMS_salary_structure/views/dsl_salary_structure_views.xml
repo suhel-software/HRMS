@@ -1,0 +1,636 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================================================================== -->
+    <!-- 1. EMPLOYEE COMPENSATION PACKAGE VIEWS (3 PILLARS + PERQUISITES)   -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_employee_compensation_list" model="ir.ui.view">
+        <field name="name">dsl.employee.compensation.list</field>
+        <field name="model">dsl.employee.compensation</field>
+        <field name="arch" type="xml">
+            <list string="Employee Salary Packages (Earnings, Deductions &amp; Employer Contributions)"
+                  decoration-success="state == 'active'"
+                  decoration-muted="state in ('superseded', 'closed')">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="department_id" optional="hide"/>
+                <field name="structure_id" widget="badge"/>
+                <field name="revision_type" optional="hide"/>
+                <field name="effective_from"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="gross_salary" sum="Total Base Gross"/>
+                <field name="basic_salary" sum="Total Basic" optional="show"/>
+                <field name="total_other_allowances" sum="Total Extra Allowances" optional="show"/>
+                <field name="total_gross_package" sum="Total Gross Salary" decoration-bf="1"/>
+                <field name="total_recurring_deductions" sum="Total Employee Deductions" decoration-danger="total_recurring_deductions &gt; 0"/>
+                <field name="estimated_net_take_home" sum="Total Illustrative Net" decoration-bf="1" decoration-success="1"/>
+                <field name="total_employer_contributions" sum="Total Employer Contrib." optional="show"/>
+                <field name="total_ctc_monthly" sum="Total Monthly CTC" optional="show" decoration-bf="1"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-info="state == 'draft'"
+                       decoration-muted="state in ('superseded', 'closed')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_employee_compensation_form" model="ir.ui.view">
+        <field name="name">dsl.employee.compensation.form</field>
+        <field name="model">dsl.employee.compensation</field>
+        <field name="arch" type="xml">
+            <form string="Employee Salary Package (Allowances, Deductions, Benefits &amp; Employer Contributions)">
+                <header>
+                    <button name="action_activate"
+                            string="✓ Activate Package &amp; Sync"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state == 'active'"/>
+                    <button name="action_load_structure_rules"
+                            string="⚡ Load Structure Rules"
+                            type="object"
+                            class="btn-secondary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state == 'closed'"/>
+                    <button name="action_open_salary_component_master"
+                            string="⚙️ Manage Components &amp; Default ৳"
+                            type="object"
+                            class="btn-secondary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <button name="action_close"
+                            string="Close Package"
+                            type="object"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state == 'closed'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,superseded"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Employee Compensation, Deduction &amp; Employer Cost Assignment</span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+
+                    <group name="dsl_comp_header_group">
+                        <group string="Employee &amp; Salary Structure">
+                            <field name="employee_id"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                            <field name="structure_id"/>
+                            <field name="revision_type"/>
+                            <field name="effective_from"/>
+                            <field name="effective_to"/>
+                        </group>
+                        <group string="3-Pillar Monthly Salary &amp; CTC Summary (৳)">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="gross_salary" decoration-bf="1"/>
+                            <field name="total_other_allowances"/>
+                            <field name="total_gross_package" decoration-bf="1" decoration-success="1"/>
+                            <field name="total_recurring_deductions" decoration-bf="1" decoration-danger="total_recurring_deductions &gt; 0"/>
+                            <field name="estimated_net_take_home" decoration-bf="1" decoration-primary="1"/>
+                            <field name="total_employer_contributions" decoration-info="total_employer_contributions &gt; 0"/>
+                            <field name="total_perquisite_valuation"/>
+                            <field name="total_ctc_monthly" decoration-bf="1"/>
+                        </group>
+                    </group>
+
+                    <notebook name="dsl_comp_notebook">
+                        <!-- TAB 1: PILLAR 1 — EARNINGS & ALLOWANCES -->
+                        <page name="allowances_page" string="1. Earnings &amp; Allowances (কর্মী যে টাকা পাবেন)">
+                            <group>
+                                <group string="Core Gross Breakdown (৳)">
+                                    <field name="basic_salary" decoration-bf="1"/>
+                                    <field name="house_rent"/>
+                                    <field name="medical_allowance"/>
+                                    <field name="conveyance_allowance"/>
+                                    <field name="food_special_allowance"/>
+                                    <field name="attendance_bonus_amount"/>
+                                </group>
+                                <group string="Quick Regular Allowances (৳)">
+                                    <field name="mobile_internet_allowance"/>
+                                    <field name="car_fuel_allowance"/>
+                                    <field name="dearness_allowance"/>
+                                    <field name="technical_charge_allowance"/>
+                                    <field name="tiffin_meal_allowance"/>
+                                    <field name="education_allowance"/>
+                                    <field name="entertainment_utility_allowance"/>
+                                    <field name="hardship_site_allowance"/>
+                                    <field name="performance_fixed_incentive"/>
+                                </group>
+                            </group>
+
+                            <separator string="Configurable Allowance, Bonus &amp; Variable Components (Fixed ৳ / % / Formula — Select or Type to Create New)"/>
+                            <field name="allowance_line_ids" context="{'default_line_type': 'allowance'}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="line_type" column_invisible="1"/>
+                                    <field name="is_active"/>
+                                    <field name="head_id"
+                                           domain="[('category', 'in', ('basic', 'allowance', 'bonus_incentive', 'overtime_variable')), ('is_active', '=', True)]"
+                                           context="{'default_category': 'allowance'}"/>
+                                    <field name="code" optional="show"/>
+                                    <field name="description" placeholder="Auto-filled from Component Master (or customize)"/>
+                                    <field name="calc_type"/>
+                                    <field name="rate_or_amount" invisible="calc_type == 'formula'"/>
+                                    <field name="formula" optional="show" placeholder="e.g. min(BASIC * 0.15, 5000)"/>
+                                    <field name="is_prorated" optional="show"/>
+                                    <field name="min_amount" optional="hide"/>
+                                    <field name="max_amount" optional="hide"/>
+                                    <field name="rounding_method" optional="hide"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="monthly_amount" sum="Total Extra Allowances" decoration-bf="1"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- TAB 2: PILLAR 2 — EMPLOYEE SALARY DEDUCTIONS -->
+                        <page name="deductions_page" string="2. Employee Deductions (বেতন থেকে কর্তন)">
+                            <group>
+                                <group string="Statutory Deductions (PF, Income Tax &amp; Stamp)">
+                                    <field name="pf_applicable"/>
+                                    <field name="pf_employee_pct" invisible="not pf_applicable"/>
+                                    <field name="pf_deduction_amount" invisible="not pf_applicable" decoration-bf="1"/>
+                                    <field name="tds_monthly_estimate"/>
+                                    <field name="apply_stamp_deduction"/>
+                                    <field name="stamp_deduction_amount" invisible="not apply_stamp_deduction"/>
+                                </group>
+                                <group string="Company Facility &amp; Welfare Recoveries (৳)">
+                                    <field name="welfare_fund_deduction"/>
+                                    <field name="group_insurance_deduction"/>
+                                    <field name="transport_deduction"/>
+                                    <field name="lunch_canteen_deduction"/>
+                                    <field name="accommodation_utility_deduction"/>
+                                    <field name="security_deposit_deduction"/>
+                                    <field name="union_club_subscription"/>
+                                </group>
+                            </group>
+
+                            <separator string="Configurable Employee Deductions (Loan, Advance, Excess Bill, Damage/Late — With Labour Act Authorization)"/>
+                            <field name="deduction_line_ids" context="{'default_line_type': 'deduction'}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="line_type" column_invisible="1"/>
+                                    <field name="is_active"/>
+                                    <field name="head_id"
+                                           domain="[('category', '=', 'deduction'), ('is_active', '=', True)]"
+                                           context="{'default_category': 'deduction'}"/>
+                                    <field name="code" optional="show"/>
+                                    <field name="description" placeholder="e.g. Salary Loan Installment / Excess Mobile Bill"/>
+                                    <field name="calc_type"/>
+                                    <field name="rate_or_amount" invisible="calc_type == 'formula'"/>
+                                    <field name="formula" optional="hide"/>
+                                    <field name="approval_required" optional="show" string="Consent Req."/>
+                                    <field name="is_authorized" string="Authorized ✓"/>
+                                    <field name="rounding_method" optional="hide"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="monthly_amount" sum="Total Custom Deductions" decoration-bf="1" decoration-danger="1"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- TAB 3: PILLAR 3 — EMPLOYER CONTRIBUTIONS & NON-CASH PERQUISITES -->
+                        <page name="employer_benefits_page" string="3. Employer Contributions &amp; Benefits (কোম্পানির অতিরিক্ত অবদান)">
+                            <div class="alert alert-info mb-3" role="status">
+                                <strong>Statutory Rule:</strong> Employer Contributions (PF Employer, Gratuity, Employer Insurance) and Non-Cash Perquisites are <strong>never deducted</strong> from the employee's Net Salary — they are tracked separately under Company Cost (CTC) and NBR Tax Valuation.
+                            </div>
+                            <group>
+                                <group string="Employer Retirement &amp; Gratuity Provisions">
+                                    <field name="employer_pf_applicable"/>
+                                    <field name="employer_pf_pct" invisible="not employer_pf_applicable"/>
+                                    <field name="employer_pf_amount" invisible="not employer_pf_applicable" decoration-bf="1"/>
+                                    <field name="gratuity_provision_pct"/>
+                                    <field name="gratuity_provision_amount" decoration-bf="1"/>
+                                </group>
+                                <group string="Employer Insurance &amp; Welfare Contributions (৳)">
+                                    <field name="employer_insurance_contribution"/>
+                                    <field name="employer_welfare_contribution"/>
+                                </group>
+                            </group>
+
+                            <separator string="Additional Employer Contribution &amp; Provision Rules (Bonus / Leave / Severance Provision)"/>
+                            <field name="employer_line_ids" context="{'default_line_type': 'employer_contribution'}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="line_type" column_invisible="1"/>
+                                    <field name="is_active"/>
+                                    <field name="head_id"
+                                           domain="[('category', '=', 'employer_contribution'), ('is_active', '=', True)]"
+                                           context="{'default_category': 'employer_contribution'}"/>
+                                    <field name="code" optional="show"/>
+                                    <field name="description"/>
+                                    <field name="calc_type"/>
+                                    <field name="rate_or_amount" invisible="calc_type == 'formula'"/>
+                                    <field name="formula" optional="hide"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="monthly_amount" sum="Total Extra Employer Contrib." decoration-bf="1"/>
+                                </list>
+                            </field>
+
+                            <separator string="Employer-Provided Non-Cash Benefits &amp; Perquisites (Company Car, Accommodation, Insurance, Subsidized Meal)"/>
+                            <field name="benefit_line_ids" context="{'default_line_type': 'employer_benefit'}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="line_type" column_invisible="1"/>
+                                    <field name="is_active"/>
+                                    <field name="head_id"
+                                           domain="[('category', '=', 'employer_benefit'), ('is_active', '=', True)]"
+                                           context="{'default_category': 'employer_benefit'}"/>
+                                    <field name="code" optional="show"/>
+                                    <field name="description"/>
+                                    <field name="calc_type"/>
+                                    <field name="rate_or_amount"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="monthly_amount" sum="Total Perquisite Valuation" decoration-bf="1"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- TAB 4: INCREMENT & CONTRACT NOTES -->
+                        <page name="notes_page" string="4. HR Increment &amp; Policy Notes">
+                            <field name="remarks" nolabel="1" placeholder="Record increment board resolution, KPI rating, or confirmation details..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_employee_compensation" model="ir.actions.act_window">
+        <field name="name">Employee Salary Packages</field>
+        <field name="res_model">dsl.employee.compensation</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 2. SALARY STRUCTURE TEMPLATES (`dsl.salary.structure` + RULES)     -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_salary_structure_list" model="ir.ui.view">
+        <field name="name">dsl.salary.structure.list</field>
+        <field name="model">dsl.salary.structure</field>
+        <field name="arch" type="xml">
+            <list string="Bangladesh Salary Structure Templates">
+                <field name="sequence" widget="handle"/>
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="sector_type" widget="badge"/>
+                <field name="formula_mode" widget="badge"/>
+                <field name="basic_pct" optional="show"/>
+                <field name="house_rent_pct" optional="show"/>
+                <field name="default_pf_applicable"/>
+                <field name="default_employer_pf_pct" optional="show"/>
+                <field name="default_gratuity_provision_pct" optional="show"/>
+                <field name="enable_attendance_bonus"/>
+                <field name="apply_revenue_stamp"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_salary_structure_form" model="ir.ui.view">
+        <field name="name">dsl.salary.structure.form</field>
+        <field name="model">dsl.salary.structure</field>
+        <field name="arch" type="xml">
+            <form string="Bangladesh Salary Structure Template">
+                <header>
+                    <button name="action_open_salary_component_master"
+                            string="⚙️ Open Salary Component Master (155 BD Heads)"
+                            type="object"
+                            class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Company / Sector Salary Structure Template</span>
+                        <h1><field name="name" placeholder="e.g. Corporate &amp; Software Structure (50/25/10/10/5)"/></h1>
+                    </div>
+                    <group>
+                        <group string="Template Scope &amp; Sector">
+                            <field name="code"/>
+                            <field name="sector_type"/>
+                            <field name="formula_mode"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="job_id"/>
+                            <field name="effective_from"/>
+                            <field name="effective_to"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="PF, Employer Provisions, Attendance Bonus &amp; Stamp">
+                            <field name="default_pf_applicable"/>
+                            <field name="default_pf_pct" invisible="not default_pf_applicable"/>
+                            <field name="default_employer_pf_pct" invisible="not default_pf_applicable"/>
+                            <field name="default_gratuity_provision_pct"/>
+                            <field name="enable_attendance_bonus"/>
+                            <field name="default_attendance_bonus" invisible="not enable_attendance_bonus"/>
+                            <field name="late_days_per_deduction"/>
+                            <field name="apply_revenue_stamp"/>
+                            <field name="revenue_stamp_amount" invisible="not apply_revenue_stamp"/>
+                        </group>
+                    </group>
+
+                    <notebook name="dsl_structure_notebook">
+                        <page name="rules_page" string="1. Formula &amp; Configurable Component Rules">
+                            <group string="Corporate Percentage Breakdown (Must Sum to 100%)" invisible="formula_mode != 'corporate_pct'">
+                                <group>
+                                    <field name="basic_pct"/>
+                                    <field name="house_rent_pct"/>
+                                    <field name="medical_pct"/>
+                                </group>
+                                <group>
+                                    <field name="conveyance_pct"/>
+                                    <field name="food_special_pct"/>
+                                </group>
+                            </group>
+
+                            <group string="Garments / Factory Minimum Wage Board Fixed Allowances" invisible="formula_mode != 'rmg_wage_board'">
+                                <group>
+                                    <field name="rmg_medical_fixed"/>
+                                    <field name="rmg_conveyance_fixed"/>
+                                </group>
+                                <group>
+                                    <field name="rmg_food_fixed"/>
+                                    <field name="rmg_hra_of_basic_pct"/>
+                                </group>
+                            </group>
+
+                            <separator string="Pre-Configured Template Component Rules (Loaded into Employee Salary Packages via '⚡ Load Structure Rules')"/>
+                            <field name="rule_ids">
+                                <list editable="bottom"
+                                      decoration-success="category in ('basic', 'allowance')"
+                                      decoration-info="category in ('bonus_incentive', 'overtime_variable')"
+                                      decoration-danger="category == 'deduction'"
+                                      decoration-primary="category == 'employer_contribution'"
+                                      decoration-warning="category == 'employer_benefit'">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="is_active"/>
+                                    <field name="head_id"/>
+                                    <field name="code"/>
+                                    <field name="category" widget="badge"
+                                           decoration-success="category in ('basic', 'allowance')"
+                                           decoration-info="category in ('bonus_incentive', 'overtime_variable')"
+                                           decoration-danger="category == 'deduction'"
+                                           decoration-primary="category == 'employer_contribution'"
+                                           decoration-warning="category == 'employer_benefit'"/>
+                                    <field name="calculation_type"/>
+                                    <field name="amount" invisible="calculation_type not in ('fixed', 'attendance_based')"/>
+                                    <field name="percentage" invisible="calculation_type not in ('percentage', 'attendance_based')"/>
+                                    <field name="based_on" invisible="calculation_type != 'percentage'"/>
+                                    <field name="based_on_head_id" optional="hide"/>
+                                    <field name="formula" optional="show" placeholder="e.g. (GROSS - 2450) / 1.5"/>
+                                    <field name="is_recurring" optional="show"/>
+                                    <field name="is_prorated" optional="show"/>
+                                    <field name="min_amount" optional="hide"/>
+                                    <field name="max_amount" optional="hide"/>
+                                    <field name="rounding_method" optional="hide"/>
+                                    <field name="approval_required" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="structure_notes_page" string="2. Policy &amp; Compliance Notes">
+                            <field name="notes" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_salary_structure" model="ir.actions.act_window">
+        <field name="name">Salary Structures (BD)</field>
+        <field name="res_model">dsl.salary.structure</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 3. SALARY COMPONENT MASTER (`dsl.salary.head` — ALL 155 BD HEADS)  -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_salary_head_list" model="ir.ui.view">
+        <field name="name">dsl.salary.head.list</field>
+        <field name="model">dsl.salary.head</field>
+        <field name="arch" type="xml">
+            <list string="Bangladesh Salary Components Master (Allowances, Deductions, Benefits &amp; Employer Contributions)"
+                  decoration-muted="not is_active">
+                <field name="sequence" widget="handle"/>
+                <field name="is_active" string="Enabled"/>
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="name_bn"/>
+                <field name="category" widget="badge"
+                       decoration-success="category in ('basic', 'allowance')"
+                       decoration-info="category in ('bonus_incentive', 'overtime_variable')"
+                       decoration-danger="category == 'deduction'"
+                       decoration-primary="category == 'employer_contribution'"
+                       decoration-warning="category == 'employer_benefit'"/>
+                <field name="sub_group" optional="show"/>
+                <field name="calculation_type"/>
+                <field name="amount" string="Default Fixed (৳)"/>
+                <field name="percentage" string="Default (%)"/>
+                <field name="based_on" optional="show"/>
+                <field name="is_taxable"/>
+                <field name="is_pf_applicable" optional="hide"/>
+                <field name="is_ot_applicable" optional="hide"/>
+                <field name="is_recurring" optional="show"/>
+                <field name="approval_required" optional="show"/>
+                <field name="account_code" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_salary_head_search" model="ir.ui.view">
+        <field name="name">dsl.salary.head.search</field>
+        <field name="model">dsl.salary.head</field>
+        <field name="arch" type="xml">
+            <search string="Search Bangladesh Salary Components">
+                <field name="name"/>
+                <field name="name_bn"/>
+                <field name="code"/>
+                <field name="sub_group"/>
+                <filter name="flt_enabled" string="Enabled Components" domain="[('is_active', '=', True)]"/>
+                <separator/>
+                <filter name="flt_basic_allow" string="1. Allowances &amp; Basic" domain="[('category', 'in', ('basic', 'allowance'))]"/>
+                <filter name="flt_bonus_var" string="2. Bonus, OT &amp; Variable Pay" domain="[('category', 'in', ('bonus_incentive', 'overtime_variable'))]"/>
+                <filter name="flt_deductions" string="3. Employee Deductions" domain="[('category', '=', 'deduction')]"/>
+                <filter name="flt_employer_contrib" string="4. Employer Contributions" domain="[('category', '=', 'employer_contribution')]"/>
+                <filter name="flt_employer_benefit" string="5. Non-Cash Perquisites" domain="[('category', '=', 'employer_benefit')]"/>
+                <separator/>
+                <filter name="flt_taxable" string="Taxable (NBR)" domain="[('is_taxable', '=', True)]"/>
+                <filter name="flt_exempt" string="Non-Taxable / Reimbursement" domain="[('is_taxable', '=', False)]"/>
+                <filter name="flt_consent" string="Approval / Consent Required" domain="[('approval_required', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="grp_category" string="Structure Category (7 Pillars)" context="{'group_by': 'category'}"/>
+                    <filter name="grp_section" string="Industry Section (12 Groups)" context="{'group_by': 'sub_group'}"/>
+                    <filter name="grp_calc" string="Calculation Type" context="{'group_by': 'calculation_type'}"/>
+                    <filter name="grp_tax" string="NBR Tax Treatment" context="{'group_by': 'tax_treatment'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_dsl_salary_head_form" model="ir.ui.view">
+        <field name="name">dsl.salary.head.form</field>
+        <field name="model">dsl.salary.head</field>
+        <field name="arch" type="xml">
+            <form string="Bangladesh Salary Component Configuration">
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Salary Component Master (Allowance / Deduction / Benefit / Employer Contribution)</span>
+                        <h1><field name="name" placeholder="e.g. Mobile Allowance"/></h1>
+                        <h3 class="text-muted"><field name="name_bn" placeholder="বাংলা নাম — যেমন: মোবাইল বিল ভাতা"/></h3>
+                    </div>
+
+                    <group>
+                        <group string="1. Component Identity &amp; Category">
+                            <field name="code" placeholder="e.g. MOBILE"/>
+                            <field name="category"/>
+                            <field name="head_type" readonly="1"/>
+                            <field name="sub_group" placeholder="e.g. 2. Food &amp; Daily Allowances"/>
+                            <field name="sequence"/>
+                            <field name="is_active"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group string="2. Pre-Set Default Amount, % or Formula">
+                            <field name="calculation_type"/>
+                            <field name="amount" invisible="calculation_type not in ('fixed', 'attendance_based')"/>
+                            <field name="percentage" invisible="calculation_type not in ('percentage', 'attendance_based')"/>
+                            <field name="based_on" invisible="calculation_type not in ('percentage', 'attendance_based')"/>
+                            <field name="based_on_head_id" invisible="based_on != 'other_component'"/>
+                            <field name="formula" invisible="calculation_type != 'formula'" placeholder="e.g. (GROSS - 2450) / 1.5"/>
+                            <field name="min_amount"/>
+                            <field name="max_amount"/>
+                            <field name="rounding_method"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="3. NBR Tax, PF, OT, Bonus &amp; Labour Law Flags">
+                            <field name="is_taxable"/>
+                            <field name="tax_treatment"/>
+                            <field name="is_pf_applicable"/>
+                            <field name="is_ot_applicable"/>
+                            <field name="is_bonus_applicable"/>
+                            <field name="is_recurring"/>
+                            <field name="is_prorated"/>
+                            <field name="approval_required"/>
+                        </group>
+                        <group string="4. Entity Scope, Effective Dates &amp; COA Mapping">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="effective_from"/>
+                            <field name="effective_to"/>
+                            <field name="account_code"/>
+                            <field name="debit_account_code"/>
+                            <field name="credit_account_code"/>
+                        </group>
+                    </group>
+
+                    <group string="Statutory &amp; Policy Notes">
+                        <field name="notes" nolabel="1" placeholder="Specify Bangladesh Labour Act 2006, NBR Income Tax Act 2023, or internal HR policy rules..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_salary_head" model="ir.actions.act_window">
+        <field name="name">Allowances &amp; Deductions Master (BD)</field>
+        <field name="res_model">dsl.salary.head</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_grp_category': 1}</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 4. EXECUTIVE EMPLOYEE PROFILE: TAB 09 "SALARY & BENEFITS"          -->
+    <!-- ================================================================== -->
+    <record id="view_employee_form_inherit_dsl_salary" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.payroll.tab</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="DSL_HRMS_employee.view_employee_form_inherit_dsl_dossier"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='dsl_payroll_tab']" position="inside">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-bold text-muted">Active Compensation, Allowances, Deductions, CTC &amp; Payslip Ledger (DSL_HRMS_employee_salary)</span>
+                    <button name="action_open_compensation_packages"
+                            string="Manage Salary Packages"
+                            type="object"
+                            class="btn btn-primary btn-sm"/>
+                </div>
+                <group name="dsl_emp_payroll_summary_group">
+                    <group string="Current Active Compensation &amp; CTC">
+                        <field name="company_currency_id" invisible="1"/>
+                        <field name="grade_id" readonly="1"/>
+                        <field name="active_compensation_id" readonly="1"/>
+                        <field name="current_gross_salary" decoration-bf="1"/>
+                        <field name="current_basic_salary"/>
+                        <field name="current_monthly_deductions" decoration-danger="current_monthly_deductions &gt; 0"/>
+                        <field name="current_net_take_home" decoration-bf="1" decoration-success="1"/>
+                        <field name="current_ctc_monthly" decoration-bf="1"/>
+                    </group>
+                    <group string="Bank (BEFTN) / MFS Disbursement">
+                        <field name="payment_method" readonly="1"/>
+                        <field name="salary_bank_name" readonly="1" invisible="payment_method not in ('bank', 'mixed')"/>
+                        <field name="salary_bank_routing_no" readonly="1" invisible="payment_method not in ('bank', 'mixed')"/>
+                        <field name="salary_bank_account_no" readonly="1" invisible="payment_method not in ('bank', 'mixed')"/>
+                        <field name="mfs_provider" readonly="1" invisible="payment_method != 'mfs'"/>
+                        <field name="mfs_account_no" readonly="1" invisible="payment_method != 'mfs'"/>
+                    </group>
+                </group>
+                <separator string="Compensation, Allowance, Deduction &amp; CTC History (DSL_HRMS_employee_salary)"/>
+                <field name="dsl_compensation_ids" context="{'default_employee_id': id}">
+                    <list decoration-success="state == 'active'">
+                        <field name="name"/>
+                        <field name="structure_id" widget="badge"/>
+                        <field name="revision_type"/>
+                        <field name="effective_from"/>
+                        <field name="currency_id" column_invisible="1"/>
+                        <field name="gross_salary"/>
+                        <field name="basic_salary"/>
+                        <field name="total_other_allowances"/>
+                        <field name="total_gross_package" decoration-bf="1"/>
+                        <field name="total_recurring_deductions"/>
+                        <field name="estimated_net_take_home" decoration-bf="1"/>
+                        <field name="total_ctc_monthly"/>
+                        <field name="state" widget="badge"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 5. MENUS UNDER BOTH PAYROLL & CONFIGURATION                        -->
+    <!-- ================================================================== -->
+    <menuitem id="menu_dsl_employee_compensation"
+              name="Employee Salary Packages"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_employee_compensation"
+              sequence="30"/>
+
+    <menuitem id="menu_dsl_salary_structure_payroll"
+              name="Salary Structures (BD)"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_salary_structure"
+              sequence="45"/>
+
+    <menuitem id="menu_dsl_salary_head_payroll"
+              name="Allowances &amp; Deductions Master"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_salary_head"
+              sequence="50"/>
+
+    <menuitem id="menu_dsl_salary_structure_config"
+              name="Salary Structures (BD)"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_salary_structure"
+              sequence="60"/>
+
+    <menuitem id="menu_dsl_salary_head_config"
+              name="Allowances &amp; Deductions Master"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_salary_head"
+              sequence="65"/>
+</odoo>

@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_salary_head_user,dsl.salary.head.user,model_dsl_salary_head,base.group_user,1,0,0,0
+access_dsl_salary_head_officer,dsl.salary.head.officer,model_dsl_salary_head,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_salary_head_manager,dsl.salary.head.manager,model_dsl_salary_head,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_salary_structure_user,dsl.salary.structure.user,model_dsl_salary_structure,base.group_user,1,0,0,0
+access_dsl_salary_structure_officer,dsl.salary.structure.officer,model_dsl_salary_structure,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_salary_structure_manager,dsl.salary.structure.manager,model_dsl_salary_structure,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_salary_structure_rule_user,dsl.salary.structure.rule.user,model_dsl_salary_structure_rule,base.group_user,1,0,0,0
+access_dsl_salary_structure_rule_officer,dsl.salary.structure.rule.officer,model_dsl_salary_structure_rule,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_salary_structure_rule_manager,dsl.salary.structure.rule.manager,model_dsl_salary_structure_rule,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_emp_comp_officer,dsl.employee.compensation.officer,model_dsl_employee_compensation,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_emp_comp_manager,dsl.employee.compensation.manager,model_dsl_employee_compensation,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_comp_line_officer,dsl.compensation.line.officer,model_dsl_compensation_line,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_comp_line_manager,dsl.compensation.line.manager,model_dsl_compensation_line,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1

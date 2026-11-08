@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_dsl_employee_compensation" model="ir.sequence">
+            <field name="name">DSL Employee Compensation Package</field>
+            <field name="code">dsl.employee.compensation</field>
+            <field name="prefix">PKG-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Structure 1: Corporate, Software & Executive Standard -->
+        <record id="structure_bd_corporate_std" model="dsl.salary.structure">
+            <field name="sequence">10</field>
+            <field name="name">Bangladesh Corporate &amp; Software Structure (50/25/10/10/5)</field>
+            <field name="code">STR-CORP</field>
+            <field name="sector_type">corporate</field>
+            <field name="formula_mode">corporate_pct</field>
+            <field name="basic_pct">50.0</field>
+            <field name="house_rent_pct">25.0</field>
+            <field name="medical_pct">10.0</field>
+            <field name="conveyance_pct">10.0</field>
+            <field name="food_special_pct">5.0</field>
+            <field name="default_pf_applicable" eval="True"/>
+            <field name="default_pf_pct">10.0</field>
+            <field name="default_employer_pf_pct">10.0</field>
+            <field name="default_gratuity_provision_pct">8.33</field>
+            <field name="enable_attendance_bonus" eval="False"/>
+            <field name="apply_revenue_stamp" eval="True"/>
+            <field name="revenue_stamp_amount">10.0</field>
+            <field name="late_days_per_deduction">3</field>
+            <field name="notes">Standard Bangladesh Corporate &amp; Software Company structure optimized for Income Tax Act 2023, Recognized PF (10% + 10%), and Gratuity Provision.</field>
+        </record>
+
+        <!-- Structure 2: Garments / Factory Worker Minimum Wage Board Structure -->
+        <record id="structure_bd_rmg_factory" model="dsl.salary.structure">
+            <field name="sequence">20</field>
+            <field name="name">Bangladesh Garments &amp; Industrial Wage Board Structure (RMG)</field>
+            <field name="code">STR-RMG</field>
+            <field name="sector_type">garments_rmg</field>
+            <field name="formula_mode">rmg_wage_board</field>
+            <field name="rmg_medical_fixed">750.0</field>
+            <field name="rmg_conveyance_fixed">450.0</field>
+            <field name="rmg_food_fixed">1250.0</field>
+            <field name="rmg_hra_of_basic_pct">50.0</field>
+            <field name="enable_attendance_bonus" eval="True"/>
+            <field name="default_attendance_bonus">750.0</field>
+            <field name="apply_revenue_stamp" eval="True"/>
+            <field name="revenue_stamp_amount">10.0</field>
+            <field name="late_days_per_deduction">3</field>
+            <field name="notes">Bangladesh RMG Minimum Wage Board formula: Fixed Medical ৳750 + Conveyance ৳450 + Food ৳1,250 = ৳2,450; Basic = (Gross - 2450) / 1.5; House Rent = 50% of Basic + ৳750 Attendance Bonus.</field>
+        </record>
+
+        <!-- Structure 3: NGO, Development & Field Operations Structure -->
+        <record id="structure_bd_ngo_project" model="dsl.salary.structure">
+            <field name="sequence">30</field>
+            <field name="name">Bangladesh NGO, Development &amp; Field Operations Structure (60/30/10)</field>
+            <field name="code">STR-NGO-DEV</field>
+            <field name="sector_type">ngo_dev</field>
+            <field name="formula_mode">corporate_pct</field>
+            <field name="basic_pct">60.0</field>
+            <field name="house_rent_pct">30.0</field>
+            <field name="medical_pct">10.0</field>
+            <field name="conveyance_pct">0.0</field>
+            <field name="food_special_pct">0.0</field>
+            <field name="default_pf_applicable" eval="True"/>
+            <field name="default_pf_pct">10.0</field>
+            <field name="default_employer_pf_pct">10.0</field>
+            <field name="default_gratuity_provision_pct">8.33</field>
+            <field name="apply_revenue_stamp" eval="True"/>
+            <field name="revenue_stamp_amount">10.0</field>
+            <field name="notes">Standard NGO &amp; Project-based compensation structure with Field Allowance, Employer PF, Group Insurance &amp; Gratuity Provision.</field>
+        </record>
+    </data>
+
+    <data noupdate="0">
+        <!-- Seed all 155 Bangladesh Allowances, Bonuses, Perquisites, Deductions, Employer Contributions & Rules -->
+        <function model="dsl.salary.head" name="_seed_bd_salary_components"/>
+    </data>
+</odoo>
