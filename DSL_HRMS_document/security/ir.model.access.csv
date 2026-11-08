@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_doc_type_user,dsl.document.type.user,model_dsl_document_type,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_doc_type_officer,dsl.document.type.officer,model_dsl_document_type,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_doc_type_manager,dsl.document.type.manager,model_dsl_document_type,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_emp_doc_user,dsl.employee.document.user,model_dsl_employee_document,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_emp_doc_officer,dsl.employee.document.officer,model_dsl_employee_document,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_emp_doc_manager,dsl.employee.document.manager,model_dsl_employee_document,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

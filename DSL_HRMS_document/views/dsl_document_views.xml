@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Digital Document Vault Kanban View -->
+    <record id="view_dsl_employee_document_kanban" model="ir.ui.view">
+        <field name="name">dsl.employee.document.kanban</field>
+        <field name="model">dsl.employee.document</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="doc_number"/>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="document_type_id"/>
+                <field name="reference_no"/>
+                <field name="expiry_date"/>
+                <field name="expiry_status"/>
+                <field name="verification_state"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="badge text-bg-light border text-dark fw-semibold">
+                                <field name="doc_number"/>
+                            </span>
+                            <field name="expiry_status" widget="badge"
+                                   decoration-success="expiry_status in ('valid', 'lifetime')"
+                                   decoration-warning="expiry_status == 'expiring_soon'"
+                                   decoration-danger="expiry_status == 'expired'"/>
+                        </div>
+                        <div class="fw-bold fs-6 mb-1">
+                            <field name="name"/>
+                        </div>
+                        <div class="text-muted small mb-2">
+                            <i class="fa fa-folder-open-o me-1" title="Document Type"/>
+                            <field name="document_type_id"/>
+                            <t t-if="record.reference_no.raw_value">
+                                · <span class="fw-semibold"><field name="reference_no"/></span>
+                            </t>
+                        </div>
+                        <footer class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <field name="employee_id" widget="many2one_avatar_employee"/>
+                            <field name="verification_state" widget="badge"
+                                   decoration-success="verification_state == 'verified'"
+                                   decoration-warning="verification_state == 'pending'"
+                                   decoration-danger="verification_state == 'rejected'"/>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- 2. Digital Document Vault List View -->
+    <record id="view_dsl_employee_document_list" model="ir.ui.view">
+        <field name="name">dsl.employee.document.list</field>
+        <field name="model">dsl.employee.document</field>
+        <field name="arch" type="xml">
+            <list string="Digital Document Vault"
+                  decoration-danger="expiry_status == 'expired'"
+                  decoration-warning="expiry_status == 'expiring_soon'">
+                <field name="doc_number" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="document_type_id"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="reference_no"/>
+                <field name="issue_date" optional="show"/>
+                <field name="expiry_date"/>
+                <field name="expiry_status" widget="badge"
+                       decoration-success="expiry_status in ('valid', 'lifetime')"
+                       decoration-warning="expiry_status == 'expiring_soon'"
+                       decoration-danger="expiry_status == 'expired'"/>
+                <field name="verification_state" widget="badge"
+                       decoration-success="verification_state == 'verified'"
+                       decoration-warning="verification_state == 'pending'"
+                       decoration-danger="verification_state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- 3. Digital Document Vault Form View -->
+    <record id="view_dsl_employee_document_form" model="ir.ui.view">
+        <field name="name">dsl.employee.document.form</field>
+        <field name="model">dsl.employee.document</field>
+        <field name="arch" type="xml">
+            <form string="Employee Digital Document">
+                <header>
+                    <button name="action_verify_document"
+                            string="Verify Document"
+                            type="object"
+                            class="btn-primary"
+                            invisible="verification_state == 'verified'"/>
+                    <button name="action_reject_document"
+                            string="Request Re-upload"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="verification_state == 'rejected'"/>
+                    <button name="action_reset_pending"
+                            string="Reset to Pending"
+                            type="object"
+                            invisible="verification_state == 'pending'"/>
+                    <field name="verification_state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="EXPIRED" bg_color="text-bg-danger"
+                            invisible="expiry_status != 'expired'"/>
+                    <widget name="web_ribbon" title="EXPIRING SOON" bg_color="text-bg-warning"
+                            invisible="expiry_status != 'expiring_soon'"/>
+                    <div class="oe_title">
+                        <span class="badge text-bg-primary mb-1"><field name="doc_number"/></span>
+                        <h1>
+                            <field name="name" placeholder="e.g. Smart NID Card / Passport Copy"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Classification">
+                            <field name="employee_id"/>
+                            <field name="company_id" readonly="1" groups="base.group_multi_company"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="department_id" readonly="1"/>
+                            <field name="document_type_id"/>
+                            <field name="reference_no" placeholder="e.g. NID / Passport / License No."/>
+                            <field name="is_confidential"/>
+                        </group>
+                        <group string="Validity, Expiry Alert &amp; File Upload">
+                            <field name="issue_date"/>
+                            <field name="expiry_date"/>
+                            <field name="alert_days_before" invisible="not expiry_date"/>
+                            <field name="expiry_status" widget="badge"
+                                   decoration-success="expiry_status in ('valid', 'lifetime')"
+                                   decoration-warning="expiry_status == 'expiring_soon'"
+                                   decoration-danger="expiry_status == 'expired'"/>
+                            <field name="attachment_filename" invisible="1"/>
+                            <field name="attachment_file" filename="attachment_filename"/>
+                            <field name="verified_by" invisible="not verified_by"/>
+                            <field name="verified_date" invisible="not verified_date"/>
+                        </group>
+                    </group>
+                    <group string="HR Verification Notes">
+                        <field name="notes" nolabel="1" placeholder="Notes on original copy inspection or renewal instructions..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- 4. Search & SearchPanel -->
+    <record id="view_dsl_employee_document_search" model="ir.ui.view">
+        <field name="name">dsl.employee.document.search</field>
+        <field name="model">dsl.employee.document</field>
+        <field name="arch" type="xml">
+            <search string="Search Document Vault">
+                <field name="name"/>
+                <field name="doc_number"/>
+                <field name="reference_no"/>
+                <field name="employee_id"/>
+                <field name="document_type_id"/>
+                <filter name="expiring_or_expired" string="Expiring / Expired Alerts"
+                        domain="[('expiry_status', 'in', ('expiring_soon', 'expired'))]"/>
+                <filter name="pending_review" string="Pending HR Verification"
+                        domain="[('verification_state', '=', 'pending')]"/>
+                <filter name="verified_docs" string="Verified"
+                        domain="[('verification_state', '=', 'verified')]"/>
+                <searchpanel>
+                    <field name="company_id" groups="base.group_multi_company" icon="fa-building" enable_counters="1"/>
+                    <field name="branch_id" icon="fa-map-marker" enable_counters="1"/>
+                    <field name="document_type_id" icon="fa-folder-open" enable_counters="1"/>
+                    <field name="expiry_status" icon="fa-bell" enable_counters="1"/>
+                    <field name="verification_state" icon="fa-check-circle" enable_counters="1"/>
+                </searchpanel>
+            </search>
+        </field>
+    </record>
+
+    <!-- 5. Document Checklist Type Views -->
+    <record id="view_dsl_document_type_list" model="ir.ui.view">
+        <field name="name">dsl.document.type.list</field>
+        <field name="model">dsl.document.type</field>
+        <field name="arch" type="xml">
+            <list string="HR Document Types" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="category" widget="badge"/>
+                <field name="is_mandatory" widget="boolean_toggle"/>
+                <field name="requires_expiry" widget="boolean_toggle"/>
+                <field name="alert_days_before"/>
+                <field name="document_count"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- 6. Employee Form Tab & Smart Button -->
+    <record id="view_employee_form_inherit_dsl_document" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.document</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="DSL_HRMS_employee.view_employee_form_inherit_dsl_dossier"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_employee_documents"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-folder-open"
+                        groups="hr.group_hr_user">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="dsl_document_count"/>
+                        </span>
+                        <span class="o_stat_text">Documents</span>
+                    </div>
+                </button>
+            </xpath>
+            <xpath expr="//page[@name='dsl_document_vault_tab']" position="inside">
+                <div class="alert alert-warning py-2 px-3 mb-2 d-flex align-items-center gap-2"
+                     role="alert"
+                     invisible="dsl_expiring_doc_count == 0">
+                    <i class="fa fa-exclamation-triangle" title="Expiry Alert"/>
+                    <span>
+                        <strong>Expiry Alert:</strong> This employee has
+                        <field name="dsl_expiring_doc_count" class="fw-bold mx-1"/>
+                        document(s) expiring soon or expired!
+                    </span>
+                </div>
+                <field name="dsl_document_ids" context="{'default_employee_id': id}">
+                    <list decoration-danger="expiry_status == 'expired'"
+                          decoration-warning="expiry_status == 'expiring_soon'">
+                        <field name="doc_number" decoration-bf="1"/>
+                        <field name="document_type_id"/>
+                        <field name="name" decoration-bf="1"/>
+                        <field name="reference_no"/>
+                        <field name="issue_date"/>
+                        <field name="expiry_date"/>
+                        <field name="expiry_status" widget="badge"
+                               decoration-success="expiry_status in ('valid', 'lifetime')"
+                               decoration-warning="expiry_status == 'expiring_soon'"
+                               decoration-danger="expiry_status == 'expired'"/>
+                        <field name="verification_state" widget="badge"
+                               decoration-success="verification_state == 'verified'"
+                               decoration-warning="verification_state == 'pending'"
+                               decoration-danger="verification_state == 'rejected'"/>
+                        <field name="attachment_filename" column_invisible="True"/>
+                        <field name="attachment_file" filename="attachment_filename" widget="binary"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 7. Actions & Menus -->
+    <record id="action_dsl_document_vault" model="ir.actions.act_window">
+        <field name="name">Digital Document Vault &amp; Expiry Alerts</field>
+        <field name="res_model">dsl.employee.document</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+
+    <record id="action_dsl_document_types" model="ir.actions.act_window">
+        <field name="name">HR Document Checklist Types</field>
+        <field name="res_model">dsl.document.type</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_document_vault"
+              name="Document Vault"
+              parent="DSL_HRMS_core.menu_dsl_hrms_workforce"
+              action="action_dsl_document_vault"
+              groups="DSL_HRMS_core.group_dsl_hrms_officer"
+              sequence="55"/>
+
+    <menuitem id="menu_dsl_document_types"
+              name="Document Checklist Types"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_document_types"
+              groups="DSL_HRMS_core.group_dsl_hrms_manager"
+              sequence="40"/>
+</odoo>
