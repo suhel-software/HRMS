@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Group Statutory Default Calendar (2026 Bangladesh Gazetted Calendar — Friday Weekly Off) -->
+        <record id="calendar_bd_2026_group_default" model="dsl.holiday.calendar">
+            <field name="sequence">10</field>
+            <field name="name">Bangladesh Statutory &amp; Gazetted Holiday Calendar — 2026</field>
+            <field name="calendar_year">2026</field>
+            <field name="fri_off" eval="True"/>
+            <field name="sat_off" eval="False"/>
+            <field name="notes">Ministry of Public Administration (MoPA) Gazetted Public &amp; Festival Holidays for Bangladesh (2026).</field>
+        </record>
+
+        <!-- 2026 Bangladesh Government Gazetted & Festival Holidays -->
+        <record id="hol_bd_2026_shab_e_barat" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Shab-e-Barat</field>
+            <field name="name_bn">পবিত্র শবে বরাত</field>
+            <field name="holiday_category">religious_moon</field>
+            <field name="is_moon_dependent" eval="True"/>
+            <field name="date_from">2026-02-04</field>
+            <field name="date_to">2026-02-04</field>
+        </record>
+
+        <record id="hol_bd_2026_ekushey_feb" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Shaheed Dibosh &amp; International Mother Language Day</field>
+            <field name="name_bn">শহীদ দিবস ও আন্তর্জাতিক মাতৃভাষা দিবস</field>
+            <field name="holiday_category">national</field>
+            <field name="date_from">2026-02-21</field>
+            <field name="date_to">2026-02-21</field>
+        </record>
+
+        <record id="hol_bd_2026_shab_e_qadr" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Shab-e-Qadr</field>
+            <field name="name_bn">পবিত্র লাইলাতুল কদর</field>
+            <field name="holiday_category">religious_moon</field>
+            <field name="is_moon_dependent" eval="True"/>
+            <field name="date_from">2026-03-17</field>
+            <field name="date_to">2026-03-17</field>
+        </record>
+
+        <record id="hol_bd_2026_eid_ul_fitr" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Eid-ul-Fitr (Jumatul Bidah &amp; Eid Festival)</field>
+            <field name="name_bn">জুমাতুল বিদা ও পবিত্র ঈদুল ফিতর</field>
+            <field name="holiday_category">religious_moon</field>
+            <field name="is_moon_dependent" eval="True"/>
+            <field name="date_from">2026-03-19</field>
+            <field name="date_to">2026-03-23</field>
+        </record>
+
+        <record id="hol_bd_2026_independence_day" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Independence &amp; National Day</field>
+            <field name="name_bn">স্বাধীনতা ও জাতীয় দিবস</field>
+            <field name="holiday_category">national</field>
+            <field name="date_from">2026-03-26</field>
+            <field name="date_to">2026-03-26</field>
+        </record>
+
+        <record id="hol_bd_2026_pahela_baishakh" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Pahela Baishakh (Bengali New Year 1433)</field>
+            <field name="name_bn">পহেলা বৈশাখ (বাংলা নববর্ষ)</field>
+            <field name="holiday_category">festival</field>
+            <field name="date_from">2026-04-14</field>
+            <field name="date_to">2026-04-14</field>
+        </record>
+
+        <record id="hol_bd_2026_may_day" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">International Workers' Day (May Day)</field>
+            <field name="name_bn">মহান মে দিবস</field>
+            <field name="holiday_category">national</field>
+            <field name="date_from">2026-05-01</field>
+            <field name="date_to">2026-05-01</field>
+        </record>
+
+        <record id="hol_bd_2026_buddha_purnima" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Buddha Purnima</field>
+            <field name="name_bn">বুদ্ধ পূর্ণিমা</field>
+            <field name="holiday_category">religious_moon</field>
+            <field name="is_moon_dependent" eval="True"/>
+            <field name="date_from">2026-05-01</field>
+            <field name="date_to">2026-05-01</field>
+        </record>
+
+        <record id="hol_bd_2026_eid_ul_adha" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Eid-ul-Adha Festival Holidays</field>
+            <field name="name_bn">পবিত্র ঈদুল আজহা</field>
+            <field name="holiday_category">religious_moon</field>
+            <field name="is_moon_dependent" eval="True"/>
+            <field name="date_from">2026-05-26</field>
+            <field name="date_to">2026-05-30</field>
+        </record>
+
+        <record id="hol_bd_2026_ashura" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Holy Ashura</field>
+            <field name="name_bn">পবিত্র আশুরা</field>
+            <field name="holiday_category">religious_moon</field>
+            <field name="is_moon_dependent" eval="True"/>
+            <field name="date_from">2026-06-26</field>
+            <field name="date_to">2026-06-26</field>
+        </record>
+
+        <record id="hol_bd_2026_eid_e_miladunnabi" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Eid-e-Miladunnabi (SM)</field>
+            <field name="name_bn">পবিত্র ঈদে মিলাদুন্নবী (সা.)</field>
+            <field name="holiday_category">religious_moon</field>
+            <field name="is_moon_dependent" eval="True"/>
+            <field name="date_from">2026-08-26</field>
+            <field name="date_to">2026-08-26</field>
+        </record>
+
+        <record id="hol_bd_2026_janmashtami" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Shuvo Janmashtami</field>
+            <field name="name_bn">শুভ জন্মাষ্টমী</field>
+            <field name="holiday_category">festival</field>
+            <field name="date_from">2026-09-04</field>
+            <field name="date_to">2026-09-04</field>
+        </record>
+
+        <record id="hol_bd_2026_durga_puja" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Durga Puja (Maha Nabami &amp; Vijaya Dashami)</field>
+            <field name="name_bn">শারদীয় দুর্গোৎসব (বিজয়া দশমী)</field>
+            <field name="holiday_category">festival</field>
+            <field name="date_from">2026-10-20</field>
+            <field name="date_to">2026-10-21</field>
+        </record>
+
+        <record id="hol_bd_2026_victory_day" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Victory Day of Bangladesh</field>
+            <field name="name_bn">মহান বিজয় দিবস</field>
+            <field name="holiday_category">national</field>
+            <field name="date_from">2026-12-16</field>
+            <field name="date_to">2026-12-16</field>
+        </record>
+
+        <record id="hol_bd_2026_christmas" model="dsl.holiday.line">
+            <field name="calendar_id" ref="calendar_bd_2026_group_default"/>
+            <field name="name">Christmas Day</field>
+            <field name="name_bn">শুভ বড়দিন</field>
+            <field name="holiday_category">festival</field>
+            <field name="date_from">2026-12-25</field>
+            <field name="date_to">2026-12-25</field>
+        </record>
+    </data>
+</odoo>
+

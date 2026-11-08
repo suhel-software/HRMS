@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_holiday_calendar_user,dsl.holiday.calendar.user,model_dsl_holiday_calendar,base.group_user,1,0,0,0
+access_dsl_holiday_calendar_officer,dsl.holiday.calendar.officer,model_dsl_holiday_calendar,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_holiday_calendar_manager,dsl.holiday.calendar.manager,model_dsl_holiday_calendar,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_holiday_line_user,dsl.holiday.line.user,model_dsl_holiday_line,base.group_user,1,0,0,0
+access_dsl_holiday_line_officer,dsl.holiday.line.officer,model_dsl_holiday_line,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_holiday_line_manager,dsl.holiday.line.manager,model_dsl_holiday_line,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

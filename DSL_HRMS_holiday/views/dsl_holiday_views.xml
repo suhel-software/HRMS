@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================================================================== -->
+    <!-- 1. GAZETTED & FESTIVAL HOLIDAY LIST, CALENDAR & FORM VIEWS         -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_holiday_line_list" model="ir.ui.view">
+        <field name="name">dsl.holiday.line.list</field>
+        <field name="model">dsl.holiday.line</field>
+        <field name="arch" type="xml">
+            <list string="Gazetted &amp; Institutional Holidays"
+                  decoration-info="is_moon_dependent == True">
+                <field name="calendar_year" optional="show"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="name_bn"/>
+                <field name="holiday_category" widget="badge"
+                       decoration-primary="holiday_category == 'national'"
+                       decoration-warning="holiday_category == 'religious_moon'"
+                       decoration-success="holiday_category == 'festival'"
+                       decoration-info="holiday_category == 'company'"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="day_count" sum="Total Days" decoration-bf="1"/>
+                <field name="is_moon_dependent"/>
+                <field name="calendar_id" optional="show"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_holiday_line_calendar" model="ir.ui.view">
+        <field name="name">dsl.holiday.line.calendar</field>
+        <field name="model">dsl.holiday.line</field>
+        <field name="arch" type="xml">
+            <calendar string="Bangladesh Holiday Calendar"
+                      date_start="date_from"
+                      date_stop="date_to"
+                      color="holiday_category"
+                      mode="month">
+                <field name="name"/>
+                <field name="name_bn"/>
+                <field name="holiday_category" filters="1"/>
+                <field name="day_count"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_dsl_holiday_line_form" model="ir.ui.view">
+        <field name="name">dsl.holiday.line.form</field>
+        <field name="model">dsl.holiday.line</field>
+        <field name="arch" type="xml">
+            <form string="Gazetted / Institutional Holiday">
+                <header>
+                    <button name="action_sync_holiday_to_attendance"
+                            string="📅 Sync Holiday to Attendance Register"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Holiday Occasion</span>
+                        <h1><field name="name" placeholder="e.g. Victory Day of Bangladesh"/></h1>
+                    </div>
+                    <group>
+                        <group string="Occasion &amp; Calendar Scope">
+                            <field name="name_bn"/>
+                            <field name="calendar_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="holiday_category"/>
+                            <field name="is_moon_dependent"/>
+                        </group>
+                        <group string="Holiday Dates &amp; Circular">
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="day_count" decoration-bf="1"/>
+                            <field name="gazette_ref"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dsl_holiday_line_search" model="ir.ui.view">
+        <field name="name">dsl.holiday.line.search</field>
+        <field name="model">dsl.holiday.line</field>
+        <field name="arch" type="xml">
+            <search string="Search Holidays">
+                <field name="name"/>
+                <field name="name_bn"/>
+                <field name="calendar_id"/>
+                <field name="calendar_year"/>
+                <filter name="flt_moon" string="Moon-Sighting Dependent" domain="[('is_moon_dependent', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="grp_cat" string="Holiday Category" context="{'group_by': 'holiday_category'}"/>
+                    <filter name="grp_cal" string="Calendar" context="{'group_by': 'calendar_id'}"/>
+                    <filter name="grp_year" string="Year" context="{'group_by': 'calendar_year'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_dsl_holiday_line" model="ir.actions.act_window">
+        <field name="name">Gazetted &amp; Institutional Holidays</field>
+        <field name="res_model">dsl.holiday.line</field>
+        <field name="view_mode">calendar,list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 2. WEEKEND & HOLIDAY MASTER CALENDAR VIEWS                         -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_holiday_calendar_list" model="ir.ui.view">
+        <field name="name">dsl.holiday.calendar.list</field>
+        <field name="model">dsl.holiday.calendar</field>
+        <field name="arch" type="xml">
+            <list string="Weekend &amp; Holiday Master Calendars">
+                <field name="sequence" widget="handle"/>
+                <field name="calendar_year" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="branch_id"/>
+                <field name="weekend_summary" widget="badge"/>
+                <field name="total_holiday_events"/>
+                <field name="total_gazetted_days" decoration-bf="1"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_holiday_calendar_form" model="ir.ui.view">
+        <field name="name">dsl.holiday.calendar.form</field>
+        <field name="model">dsl.holiday.calendar</field>
+        <field name="arch" type="xml">
+            <form string="Weekend &amp; Holiday Master Calendar">
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Holiday &amp; Weekend Calendar</span>
+                        <h1><field name="name" placeholder="e.g. Corporate HQ 2026 Calendar (Fri-Sat Off)"/></h1>
+                    </div>
+                    <group>
+                        <group string="Calendar Scope">
+                            <field name="calendar_year"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Weekly Off Days (BD Labour Act Sec 103)">
+                            <field name="fri_off"/>
+                            <field name="sat_off"/>
+                            <field name="sun_off"/>
+                            <field name="mon_off"/>
+                            <field name="tue_off"/>
+                            <field name="wed_off"/>
+                            <field name="thu_off"/>
+                            <field name="weekend_summary" decoration-bf="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page name="holidays_page" string="Gazetted &amp; Institutional Holidays">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="name_bn"/>
+                                    <field name="holiday_category"/>
+                                    <field name="date_from"/>
+                                    <field name="date_to"/>
+                                    <field name="day_count" sum="Total Days"/>
+                                    <field name="is_moon_dependent"/>
+                                    <field name="gazette_ref"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="notes_page" string="Circular &amp; Policy Notes">
+                            <field name="notes" placeholder="Reference MoPA circular or branch weekend rules..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_holiday_calendar" model="ir.actions.act_window">
+        <field name="name">Weekend &amp; Holiday Calendars</field>
+        <field name="res_model">dsl.holiday.calendar</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 3. MENUS UNDER LEAVES + CONFIGURATION                              -->
+    <!-- ================================================================== -->
+    <menuitem id="menu_dsl_holiday_line"
+              name="Holiday Calendar (BD)"
+              parent="DSL_HRMS_core.menu_dsl_hrms_leave_root"
+              action="action_dsl_holiday_line"
+              sequence="30"/>
+
+    <menuitem id="menu_dsl_holiday_calendar_config"
+              name="Weekend &amp; Holiday Calendars"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_holiday_calendar"
+              sequence="50"/>
+</odoo>
+
