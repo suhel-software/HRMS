@@ -1,0 +1,43 @@
+/* DSL HRMS Modern SCSS Variables & Odoo Overrides */
+
+// Override Odoo Core brand colors
+$o-brand-odoo: #4f46e5;
+$o-brand-primary: #4f46e5;
+$o-enterprise-color: #4f46e5;
+
+// Main Navbar Overrides
+$o-navbar-background: #ffffff;
+$o-navbar-entry-color: #334155;
+$o-navbar-entry-color--hover: #2563eb;
+$o-navbar-entry-bg--hover: #f1f5f9;
+$o-navbar-border-bottom: 1px solid #e2e8f0;
+
+// DSL Brand Variables
+$dsl-primary: #4f46e5;
+$dsl-primary-hover: #4338ca;
+$dsl-primary-light: #eef2ff;
+$dsl-sidebar-bg: #0f172a;
+$dsl-sidebar-text: #94a3b8;
+$dsl-sidebar-active: #2563eb;
+$dsl-sidebar-width: 260px;
+$dsl-sidebar-collapsed-width: 72px;
+
+$dsl-light-bg: #f8fafc;
+$dsl-light-card: #ffffff;
+$dsl-light-border: #e2e8f0;
+$dsl-text-main: #0f172a;
+$dsl-text-muted: #64748b;
+
+$dsl-success: #10b981;
+$dsl-warning: #f59e0b;
+$dsl-danger: #ef4444;
+$dsl-info: #3b82f6;
+
+$dsl-radius-sm: 8px;
+$dsl-radius-md: 12px;
+$dsl-radius-lg: 16px;
+$dsl-radius-full: 9999px;
+
+$dsl-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+$dsl-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+$dsl-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08);

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="DSL_HRMS_theme.ThemeModeSystray">
+        <div class="o_nav_entry d-flex align-items-center">
+            <button type="button"
+                    class="btn btn-sm dsl-theme-toggle-btn d-flex align-items-center justify-content-center"
+                    t-on-click="toggleTheme"
+                    t-att-title="state.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+                <i t-if="!state.isDark" class="fa fa-moon-o" title="Dark Mode"/>
+                <i t-else="" class="fa fa-sun-o text-warning" title="Light Mode"/>
+            </button>
+        </div>
+    </t>
+</templates>
+

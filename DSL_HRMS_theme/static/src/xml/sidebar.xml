@@ -1,0 +1,1093 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <!-- Extend WebClient to insert DslSidebar alongside NavBar -->
+    <t t-inherit="web.WebClient" t-inherit-mode="extension">
+        <xpath expr="//t[@t-if='!state.fullscreen']" position="before">
+            <t t-if="!state.fullscreen">
+                <DslSidebar isCollapsed="state.sidebarCollapsed" onToggle="() => this.toggleSidebar()"/>
+            </t>
+        </xpath>
+    </t>
+
+    <!-- DslSidebar Component Template (Dark Enterprise Shell + Module-Scoped Accordion) -->
+    <t t-name="DSL_HRMS_theme.DslSidebar">
+        <aside class="dsl_sidebar" t-att-class="{'collapsed': props.isCollapsed}">
+            <!-- Brand / Logo Header -->
+            <div class="dsl_sidebar_header">
+                <div class="dsl_brand_box">
+                    <div class="dsl_brand_logo_icon">D</div>
+                    <div class="dsl_brand_info" t-if="!props.isCollapsed">
+                        <span class="dsl_brand_name">DSL HRMS</span>
+                        <span class="dsl_brand_tag">ENTERPRISE</span>
+                    </div>
+                </div>
+                <button class="dsl_sidebar_toggle_btn" t-on-click="props.onToggle" title="Toggle Sidebar Rail">
+                    <i t-att-class="props.isCollapsed ? 'fa fa-angle-right' : 'fa fa-angle-left'" title="Toggle"/>
+                </button>
+            </div>
+
+            <!-- Accordion Navigation Scroll Container -->
+            <div class="dsl_sidebar_scroll">
+                <!-- 1. Standalone Top Item: Dashboard -->
+                <div class="dsl_nav_single"
+                     t-if="canAccess('dashboard')"
+                     t-att-class="{'active': isCurrentSection('dashboard')}">
+                    <a href="#" t-on-click.prevent="() => this.openDashboard()" title="Dashboard">
+                        <i class="fa fa-th-large dsl_nav_icon" title="Dashboard"/>
+                        <span class="dsl_nav_label" t-if="!props.isCollapsed">Dashboard</span>
+                    </a>
+                </div>
+
+                <!-- 2. Collapsible Group: Organization -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('organization') &amp;&amp; (hasModule('DSL_HRMS_core') || hasModule('DSL_HRMS_organization') || hasModule('DSL_HRMS_multi_company') || hasModule('DSL_HRMS_branch'))"
+                     t-att-class="{'is-open': isGroupOpen('organization'), 'has-active': isGroupActive('organization')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('organization')"
+                            title="Organization">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-building-o dsl_nav_icon" title="Organization"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Organization</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('organization') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('organization')">
+                        <li t-if="hasModule('DSL_HRMS_multi_company')"
+                            t-att-class="{'active': isCurrentSection('companies')}">
+                            <a href="#" t-on-click.prevent="() => this.openCompanies()" title="Companies &amp; Group">
+                                <i class="fa fa-university dsl_sub_icon" title="Companies"/>
+                                <span>Companies &amp; Group</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_branch')"
+                            t-att-class="{'active': isCurrentSection('branches')}">
+                            <a href="#" t-on-click.prevent="() => this.openBranches()" title="Branches &amp; Plants">
+                                <i class="fa fa-map-signs dsl_sub_icon" title="Branches"/>
+                                <span>Branches &amp; Plants</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('departments')}">
+                            <a href="#" t-on-click.prevent="() => this.openDepartments()" title="Departments">
+                                <i class="fa fa-sitemap dsl_sub_icon" title="Departments"/>
+                                <span>Departments</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_organization')"
+                            t-att-class="{'active': isCurrentSection('designations')}">
+                            <a href="#" t-on-click.prevent="() => this.openDesignations()" title="Designations">
+                                <i class="fa fa-id-badge dsl_sub_icon" title="Designations"/>
+                                <span>Designations</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_organization')"
+                            t-att-class="{'active': isCurrentSection('grades')}">
+                            <a href="#" t-on-click.prevent="() => this.openGrades()" title="Pay Grades">
+                                <i class="fa fa-sliders dsl_sub_icon" title="Pay Grades"/>
+                                <span>Pay Grades</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_organization')"
+                            t-att-class="{'active': isCurrentSection('org_chart')}">
+                            <a href="#" t-on-click.prevent="() => this.openOrgChart()" title="Org Chart">
+                                <i class="fa fa-code-fork dsl_sub_icon" title="Org Chart"/>
+                                <span>Org Chart</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 3. Collapsible Group: Recruitment & ATS (Hire & Onboard Stage) -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('recruitment') &amp;&amp; (hasModule('DSL_HRMS_recruitment') || hasModule('DSL_HRMS_onboarding'))"
+                     t-att-class="{'is-open': isGroupOpen('talent'), 'has-active': isGroupActive('talent')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('talent')"
+                            title="Recruitment &amp; Onboarding">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-user-plus dsl_nav_icon" title="Recruitment &amp; Onboarding"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Recruitment &amp; ATS</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('talent') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('talent')">
+                        <li t-if="hasModule('DSL_HRMS_recruitment')"
+                            t-att-class="{'active': isCurrentSection('mpr')}">
+                            <a href="#" t-on-click.prevent="() => this.openManpowerRequisitions()" title="Manpower Requisitions">
+                                <i class="fa fa-file-text-o dsl_sub_icon" title="Manpower Requisitions"/>
+                                <span>Manpower Requisitions</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_recruitment')"
+                            t-att-class="{'active': isCurrentSection('ats_pipeline')}">
+                            <a href="#" t-on-click.prevent="() => this.openAtsPipeline()" title="Candidate ATS Pipeline">
+                                <i class="fa fa-user-plus dsl_sub_icon" title="Candidate ATS Pipeline"/>
+                                <span>Candidate ATS Pipeline</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_onboarding')"
+                            t-att-class="{'active': isCurrentSection('onboarding')}">
+                            <a href="#" t-on-click.prevent="() => this.openOnboarding()" title="Onboarding &amp; Checklist">
+                                <i class="fa fa-check-square-o dsl_sub_icon" title="Onboarding &amp; Checklist"/>
+                                <span>Onboarding Checklist</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 4. Collapsible Group: Employee Management -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('employee_mgmt') &amp;&amp; (hasModule('DSL_HRMS_employee') || hasModule('DSL_HRMS_core'))"
+                     t-att-class="{'is-open': isGroupOpen('employee_mgmt'), 'has-active': isGroupActive('employee_mgmt')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('employee_mgmt')"
+                            title="Employee Management">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-users dsl_nav_icon" title="Employee Management"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Employee Management</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('employee_mgmt') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('employee_mgmt')">
+                        <li t-att-class="{'active': isCurrentSection('employees')}">
+                            <a href="#" t-on-click.prevent="() => this.openEmployees()" title="Employee Directory">
+                                <i class="fa fa-id-card-o dsl_sub_icon" title="Employee Directory"/>
+                                <span>Employee Directory</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_education')"
+                            t-att-class="{'active': isCurrentSection('education')}">
+                            <a href="#" t-on-click.prevent="() => this.openEducation()" title="Qualifications &amp; Certs">
+                                <i class="fa fa-graduation-cap dsl_sub_icon" title="Qualifications"/>
+                                <span>Qualifications &amp; Certs</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_experience')"
+                            t-att-class="{'active': isCurrentSection('skills_matrix')}">
+                            <a href="#" t-on-click.prevent="() => this.openSkillsMatrix()" title="Skills Matrix">
+                                <i class="fa fa-star-o dsl_sub_icon" title="Skills Matrix"/>
+                                <span>Skills Matrix</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_experience')"
+                            t-att-class="{'active': isCurrentSection('experience')}">
+                            <a href="#" t-on-click.prevent="() => this.openExperience()" title="Prior Experience">
+                                <i class="fa fa-briefcase dsl_sub_icon" title="Prior Experience"/>
+                                <span>Prior Experience</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_family')"
+                            t-att-class="{'active': isCurrentSection('family')}">
+                            <a href="#" t-on-click.prevent="() => this.openFamily()" title="Family &amp; Dependents">
+                                <i class="fa fa-heart-o dsl_sub_icon" title="Family &amp; Dependents"/>
+                                <span>Family &amp; Dependents</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_employee')"
+                            t-att-class="{'active': isCurrentSection('nominees')}">
+                            <a href="#" t-on-click.prevent="() => this.openNominees()" title="Statutory Nominees">
+                                <i class="fa fa-shield dsl_sub_icon" title="Statutory Nominees"/>
+                                <span>Statutory Nominees</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_onboarding')"
+                            t-att-class="{'active': isCurrentSection('emp_assets')}">
+                            <a href="#" t-on-click.prevent="() => this.openEmployeeAssets()" title="Employee Assets (Laptop, Mobile, ID Card)">
+                                <i class="fa fa-laptop dsl_sub_icon" title="Employee Assets"/>
+                                <span>Employee Assets</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_document')"
+                            t-att-class="{'active': isCurrentSection('document_vault')}">
+                            <a href="#" t-on-click.prevent="() => this.openDocumentVault()" title="Document Vault">
+                                <i class="fa fa-folder-open-o dsl_sub_icon" title="Document Vault"/>
+                                <span>Document Vault</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 5. Collapsible Group: Attendance & Shift -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('attendance') &amp;&amp; (hasModule('DSL_HRMS_attendance') || hasModule('DSL_HRMS_shift_roster') || hasModule('DSL_HRMS_overtime') || hasModule('DSL_HRMS_attendance_device') || hasModule('DSL_HRMS_gps_attendance'))"
+                     t-att-class="{'is-open': isGroupOpen('attendance'), 'has-active': isGroupActive('attendance')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('attendance')"
+                            title="Attendance &amp; Shift">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-clock-o dsl_nav_icon" title="Attendance &amp; Shift"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Attendance &amp; Shift</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('attendance') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('attendance')">
+                        <li t-att-class="{'active': isCurrentSection('attendance')}">
+                            <a href="#" t-on-click.prevent="() => this.openAttendance()" title="Daily Attendance">
+                                <i class="fa fa-check-square-o dsl_sub_icon" title="Daily Attendance"/>
+                                <span>Daily Attendance</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_attendance')"
+                            t-att-class="{'active': isCurrentSection('attendance_reg')}">
+                            <a href="#" t-on-click.prevent="() => this.openAttendanceRegularization()" title="Regularization">
+                                <i class="fa fa-history dsl_sub_icon" title="Regularization"/>
+                                <span>Regularization</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_attendance_device')"
+                            t-att-class="{'active': isCurrentSection('biometric_devices')}">
+                            <a href="#" t-on-click.prevent="() => this.openBiometricDevices()" title="Biometric Devices">
+                                <i class="fa fa-hdd-o dsl_sub_icon" title="Biometric Devices"/>
+                                <span>Biometric Devices</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_gps_attendance')"
+                            t-att-class="{'active': isCurrentSection('gps_attendance')}">
+                            <a href="#" t-on-click.prevent="() => this.openGpsAttendance()" title="GPS Geo-Attendance">
+                                <i class="fa fa-map-marker dsl_sub_icon" title="GPS Geo-Attendance"/>
+                                <span>GPS Geo-Attendance</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_shift_roster')"
+                            t-att-class="{'active': isCurrentSection('shift_roster')}">
+                            <a href="#" t-on-click.prevent="() => this.openShiftRoster()" title="Shift Roster">
+                                <i class="fa fa-calendar dsl_sub_icon" title="Shift Roster"/>
+                                <span>Shift Roster</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_overtime')"
+                            t-att-class="{'active': isCurrentSection('overtime')}">
+                            <a href="#" t-on-click.prevent="() => this.openOvertime()" title="Overtime (BD 2x)">
+                                <i class="fa fa-bolt dsl_sub_icon" title="Overtime (BD 2x)"/>
+                                <span>Overtime (BD 2x)</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 6. Collapsible Group: Leave Management -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('leaves') &amp;&amp; (hasModule('DSL_HRMS_leave') || hasModule('DSL_HRMS_holiday') || hasModule('DSL_HRMS_leave_approval'))"
+                     t-att-class="{'is-open': isGroupOpen('leaves'), 'has-active': isGroupActive('leaves')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('leaves')"
+                            title="Leave Management">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-calendar-check-o dsl_nav_icon" title="Leave Management"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Leave Management</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('leaves') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('leaves')">
+                        <li t-att-class="{'active': isCurrentSection('leaves')}">
+                            <a href="#" t-on-click.prevent="() => this.openLeaves()" title="Leave Applications">
+                                <i class="fa fa-plane dsl_sub_icon" title="Leave Applications"/>
+                                <span>Leave Applications</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_leave_approval')"
+                            t-att-class="{'active': isCurrentSection('leave_approvals')}">
+                            <a href="#" t-on-click.prevent="() => this.openLeaveApprovals()" title="Pending Approvals">
+                                <i class="fa fa-check-circle-o dsl_sub_icon" title="Pending Approvals"/>
+                                <span>Pending Approvals</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_leave')"
+                            t-att-class="{'active': isCurrentSection('leave_quotas')}">
+                            <a href="#" t-on-click.prevent="() => this.openLeaveQuotas()" title="Leave Balances">
+                                <i class="fa fa-pie-chart dsl_sub_icon" title="Leave Balances"/>
+                                <span>Leave Balances</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_leave')"
+                            t-att-class="{'active': isCurrentSection('leave_batch')}">
+                            <a href="#" t-on-click.prevent="() => this.openLeaveBatch()" title="Yearly Quota Batch">
+                                <i class="fa fa-magic dsl_sub_icon" title="Yearly Quota Batch"/>
+                                <span>Yearly Quota Batch</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_holiday')"
+                            t-att-class="{'active': isCurrentSection('holidays')}">
+                            <a href="#" t-on-click.prevent="() => this.openHolidays()" title="Gazetted Holidays (BD)">
+                                <i class="fa fa-calendar-o dsl_sub_icon" title="Gazetted Holidays (BD)"/>
+                                <span>Gazetted Holidays</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 7. Collapsible Group: Performance & 360° Assessment Engine -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('performance') &amp;&amp; hasModule('DSL_HRMS_appraisal')"
+                     t-att-class="{'is-open': isGroupOpen('performance'), 'has-active': isGroupActive('performance')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('performance')"
+                            title="Performance &amp; 360° Assessment">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-line-chart dsl_nav_icon" title="Performance &amp; 360° Assessment"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Performance &amp; 360°</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('performance') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('performance')">
+                        <li t-att-class="{'active': isCurrentSection('assessments_all')}">
+                            <a href="#" t-on-click.prevent="() => this.openAssessmentsAll()" title="Employee Assessments (Standard / Advanced / 360°)">
+                                <i class="fa fa-star dsl_sub_icon" title="Employee Assessments"/>
+                                <span>Employee Assessments</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('assessment_cycles')}">
+                            <a href="#" t-on-click.prevent="() => this.openAssessmentCycles()" title="Concurrent Assessment Cycles">
+                                <i class="fa fa-refresh dsl_sub_icon" title="Concurrent Assessment Cycles"/>
+                                <span>Concurrent Cycles</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('reviewer_inbox')}">
+                            <a href="#" t-on-click.prevent="() => this.openReviewerInbox()" title="Reviewer Evaluation Inbox">
+                                <i class="fa fa-inbox dsl_sub_icon" title="Reviewer Evaluation Inbox"/>
+                                <span>Reviewer Inbox</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('employee_kpis')}">
+                            <a href="#" t-on-click.prevent="() => this.openEmployeeKpis()" title="Employee KPIs &amp; Targets">
+                                <i class="fa fa-bullseye dsl_sub_icon" title="Employee KPIs &amp; Targets"/>
+                                <span>Employee KPIs</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('hr_calibration')}">
+                            <a href="#" t-on-click.prevent="() => this.openHrCalibration()" title="HR Bell-Curve Calibration">
+                                <i class="fa fa-balance-scale dsl_sub_icon" title="HR Bell-Curve Calibration"/>
+                                <span>HR Calibration</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('assessment_appeals')}">
+                            <a href="#" t-on-click.prevent="() => this.openAssessmentAppeals()" title="Employee Appeals &amp; Disputes">
+                                <i class="fa fa-gavel dsl_sub_icon" title="Employee Appeals &amp; Disputes"/>
+                                <span>Appeals &amp; Disputes</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('employee_pips')}">
+                            <a href="#" t-on-click.prevent="() => this.openEmployeePips()" title="Performance Improvement Plans (PIP)">
+                                <i class="fa fa-life-ring dsl_sub_icon" title="Performance Improvement Plans"/>
+                                <span>PIP Coaching Plans</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('increment_recs')}">
+                            <a href="#" t-on-click.prevent="() => this.openIncrementRecs()" title="Increment Recommendations">
+                                <i class="fa fa-level-up dsl_sub_icon" title="Increment Recommendations"/>
+                                <span>Increment Proposals</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 8. Collapsible Group: Payroll & Benefits -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('payroll') &amp;&amp; (hasModule('DSL_HRMS_payroll_bd') || hasModule('DSL_HRMS_salary_structure') || hasModule('DSL_HRMS_tax_bd') || hasModule('DSL_HRMS_loan') || hasModule('DSL_HRMS_provident_fund') || hasModule('DSL_HRMS_gratuity') || hasModule('DSL_HRMS_festival_bonus'))"
+                     t-att-class="{'is-open': isGroupOpen('payroll'), 'has-active': isGroupActive('payroll')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('payroll')"
+                            title="Payroll &amp; Benefits">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-credit-card dsl_nav_icon" title="Payroll &amp; Benefits"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Payroll &amp; Benefits</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('payroll') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('payroll')">
+                        <li t-if="hasModule('DSL_HRMS_payroll_bd')"
+                            t-att-class="{'active': isCurrentSection('payroll_batches')}">
+                            <a href="#" t-on-click.prevent="() => this.openPayrollBatches()" title="Payroll Batches &amp; Advice">
+                                <i class="fa fa-bank dsl_sub_icon" title="Payroll Batches &amp; Advice"/>
+                                <span>Payroll &amp; Bank Advice</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('payroll')}">
+                            <a href="#" t-on-click.prevent="() => this.openPayroll()" title="Monthly Payslips">
+                                <i class="fa fa-money dsl_sub_icon" title="Monthly Payslips"/>
+                                <span>Monthly Payslips</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_salary_structure')"
+                            t-att-class="{'active': isCurrentSection('salary_packages')}">
+                            <a href="#" t-on-click.prevent="() => this.openSalaryPackages()" title="Salary Packages">
+                                <i class="fa fa-briefcase dsl_sub_icon" title="Salary Packages"/>
+                                <span>Salary Packages</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_payroll_bd')"
+                            t-att-class="{'active': isCurrentSection('salary_doc_center')}">
+                            <a href="#" t-on-click.prevent="() => this.openSalaryDocumentCenter()" title="Salary Document Center (100 Types)">
+                                <i class="fa fa-file-text-o dsl_sub_icon" title="Salary Document Center"/>
+                                <span>Salary Document Center</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_tax_bd')"
+                            t-att-class="{'active': isCurrentSection('tax_bd')}">
+                            <a href="#" t-on-click.prevent="() => this.openTaxBd()" title="NBR Income Tax (TDS)">
+                                <i class="fa fa-calculator dsl_sub_icon" title="NBR Income Tax (TDS)"/>
+                                <span>NBR Income Tax (TDS)</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_loan')"
+                            t-att-class="{'active': isCurrentSection('loans')}">
+                            <a href="#" t-on-click.prevent="() => this.openLoans()" title="Loans &amp; Salary Advances">
+                                <i class="fa fa-handshake-o dsl_sub_icon" title="Loans &amp; Salary Advances"/>
+                                <span>Loans &amp; Advances</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_provident_fund')"
+                            t-att-class="{'active': isCurrentSection('provident_fund')}">
+                            <a href="#" t-on-click.prevent="() => this.openProvidentFund()" title="Provident Fund (PF)">
+                                <i class="fa fa-shield dsl_sub_icon" title="Provident Fund (PF)"/>
+                                <span>Provident Fund (PF)</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_provident_fund')"
+                            t-att-class="{'active': isCurrentSection('pf_profit')}">
+                            <a href="#" t-on-click.prevent="() => this.openPfProfit()" title="PF Profit Distribution">
+                                <i class="fa fa-line-chart dsl_sub_icon" title="PF Profit Distribution"/>
+                                <span>PF Profit Distribution</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_gratuity')"
+                            t-att-class="{'active': isCurrentSection('gratuity')}">
+                            <a href="#" t-on-click.prevent="() => this.openGratuity()" title="Gratuity &amp; Service Benefit">
+                                <i class="fa fa-trophy dsl_sub_icon" title="Gratuity &amp; Service Benefit"/>
+                                <span>Gratuity Benefit</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_festival_bonus')"
+                            t-att-class="{'active': isCurrentSection('festival_bonus')}">
+                            <a href="#" t-on-click.prevent="() => this.openFestivalBonus()" title="Festival &amp; Performance Bonus">
+                                <i class="fa fa-gift dsl_sub_icon" title="Festival &amp; Performance Bonus"/>
+                                <span>Festival &amp; Eid Bonus</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 9. Collapsible Group: Accounting & Finance (Operations & Vouchers) -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('accounting') &amp;&amp; hasModule('DSL_HRMS_accounting')"
+                     t-att-class="{'is-open': isGroupOpen('accounting'), 'has-active': isGroupActive('accounting')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('accounting')"
+                            title="Accounting &amp; Finance">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-balance-scale dsl_nav_icon" title="Accounting &amp; Finance"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Accounting &amp; Finance</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('accounting') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('accounting')">
+                        <li t-att-class="{'active': isCurrentSection('acc_dashboard')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccDashboard()" title="Accounting Overview &amp; Journals Dashboard">
+                                <i class="fa fa-dashboard dsl_sub_icon" title="Accounting Dashboard"/>
+                                <span>Accounting Dashboard</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_payroll_bd')"
+                            t-att-class="{'active': isCurrentSection('acc_payroll_vouchers')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccPayrollVouchers()" title="Payroll Accounting &amp; GL Vouchers">
+                                <i class="fa fa-id-card-o dsl_sub_icon" title="Payroll GL Vouchers"/>
+                                <span>Payroll GL Vouchers</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('acc_journal_entries')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccJournalEntries()" title="Journal Entries">
+                                <i class="fa fa-book dsl_sub_icon" title="Journal Entries"/>
+                                <span>Journal Entries</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('acc_journal_items')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccJournalItems()" title="Journal Items (GL)">
+                                <i class="fa fa-list-alt dsl_sub_icon" title="Journal Items"/>
+                                <span>Journal Items (GL)</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('acc_invoices')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccInvoices()" title="Customer Invoices">
+                                <i class="fa fa-file-text dsl_sub_icon" title="Customer Invoices"/>
+                                <span>Customer Invoices</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('acc_bills')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccBills()" title="Vendor Bills &amp; Expenses">
+                                <i class="fa fa-shopping-bag dsl_sub_icon" title="Vendor Bills"/>
+                                <span>Vendor Bills</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('acc_payments')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccPayments()" title="Payments &amp; Transfers">
+                                <i class="fa fa-exchange dsl_sub_icon" title="Payments &amp; Transfers"/>
+                                <span>Payments &amp; Transfers</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('acc_reconcile')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccReconcile()" title="Account &amp; Bank Reconciliation">
+                                <i class="fa fa-check-square-o dsl_sub_icon" title="Reconciliation"/>
+                                <span>Account Reconciliation</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('acc_assets')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccAssets()" title="Fixed Assets &amp; Depreciation">
+                                <i class="fa fa-building-o dsl_sub_icon" title="Fixed Assets"/>
+                                <span>Fixed Assets</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('acc_budgets')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccBudgets()" title="Financial Budgets">
+                                <i class="fa fa-pie-chart dsl_sub_icon" title="Financial Budgets"/>
+                                <span>Financial Budgets</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 10. Collapsible Group: Financial Reports (All 16 at_accounting Statements & Ledgers) -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('financial_reports') &amp;&amp; hasModule('DSL_HRMS_accounting')"
+                     t-att-class="{'is-open': isGroupOpen('financial_reports'), 'has-active': isGroupActive('financial_reports')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('financial_reports')"
+                            title="Financial Statements, Ledgers &amp; Audit Reports">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-bar-chart dsl_nav_icon" title="Financial Reports"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Financial Reports</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('financial_reports') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('financial_reports')">
+                        <li class="dsl_sub_section_title">
+                            <span>FINANCIAL STATEMENTS</span>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_balance_sheet')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepBalanceSheet()" title="Balance Sheet Statement">
+                                <i class="fa fa-balance-scale dsl_sub_icon" title="Balance Sheet"/>
+                                <span>Balance Sheet</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_profit_loss')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepProfitLoss()" title="Profit and Loss (P&amp;L) Statement">
+                                <i class="fa fa-line-chart dsl_sub_icon" title="Profit and Loss"/>
+                                <span>Profit &amp; Loss (P&amp;L)</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_cash_flow')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepCashFlow()" title="Cash Flow Statement">
+                                <i class="fa fa-money dsl_sub_icon" title="Cash Flow Statement"/>
+                                <span>Cash Flow Statement</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_exec_summary')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepExecSummary()" title="Executive Financial Summary">
+                                <i class="fa fa-bar-chart dsl_sub_icon" title="Executive Summary"/>
+                                <span>Executive Summary</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_tax_return')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepTaxReturn()" title="Tax Return (VAT / Tax Report)">
+                                <i class="fa fa-percent dsl_sub_icon" title="Tax Return"/>
+                                <span>Tax Return Report</span>
+                            </a>
+                        </li>
+
+                        <li class="dsl_sub_section_title">
+                            <span>LEDGER, AUDIT &amp; AGED REPORTS</span>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_general_ledger')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepGeneralLedger()" title="General Ledger Report">
+                                <i class="fa fa-columns dsl_sub_icon" title="General Ledger"/>
+                                <span>General Ledger</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_trial_balance')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepTrialBalance()" title="Trial Balance Report">
+                                <i class="fa fa-table dsl_sub_icon" title="Trial Balance"/>
+                                <span>Trial Balance</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_journal_audit')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepJournalAudit()" title="Journal Audit Report">
+                                <i class="fa fa-file-code-o dsl_sub_icon" title="Journal Audit"/>
+                                <span>Journal Audit</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_partner_ledger')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepPartnerLedger()" title="Partner Ledger Report">
+                                <i class="fa fa-address-book-o dsl_sub_icon" title="Partner Ledger"/>
+                                <span>Partner Ledger</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_aged_receivable')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepAgedReceivable()" title="Aged Receivable Report">
+                                <i class="fa fa-arrow-circle-o-down dsl_sub_icon" title="Aged Receivable"/>
+                                <span>Aged Receivable</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_aged_payable')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepAgedPayable()" title="Aged Payable Report">
+                                <i class="fa fa-arrow-circle-o-up dsl_sub_icon" title="Aged Payable"/>
+                                <span>Aged Payable</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_bank_reconciliation')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepBankReconciliation()" title="Bank Reconciliation Report">
+                                <i class="fa fa-university dsl_sub_icon" title="Bank Reconciliation Report"/>
+                                <span>Bank Rec Report</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_depreciation')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepDepreciation()" title="Asset Depreciation Schedule">
+                                <i class="fa fa-calendar-check-o dsl_sub_icon" title="Depreciation Schedule"/>
+                                <span>Depreciation Schedule</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_deferred_expense')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepDeferredExpense()" title="Deferred Expense Report">
+                                <i class="fa fa-hourglass-half dsl_sub_icon" title="Deferred Expense"/>
+                                <span>Deferred Expense</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_deferred_revenue')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepDeferredRevenue()" title="Deferred Revenue Report">
+                                <i class="fa fa-hourglass-end dsl_sub_icon" title="Deferred Revenue"/>
+                                <span>Deferred Revenue</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('rep_multicurrency')}">
+                            <a href="#" t-on-click.prevent="() => this.openRepMulticurrency()" title="Unrealized Currency Gains/Losses">
+                                <i class="fa fa-globe dsl_sub_icon" title="Unrealized Currency Gains/Losses"/>
+                                <span>Currency Revaluation</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 11. Collapsible Group: Self-Service & Exit (ESS / MSS / Offboarding) -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('self_service') &amp;&amp; (hasModule('DSL_HRMS_ess') || hasModule('DSL_HRMS_mss') || hasModule('DSL_HRMS_helpdesk') || hasModule('DSL_HRMS_separation'))"
+                     t-att-class="{'is-open': isGroupOpen('self_service'), 'has-active': isGroupActive('self_service')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('self_service')"
+                            title="Self-Service &amp; Exit">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-user-circle-o dsl_nav_icon" title="Self-Service &amp; Exit"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Self-Service &amp; Exit</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('self_service') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('self_service')">
+                        <li t-if="hasModule('DSL_HRMS_ess')"
+                            t-att-class="{'active': isCurrentSection('ess_portal')}">
+                            <a href="#" t-on-click.prevent="() => this.openEssPortal()" title="My Portal (ESS)">
+                                <i class="fa fa-user-o dsl_sub_icon" title="My Portal (ESS)"/>
+                                <span>My Portal (ESS)</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_mss') &amp;&amp; canAccessMss()"
+                            t-att-class="{'active': isCurrentSection('mss_portal')}">
+                            <a href="#" t-on-click.prevent="() => this.openMssPortal()" title="Manager Hub (MSS)">
+                                <i class="fa fa-users dsl_sub_icon" title="Manager Hub (MSS)"/>
+                                <span>Manager Hub (MSS)</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_ess') &amp;&amp; canAccess('hr_announcements')"
+                            t-att-class="{'active': isCurrentSection('hr_announcements')}">
+                            <a href="#" t-on-click.prevent="() => this.openHrAnnouncements()" title="Corporate HR Announcements &amp; Official Notice Board">
+                                <i class="fa fa-bullhorn dsl_sub_icon" title="HR Announcements"/>
+                                <span>HR Announcements</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_payroll_bd')"
+                            t-att-class="{'active': isCurrentSection('salary_doc_requests')}">
+                            <a href="#" t-on-click.prevent="() => this.openSalaryDocRequests()" title="Salary Certificate &amp; Document Requests">
+                                <i class="fa fa-envelope-open-o dsl_sub_icon" title="Salary Doc Requests"/>
+                                <span>Salary Doc Requests</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_ess')"
+                            t-att-class="{'active': isCurrentSection('hr_letters')}">
+                            <a href="#" t-on-click.prevent="() => this.openHrLetters()" title="HR Certificates &amp; NOC">
+                                <i class="fa fa-certificate dsl_sub_icon" title="HR Certificates &amp; NOC"/>
+                                <span>HR Letters &amp; NOC</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_helpdesk')"
+                            t-att-class="{'active': isCurrentSection('hr_helpdesk')}">
+                            <a href="#" t-on-click.prevent="() => this.openHrHelpdesk()" title="HR Helpdesk &amp; Grievance">
+                                <i class="fa fa-headphones dsl_sub_icon" title="HR Helpdesk &amp; Grievance"/>
+                                <span>HR Helpdesk &amp; Grievance</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_separation')"
+                            t-att-class="{'active': isCurrentSection('separations')}">
+                            <a href="#" t-on-click.prevent="() => this.openSeparations()" title="Exit Clearance &amp; Final Settlement">
+                                <i class="fa fa-sign-out dsl_sub_icon" title="Exit Clearance &amp; Final Settlement"/>
+                                <span>Exit &amp; Final Settlement</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 12. Collapsible Group: Operations, Facility & Factory -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('operations') &amp;&amp; (hasModule('DSL_HRMS_canteen') || hasModule('DSL_HRMS_fleet') || hasModule('DSL_HRMS_visitor') || hasModule('DSL_HRMS_factory_garments'))"
+                     t-att-class="{'is-open': isGroupOpen('operations'), 'has-active': isGroupActive('operations')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('operations')"
+                            title="Operations, Facility &amp; Factory">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-industry dsl_nav_icon" title="Operations, Facility &amp; Factory"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Operations &amp; Factory</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('operations') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('operations')">
+                        <li t-if="hasModule('DSL_HRMS_canteen')"
+                            t-att-class="{'active': isCurrentSection('canteen')}">
+                            <a href="#" t-on-click.prevent="() => this.openCanteen()" title="Canteen &amp; Meal Recovery">
+                                <i class="fa fa-cutlery dsl_sub_icon" title="Canteen &amp; Meal Recovery"/>
+                                <span>Canteen &amp; Meals</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_fleet')"
+                            t-att-class="{'active': isCurrentSection('fleet_req')}">
+                            <a href="#" t-on-click.prevent="() => this.openFleetRequisitions()" title="Vehicle Requisitions">
+                                <i class="fa fa-car dsl_sub_icon" title="Vehicle Requisitions"/>
+                                <span>Vehicle Requisitions</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_fleet')"
+                            t-att-class="{'active': isCurrentSection('fleet_fuel')}">
+                            <a href="#" t-on-click.prevent="() => this.openFleetFuel()" title="Vehicle Fuel Logs">
+                                <i class="fa fa-tachometer dsl_sub_icon" title="Vehicle Fuel Logs"/>
+                                <span>Fuel &amp; Mileage Log</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_visitor')"
+                            t-att-class="{'active': isCurrentSection('visitors')}">
+                            <a href="#" t-on-click.prevent="() => this.openVisitors()" title="Visitor Gate Pass">
+                                <i class="fa fa-id-badge dsl_sub_icon" title="Visitor Gate Pass"/>
+                                <span>Visitor Gate Pass</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_factory_garments')"
+                            t-att-class="{'active': isCurrentSection('factory_lines')}">
+                            <a href="#" t-on-click.prevent="() => this.openFactoryLines()" title="Garments Floor &amp; Line Roster">
+                                <i class="fa fa-cogs dsl_sub_icon" title="Garments Floor &amp; Line Roster"/>
+                                <span>Garments Floor Lines</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_factory_garments')"
+                            t-att-class="{'active': isCurrentSection('factory_audits')}">
+                            <a href="#" t-on-click.prevent="() => this.openFactoryAudits()" title="Factory Compliance Audits">
+                                <i class="fa fa-check-square dsl_sub_icon" title="Factory Compliance Audits"/>
+                                <span>Compliance Audits</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 13. Collapsible Group: Settings & Module-Grouped Configuration -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('settings')"
+                     t-att-class="{'is-open': isGroupOpen('settings'), 'has-active': isGroupActive('settings')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('settings')"
+                            title="Settings &amp; Module Configuration">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-cog dsl_nav_icon" title="Settings &amp; System"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Settings</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('settings') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('settings')">
+                        <!-- Group 1: System & Access -->
+                        <li class="dsl_sub_section_title">
+                            <span>1 · CORE SYSTEM &amp; ACCESS</span>
+                        </li>
+                        <li t-if="canAccess('system_modules')"
+                            t-att-class="{'active': isCurrentSection('apps')}">
+                            <a href="#" t-on-click.prevent="() => this.openApps()" title="HRMS Modules">
+                                <i class="fa fa-cubes dsl_sub_icon" title="HRMS Modules"/>
+                                <span>HRMS Modules</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('user_management')"
+                            t-att-class="{'active': isCurrentSection('users_access')}">
+                            <a href="#" t-on-click.prevent="() => this.openUsersAccess()" title="Users &amp; Access">
+                                <i class="fa fa-key dsl_sub_icon" title="Users &amp; Access"/>
+                                <span>Users &amp; Access</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('user_management')"
+                            t-att-class="{'active': isCurrentSection('role_templates')}">
+                            <a href="#" t-on-click.prevent="() => this.openRoleTemplates()" title="Role Templates &amp; Access Matrix">
+                                <i class="fa fa-shield dsl_sub_icon" title="Role Templates &amp; Matrix"/>
+                                <span>Role Templates &amp; Matrix</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('settings')}">
+                            <a href="#" t-on-click.prevent="() => this.openSettings()" title="System Settings">
+                                <i class="fa fa-wrench dsl_sub_icon" title="System Settings"/>
+                                <span>System Settings</span>
+                            </a>
+                        </li>
+
+                        <!-- Group 2: Employee & Document Module -->
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_document')" class="dsl_sub_section_title">
+                            <span>2 · EMPLOYEE &amp; DOCUMENTS</span>
+                        </li>
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_document')"
+                            t-att-class="{'active': isCurrentSection('doc_types')}">
+                            <a href="#" t-on-click.prevent="() => this.openDocumentTypes()" title="Document Checklist">
+                                <i class="fa fa-list-alt dsl_sub_icon" title="Document Checklist"/>
+                                <span>Document Checklist</span>
+                            </a>
+                        </li>
+
+                        <!-- Group 3: Attendance & Shift Module -->
+                        <li t-if="canAccess('hr_settings') &amp;&amp; (hasModule('DSL_HRMS_attendance') || hasModule('DSL_HRMS_shift_roster'))" class="dsl_sub_section_title">
+                            <span>3 · ATTENDANCE &amp; SHIFT</span>
+                        </li>
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_attendance')"
+                            t-att-class="{'active': isCurrentSection('att_policies')}">
+                            <a href="#" t-on-click.prevent="() => this.openAttendancePolicies()" title="Attendance Policies">
+                                <i class="fa fa-sliders dsl_sub_icon" title="Attendance Policies"/>
+                                <span>Attendance Policies</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_shift_roster')"
+                            t-att-class="{'active': isCurrentSection('shift_defs')}">
+                            <a href="#" t-on-click.prevent="() => this.openShiftDefinitions()" title="Shift Definitions">
+                                <i class="fa fa-clock-o dsl_sub_icon" title="Shift Definitions"/>
+                                <span>Shift Definitions</span>
+                            </a>
+                        </li>
+
+                        <!-- Group 4: Leave & Holiday Module -->
+                        <li t-if="canAccess('hr_settings') &amp;&amp; (hasModule('DSL_HRMS_leave') || hasModule('DSL_HRMS_holiday'))" class="dsl_sub_section_title">
+                            <span>4 · LEAVE &amp; HOLIDAYS</span>
+                        </li>
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_leave')"
+                            t-att-class="{'active': isCurrentSection('leave_policies')}">
+                            <a href="#" t-on-click.prevent="() => this.openLeavePolicies()" title="Leave Policies (BD)">
+                                <i class="fa fa-tags dsl_sub_icon" title="Leave Policies (BD)"/>
+                                <span>Leave Policies (BD)</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_holiday')"
+                            t-att-class="{'active': isCurrentSection('holiday_calendars')}">
+                            <a href="#" t-on-click.prevent="() => this.openHolidayCalendars()" title="Holiday Calendars">
+                                <i class="fa fa-calendar-plus-o dsl_sub_icon" title="Holiday Calendars"/>
+                                <span>Holiday Calendars</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_leave_approval')"
+                            t-att-class="{'active': isCurrentSection('approval_chains')}">
+                            <a href="#" t-on-click.prevent="() => this.openApprovalChains()" title="Leave Approval Chains">
+                                <i class="fa fa-sitemap dsl_sub_icon" title="Leave Approval Chains"/>
+                                <span>Leave Approval Chains</span>
+                            </a>
+                        </li>
+
+                        <!-- Group 5: Payroll, Tax, Loan & PF Module -->
+                        <li t-if="canAccess('payroll_settings') &amp;&amp; (hasModule('DSL_HRMS_salary_structure') || hasModule('DSL_HRMS_tax_bd'))" class="dsl_sub_section_title">
+                            <span>5 · PAYROLL, TAX, LOAN &amp; PF</span>
+                        </li>
+                        <li t-if="canAccess('payroll_settings') &amp;&amp; hasModule('DSL_HRMS_salary_structure')"
+                            t-att-class="{'active': isCurrentSection('salary_structures')}">
+                            <a href="#" t-on-click.prevent="() => this.openSalaryStructures()" title="Salary Structures (BD)">
+                                <i class="fa fa-columns dsl_sub_icon" title="Salary Structures (BD)"/>
+                                <span>Salary Structures (BD)</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('payroll_settings') &amp;&amp; hasModule('DSL_HRMS_salary_structure')"
+                            t-att-class="{'active': isCurrentSection('salary_heads')}">
+                            <a href="#" t-on-click.prevent="() => this.openSalaryHeads()" title="Allowances &amp; Deductions">
+                                <i class="fa fa-list-ul dsl_sub_icon" title="Allowances &amp; Deductions"/>
+                                <span>Allowances &amp; Deductions</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('payroll_settings') &amp;&amp; hasModule('DSL_HRMS_tax_bd')"
+                            t-att-class="{'active': isCurrentSection('nbr_tax_slabs')}">
+                            <a href="#" t-on-click.prevent="() => this.openNbrTaxSlabs()" title="NBR Tax Slabs (FY)">
+                                <i class="fa fa-percent dsl_sub_icon" title="NBR Tax Slabs (FY)"/>
+                                <span>NBR Tax Slabs (FY)</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('payroll_settings') &amp;&amp; hasModule('DSL_HRMS_loan')"
+                            t-att-class="{'active': isCurrentSection('loan_policies')}">
+                            <a href="#" t-on-click.prevent="() => this.openLoanPolicies()" title="Loan &amp; Advance Policies">
+                                <i class="fa fa-credit-card dsl_sub_icon" title="Loan &amp; Advance Policies"/>
+                                <span>Loan Policies</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('payroll_settings') &amp;&amp; hasModule('DSL_HRMS_provident_fund')"
+                            t-att-class="{'active': isCurrentSection('pf_policies')}">
+                            <a href="#" t-on-click.prevent="() => this.openPfPolicies()" title="PF Trust Policies">
+                                <i class="fa fa-shield dsl_sub_icon" title="PF Trust Policies"/>
+                                <span>PF Trust Policies</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('payroll_settings') &amp;&amp; hasModule('DSL_HRMS_gratuity')"
+                            t-att-class="{'active': isCurrentSection('gratuity_policies')}">
+                            <a href="#" t-on-click.prevent="() => this.openGratuityPolicies()" title="Gratuity Policies (BD)">
+                                <i class="fa fa-balance-scale dsl_sub_icon" title="Gratuity Policies (BD)"/>
+                                <span>Gratuity Policies (BD)</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('payroll_settings') &amp;&amp; hasModule('DSL_HRMS_payroll_bd')"
+                            t-att-class="{'active': isCurrentSection('salary_doc_types_cfg')}">
+                            <a href="#" t-on-click.prevent="() => this.openSalaryDocTypesCfg()" title="100 Salary Document Types">
+                                <i class="fa fa-files-o dsl_sub_icon" title="Salary Document Types (100)"/>
+                                <span>Salary Doc Types (100)</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('payroll_settings') &amp;&amp; hasModule('DSL_HRMS_payroll_bd')"
+                            t-att-class="{'active': isCurrentSection('salary_doc_tpls_cfg')}">
+                            <a href="#" t-on-click.prevent="() => this.openSalaryDocTemplatesCfg()" title="Salary Letter &amp; Certificate Templates">
+                                <i class="fa fa-code dsl_sub_icon" title="Salary Document Templates"/>
+                                <span>Salary Doc Templates</span>
+                            </a>
+                        </li>
+
+                        <!-- Group 6: Performance & 360° Assessment Engine -->
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_appraisal')" class="dsl_sub_section_title">
+                            <span>6 · PERFORMANCE &amp; 360° ENGINE</span>
+                        </li>
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_appraisal')"
+                            t-att-class="{'active': isCurrentSection('assessment_policies_cfg')}">
+                            <a href="#" t-on-click.prevent="() => this.openAssessmentPoliciesCfg()" title="Mother &amp; Sub-Company Policies">
+                                <i class="fa fa-sitemap dsl_sub_icon" title="Mother &amp; Sub-Company Policies"/>
+                                <span>Mother &amp; Sub Policies</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_appraisal')"
+                            t-att-class="{'active': isCurrentSection('assessment_templates_cfg')}">
+                            <a href="#" t-on-click.prevent="() => this.openAssessmentTemplatesCfg()" title="Assessment Templates &amp; Questions">
+                                <i class="fa fa-list-alt dsl_sub_icon" title="Assessment Templates &amp; Questions"/>
+                                <span>Templates &amp; Questions</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_appraisal')"
+                            t-att-class="{'active': isCurrentSection('rating_scales_cfg')}">
+                            <a href="#" t-on-click.prevent="() => this.openRatingScalesCfg()" title="Rating Scales &amp; Bands">
+                                <i class="fa fa-sliders dsl_sub_icon" title="Rating Scales &amp; Bands"/>
+                                <span>Rating Scales (1–5)</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_appraisal')"
+                            t-att-class="{'active': isCurrentSection('master_kpis_cfg')}">
+                            <a href="#" t-on-click.prevent="() => this.openMasterKpisCfg()" title="Master KPIs &amp; Formulas">
+                                <i class="fa fa-calculator dsl_sub_icon" title="Master KPIs &amp; Formulas"/>
+                                <span>Master KPI Library</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('hr_settings') &amp;&amp; hasModule('DSL_HRMS_appraisal')"
+                            t-att-class="{'active': isCurrentSection('corporate_goals_cfg')}">
+                            <a href="#" t-on-click.prevent="() => this.openCorporateGoalsCfg()" title="Corporate Goals &amp; OKRs">
+                                <i class="fa fa-bullseye dsl_sub_icon" title="Corporate Goals &amp; OKRs"/>
+                                <span>Corporate Goals &amp; OKRs</span>
+                            </a>
+                        </li>
+
+                        <!-- Group 7: Accounting & Finance Config -->
+                        <li t-if="canAccess('accounting_settings') &amp;&amp; hasModule('DSL_HRMS_accounting')" class="dsl_sub_section_title">
+                            <span>7 · ACCOUNTING &amp; FINANCE</span>
+                        </li>
+                        <li t-if="canAccess('accounting_settings') &amp;&amp; hasModule('DSL_HRMS_accounting')"
+                            t-att-class="{'active': isCurrentSection('acc_coa_cfg')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccCoaCfg()" title="Chart of Accounts (COA)">
+                                <i class="fa fa-sitemap dsl_sub_icon" title="Chart of Accounts"/>
+                                <span>Chart of Accounts (COA)</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('accounting_settings') &amp;&amp; hasModule('DSL_HRMS_accounting')"
+                            t-att-class="{'active': isCurrentSection('acc_journals_cfg')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccJournalsCfg()" title="Accounting Journals">
+                                <i class="fa fa-folder-open-o dsl_sub_icon" title="Accounting Journals"/>
+                                <span>Accounting Journals</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('accounting_settings') &amp;&amp; hasModule('DSL_HRMS_accounting')"
+                            t-att-class="{'active': isCurrentSection('acc_taxes_cfg')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccTaxesCfg()" title="Taxes &amp; VAT">
+                                <i class="fa fa-calculator dsl_sub_icon" title="Taxes &amp; VAT"/>
+                                <span>Taxes &amp; VAT</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('accounting_settings') &amp;&amp; hasModule('DSL_HRMS_accounting')"
+                            t-att-class="{'active': isCurrentSection('acc_fiscal_years_cfg')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccFiscalYearsCfg()" title="Fiscal Years">
+                                <i class="fa fa-calendar dsl_sub_icon" title="Fiscal Years"/>
+                                <span>Fiscal Years</span>
+                            </a>
+                        </li>
+                        <li t-if="canAccess('accounting_settings') &amp;&amp; hasModule('DSL_HRMS_accounting')"
+                            t-att-class="{'active': isCurrentSection('acc_asset_models_cfg')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccAssetModelsCfg()" title="Asset Models">
+                                <i class="fa fa-cubes dsl_sub_icon" title="Asset Models"/>
+                                <span>Asset Models</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer User Profile Card -->
+            <div class="dsl_sidebar_footer">
+                <div class="dsl_user_card">
+                    <img t-att-src="'/web/image?model=res.users&amp;field=avatar_128&amp;id=' + (user.userId || 2)"
+                         alt="User" class="dsl_user_avatar"/>
+                    <div class="dsl_user_meta" t-if="!props.isCollapsed">
+                        <span class="dsl_user_name" t-esc="user.name || 'Admin'"/>
+                        <span class="dsl_user_role" t-att-title="fullRoleTooltip" t-esc="roleBadgeLabel"/>
+                    </div>
+                </div>
+                <button class="dsl_logout_btn" t-if="!props.isCollapsed" t-on-click="() => this.logout()" title="Log out">
+                    <i class="fa fa-sign-out" title="Log out"/>
+                </button>
+            </div>
+        </aside>
+    </t>
+
+</templates>

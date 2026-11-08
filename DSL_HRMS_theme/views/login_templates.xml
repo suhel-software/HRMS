@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="dsl_login_layout" inherit_id="web.login_layout" name="DSL HRMS Split-Screen Login">
+        <xpath expr="//div[hasclass('container')]" position="replace">
+            <div class="dsl_login_wrapper">
+                <!-- Left Hero Panel -->
+                <div class="dsl_login_hero d-none d-lg-flex">
+                    <div class="dsl_hero_overlay"/>
+                    <div class="dsl_hero_content">
+                        <div class="dsl_hero_brand">
+                            <div class="dsl_brand_icon">D</div>
+                            <div class="dsl_brand_text">
+                                <span class="dsl_brand_title">DSL HRMS</span>
+                                <span class="dsl_brand_badge">ENTERPRISE</span>
+                            </div>
+                        </div>
+                        <div class="dsl_hero_body">
+                            <h2>Next-Generation Workforce &amp; HR Platform</h2>
+                            <p class="dsl_hero_sub">Comprehensive Human Resource, Payroll, Attendance &amp; Multi-Company Management designed for modern enterprises.</p>
+                            
+                            <div class="dsl_features_list">
+                                <div class="dsl_feature_item">
+                                    <span class="dsl_check_icon">✓</span>
+                                    <span>Mother Company &amp; Multi-Entity Centralized Control</span>
+                                </div>
+                                <div class="dsl_feature_item">
+                                    <span class="dsl_check_icon">✓</span>
+                                    <span>Bangladesh Labor Act &amp; NBR Tax Automated Engine</span>
+                                </div>
+                                <div class="dsl_feature_item">
+                                    <span class="dsl_check_icon">✓</span>
+                                    <span>Real-Time Biometric, Facial &amp; GPS Geofenced Attendance</span>
+                                </div>
+                                <div class="dsl_feature_item">
+                                    <span class="dsl_check_icon">✓</span>
+                                    <span>Automated Payroll, Provident Fund &amp; Gratuity System</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dsl_hero_footer">
+                            <span>DSL Enterprise Platform • v18.0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Form Panel -->
+                <div class="dsl_login_form_container">
+                    <div class="dsl_login_card">
+                        <div class="dsl_form_header">
+                            <div class="d-lg-none d-flex align-items-center gap-2 mb-3">
+                                <div class="dsl_brand_icon sm">D</div>
+                                <span class="h4 mb-0 fw-bold text-dark">DSL HRMS</span>
+                            </div>
+                            <h3>Welcome back</h3>
+                            <p class="text-muted">Sign in to access your HR &amp; workforce workspace</p>
+                        </div>
+
+                        <!-- Login Form Output -->
+                        <div class="dsl_form_body">
+                            <t t-out="0"/>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="dsl_form_footer">
+                            <p>© 2026 DSL Enterprise HRMS. All Rights Reserved.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+</odoo>
+

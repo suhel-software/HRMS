@@ -1,0 +1,433 @@
+/* DSL HRMS Modern Left Navigation Sidebar (Dark Enterprise + Collapsible Accordion) */
+
+$dsl-sidebar-width: 262px !default;
+$dsl-sidebar-collapsed-width: 72px !default;
+
+.dsl_sidebar {
+    width: $dsl-sidebar-width;
+    height: 100vh;
+    background: linear-gradient(180deg, #0f172a 0%, #171738 55%, #0f172a 100%);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.14);
+    z-index: 105;
+    position: relative;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+
+    // Mini Icon Rail State
+    &.collapsed {
+        width: $dsl-sidebar-collapsed-width;
+
+        .dsl_sidebar_header {
+            padding: 16px 10px;
+            justify-content: center;
+
+            .dsl_brand_box {
+                display: none;
+            }
+        }
+
+        .dsl_nav_single a,
+        .dsl_group_header {
+            justify-content: center !important;
+            padding: 11px 0 !important;
+
+            .dsl_group_left {
+                justify-content: center;
+            }
+
+            .dsl_nav_icon {
+                font-size: 18px;
+                margin-right: 0 !important;
+            }
+        }
+
+        .dsl_sidebar_footer {
+            padding: 14px 8px;
+            justify-content: center;
+
+            .dsl_user_card {
+                justify-content: center;
+            }
+        }
+    }
+
+    // Top Brand Header
+    .dsl_sidebar_header {
+        height: 56px;
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+        .dsl_brand_box {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            text-decoration: none;
+
+            .dsl_brand_logo_icon {
+                width: 36px;
+                height: 36px;
+                background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+                border-radius: 9px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 19px;
+                font-weight: 800;
+                color: #ffffff;
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+                flex-shrink: 0;
+            }
+
+            .dsl_brand_info {
+                display: flex;
+                flex-direction: column;
+
+                .dsl_brand_name {
+                    font-size: 15px;
+                    font-weight: 800;
+                    letter-spacing: -0.3px;
+                    color: #ffffff;
+                    line-height: 1.2;
+                }
+
+                .dsl_brand_tag {
+                    font-size: 9px;
+                    font-weight: 700;
+                    color: #93c5fd;
+                    letter-spacing: 0.6px;
+                }
+            }
+        }
+
+        .dsl_sidebar_toggle_btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #94a3b8;
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.18);
+                color: #ffffff;
+            }
+        }
+    }
+
+    // Scrollable Accordion Navigation Area
+    .dsl_sidebar_scroll {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 14px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+
+        &::-webkit-scrollbar {
+            width: 4px;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+        }
+
+        // Standalone Item (Dashboard)
+        .dsl_nav_single {
+            a {
+                display: flex;
+                align-items: center;
+                padding: 10px 12px;
+                border-radius: 10px;
+                color: #cbd5e1;
+                text-decoration: none;
+                font-size: 13.5px;
+                font-weight: 600;
+                transition: all 0.18s ease;
+
+                .dsl_nav_icon {
+                    font-size: 16px;
+                    width: 22px;
+                    text-align: center;
+                    margin-right: 11px;
+                    color: #94a3b8;
+                    transition: color 0.18s ease;
+                    flex-shrink: 0;
+                }
+
+                &:hover {
+                    background: rgba(255, 255, 255, 0.07);
+                    color: #ffffff;
+
+                    .dsl_nav_icon {
+                        color: #60a5fa;
+                    }
+                }
+            }
+
+            &.active a {
+                background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+                color: #ffffff;
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.32);
+
+                .dsl_nav_icon {
+                    color: #ffffff;
+                }
+            }
+        }
+
+        // Collapsible Accordion Group (matches Image 2 inside Dark Shell!)
+        .dsl_accordion_group {
+            border-radius: 12px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+
+            // Open Group Elevated Soft Glass Container
+            &.is-open {
+                background: rgba(255, 255, 255, 0.04);
+                border-color: rgba(255, 255, 255, 0.07);
+                padding-bottom: 6px;
+
+                .dsl_group_header {
+                    color: #ffffff;
+
+                    .dsl_nav_icon {
+                        color: #60a5fa;
+                    }
+
+                    .dsl_group_chevron {
+                        color: #cbd5e1;
+                    }
+                }
+            }
+
+            // Closed group that holds the active screen gets a subtle glow
+            &.has-active:not(.is-open) .dsl_group_header {
+                background: rgba(37, 99, 235, 0.16);
+                color: #93c5fd;
+
+                .dsl_nav_icon {
+                    color: #60a5fa;
+                }
+            }
+
+            .dsl_group_header {
+                width: 100%;
+                background: transparent;
+                border: none;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 12px;
+                border-radius: 10px;
+                color: #cbd5e1;
+                font-size: 13.5px;
+                font-weight: 600;
+                cursor: pointer;
+                text-align: left;
+                transition: all 0.18s ease;
+
+                .dsl_group_left {
+                    display: flex;
+                    align-items: center;
+                    min-width: 0;
+                }
+
+                .dsl_nav_icon {
+                    font-size: 16px;
+                    width: 22px;
+                    text-align: center;
+                    margin-right: 11px;
+                    color: #94a3b8;
+                    transition: color 0.18s ease;
+                    flex-shrink: 0;
+                }
+
+                .dsl_nav_label {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .dsl_group_chevron {
+                    font-size: 12px;
+                    color: #64748b;
+                    transition: transform 0.2s ease, color 0.2s ease;
+                    flex-shrink: 0;
+                    margin-left: 6px;
+                }
+
+                &:hover {
+                    background: rgba(255, 255, 255, 0.07);
+                    color: #ffffff;
+
+                    .dsl_nav_icon {
+                        color: #60a5fa;
+                    }
+                    .dsl_group_chevron {
+                        color: #e2e8f0;
+                    }
+                }
+            }
+
+            // Indented Child Sub-Menu List with Distinct Icons
+            .dsl_sub_list {
+                list-style: none;
+                padding: 3px 8px 2px 10px;
+                margin: 2px 0 0 0;
+                display: flex;
+                flex-direction: column;
+                gap: 3px;
+
+                li.dsl_sub_section_title {
+                    margin-top: 8px;
+                    margin-bottom: 2px;
+                    padding: 4px 12px 2px 14px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+                    &:first-child {
+                        margin-top: 2px;
+                        border-top: none;
+                    }
+
+                    span {
+                        font-size: 10px;
+                        font-weight: 700;
+                        letter-spacing: 0.8px;
+                        text-transform: uppercase;
+                        color: #60a5fa;
+                        opacity: 0.85;
+                    }
+                }
+
+                li {
+                    a {
+                        display: flex;
+                        align-items: center;
+                        gap: 11px;
+                        padding: 8px 12px 8px 14px;
+                        border-radius: 9px;
+                        border-left: 3px solid transparent;
+                        color: #94a3b8;
+                        text-decoration: none;
+                        font-size: 13px;
+                        font-weight: 500;
+                        transition: all 0.16s ease;
+
+                        .dsl_sub_icon {
+                            font-size: 14.5px;
+                            width: 20px;
+                            text-align: center;
+                            color: #64748b;
+                            transition: color 0.16s ease, transform 0.16s ease;
+                            flex-shrink: 0;
+                        }
+
+                        span {
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        }
+
+                        &:hover {
+                            background: rgba(255, 255, 255, 0.07);
+                            color: #f8fafc;
+
+                            .dsl_sub_icon {
+                                color: #60a5fa;
+                                transform: scale(1.08);
+                            }
+                        }
+                    }
+
+                    // Active Sub-Item Pill with Vibrant Royal-Blue Gradient & Crisp White Icon
+                    &.active a {
+                        background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+                        border-left-color: #93c5fd;
+                        color: #ffffff;
+                        font-weight: 600;
+                        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.32);
+
+                        .dsl_sub_icon {
+                            color: #ffffff;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Footer User Card
+    .dsl_sidebar_footer {
+        padding: 14px 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(0, 0, 0, 0.18);
+
+        .dsl_user_card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+
+            .dsl_user_avatar {
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                border: 2px solid rgba(255, 255, 255, 0.2);
+                object-fit: cover;
+                flex-shrink: 0;
+            }
+
+            .dsl_user_meta {
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+
+                .dsl_user_name {
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #ffffff;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                }
+
+                .dsl_user_role {
+                    font-size: 10.5px;
+                    color: #94a3b8;
+                }
+            }
+        }
+
+        .dsl_logout_btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: rgba(239, 68, 68, 0.15);
+                color: #f87171;
+            }
+        }
+    }
+}

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Debrand Web Layout (Favicon and Title) -->
+    <template id="web_layout_dsl_hrms" inherit_id="web.layout" name="DSL HRMS Web Layout">
+        <xpath expr="//title" position="replace">
+            <title t-esc="title or 'DSL Enterprise HRMS'"/>
+        </xpath>
+        <xpath expr="//link[@rel='shortcut icon']" position="replace">
+            <link type="image/x-icon" rel="shortcut icon" href="/DSL_HRMS_theme/static/img/favicon.ico"/>
+        </xpath>
+    </template>
+
+    <!-- Remove Brand Promotion ("Powered by Odoo") -->
+    <template id="brand_promotion_dsl" inherit_id="web.brand_promotion" name="DSL HRMS Brand Promotion">
+        <xpath expr="//div" position="replace">
+            <div class="o_brand_promotion_dsl text-muted small text-center py-2">
+                <span>© 2026 DSL Enterprise HRMS. All Rights Reserved.</span>
+            </div>
+        </xpath>
+    </template>
+</odoo>
