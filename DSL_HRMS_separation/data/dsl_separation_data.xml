@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_dsl_employee_separation" model="ir.sequence">
+            <field name="name">Employee Separation &amp; F&amp;F</field>
+            <field name="code">dsl.employee.separation</field>
+            <field name="prefix">SEP-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>
+

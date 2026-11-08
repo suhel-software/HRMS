@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_dsl_separation_pack" model="ir.actions.report">
+        <field name="name">Experience Certificate &amp; F&amp;F Settlement Pack</field>
+        <field name="model">dsl.employee.separation</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">DSL_HRMS_separation.report_dsl_separation_pack_doc</field>
+        <field name="report_file">DSL_HRMS_separation.report_dsl_separation_pack_doc</field>
+        <field name="print_report_name">'Release_FnF_%s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_dsl_employee_separation"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_dsl_separation_pack_doc">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-size: 14px; line-height: 1.65;">
+                        <div class="d-flex justify-content-between mb-3">
+                            <div><strong>Ref:</strong> <span t-field="o.name"/></div>
+                            <div><strong>Date:</strong> <span t-esc="o.released_date or o.actual_last_working_day"/></div>
+                        </div>
+
+                        <h3 class="text-center fw-bold text-uppercase mb-4" style="text-decoration: underline;">
+                            Experience &amp; Release Certificate
+                        </h3>
+
+                        <p>
+                            This is to certify that <strong><span t-field="o.employee_id.name"/></strong>
+                            (Employee ID: <strong><span t-esc="o.employee_id.employee_code or 'N/A'"/></strong>)
+                            served at <strong><span t-field="o.company_id.name"/></strong>
+                            from <strong><span t-field="o.joining_date"/></strong> to
+                            <strong><span t-field="o.actual_last_working_day"/></strong>, holding the last designation of
+                            <strong><span t-esc="o.job_id.name or 'Executive'"/></strong> in the
+                            <strong><span t-esc="o.department_id.name or 'Operations'"/></strong> Department.
+                        </p>
+                        <p>
+                            Following completion of multi-departmental clearance formalities, the employee has been released
+                            from official duties effective close of business on <strong><span t-field="o.actual_last_working_day"/></strong>.
+                            We wish success in all future endeavors.
+                        </p>
+
+                        <hr class="my-4"/>
+
+                        <h4 class="fw-bold mb-3">Full &amp; Final (F&amp;F) Settlement Statement</h4>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Final Payables (+)</th>
+                                    <th class="text-end">Amount (৳)</th>
+                                    <th>Recoveries / Deductions (-)</th>
+                                    <th class="text-end">Amount (৳)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Unpaid Salary (<span t-field="o.unpaid_salary_days"/> days)</td>
+                                    <td class="text-end"><span t-field="o.unpaid_salary_amount"/></td>
+                                    <td>Notice Shortfall Recovery (<span t-field="o.notice_shortfall_days"/> days)</td>
+                                    <td class="text-end"><span t-field="o.notice_shortfall_recovery"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Earned Leave Encashment (<span t-field="o.encashable_el_days"/> days)</td>
+                                    <td class="text-end"><span t-field="o.leave_encashment_amount"/></td>
+                                    <td>Outstanding Loan / Advance Recovery</td>
+                                    <td class="text-end"><span t-field="o.outstanding_loan_recovery"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Vested Provident Fund (PF)</td>
+                                    <td class="text-end"><span t-field="o.vested_pf_payable"/></td>
+                                    <td>Asset / IOU Recovery</td>
+                                    <td class="text-end"><span t-field="o.asset_damage_recovery"/></td>
+                                </tr>
+                                <tr>
+                                    <td>Statutory Gratuity Benefit</td>
+                                    <td class="text-end"><span t-field="o.gratuity_payable"/></td>
+                                    <td>Final Tax / Other Deduction</td>
+                                    <td class="text-end"><span t-field="o.tax_or_other_deduction"/></td>
+                                </tr>
+                                <tr class="fw-bold table-light">
+                                    <td>Total Payables</td>
+                                    <td class="text-end"><span t-field="o.total_fnf_additions"/></td>
+                                    <td>Total Recoveries</td>
+                                    <td class="text-end"><span t-field="o.total_fnf_deductions"/></td>
+                                </tr>
+                                <tr class="fw-bold">
+                                    <td colspan="3" class="text-end">Net Full &amp; Final Settlement Payable:</td>
+                                    <td class="text-end"><span t-field="o.net_settlement_payable"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div class="row mt-5 pt-3">
+                            <div class="col-4 text-center">_______________________<br/>Employee Signature</div>
+                            <div class="col-4 text-center">_______________________<br/>Head of Finance</div>
+                            <div class="col-4 text-center">_______________________<br/>Head of Human Resources</div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
+

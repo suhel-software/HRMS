@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_dsl_employee_separation_list" model="ir.ui.view">
+        <field name="name">dsl.employee.separation.list</field>
+        <field name="model">dsl.employee.separation</field>
+        <field name="arch" type="xml">
+            <list string="Resignation, Exit Clearance &amp; Full-and-Final Settlements" decoration-success="state == 'settled_released'">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="separation_type" widget="badge"/>
+                <field name="submission_date"/>
+                <field name="actual_last_working_day"/>
+                <field name="all_cleared" widget="boolean_toggle" readonly="1"/>
+                <field name="total_fnf_additions" optional="show"/>
+                <field name="total_fnf_deductions" optional="show"/>
+                <field name="net_settlement_payable" decoration-bf="1"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="state" widget="badge"
+                       decoration-info="state in ('submitted', 'notice_clearance')"
+                       decoration-warning="state == 'fnf_computed'"
+                       decoration-primary="state == 'approved'"
+                       decoration-success="state == 'settled_released'"
+                       decoration-muted="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_employee_separation_form" model="ir.ui.view">
+        <field name="name">dsl.employee.separation.form</field>
+        <field name="model">dsl.employee.separation</field>
+        <field name="arch" type="xml">
+            <form string="Resignation, Exit Clearance &amp; Full-and-Final Settlement">
+                <header>
+                    <button name="action_submit" string="Submit Resignation / Notice" type="object"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_start_clearance" string="Initiate 5-Dept Clearance" type="object"
+                            class="btn-primary" invisible="state != 'submitted'"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <button name="action_mark_all_cleared" string="Mark All Depts Cleared" type="object"
+                            class="btn-secondary" invisible="state not in ('submitted', 'notice_clearance', 'fnf_computed') or all_cleared"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <button name="action_compute_final_settlement" string="Compute Automated F&amp;F Settlement" type="object"
+                            class="btn-primary" invisible="state not in ('submitted', 'notice_clearance', 'fnf_computed')"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <button name="action_approve_fnf" string="Approve F&amp;F Statement" type="object"
+                            class="btn-primary" invisible="state != 'fnf_computed'"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"/>
+                    <button name="action_settle_and_release" string="Settle Dues &amp; Issue Final Release" type="object"
+                            class="btn-success" invisible="state != 'approved'"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"/>
+                    <button name="action_print_release_certificate" string="Print Experience &amp; F&amp;F Pack" type="object"
+                            class="btn-secondary" invisible="state not in ('fnf_computed', 'approved', 'settled_released')"/>
+                    <button name="action_cancel" string="Withdraw / Cancel" type="object"
+                            invisible="state in ('settled_released', 'cancelled')"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,notice_clearance,fnf_computed,approved,settled_released"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Separation &amp; F&amp;F Case Ref."/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Separation Type">
+                            <field name="employee_id" readonly="state == 'settled_released'"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state == 'settled_released'"/>
+                            <field name="branch_id" readonly="state == 'settled_released'"/>
+                            <field name="accounting_company_id" groups="base.group_multi_company"/>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                            <field name="separation_type" readonly="state == 'settled_released'"/>
+                        </group>
+                        <group string="Notice Period &amp; Release Dates (BD Labour Act)">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="joining_date" readonly="state == 'settled_released'"/>
+                            <field name="submission_date" readonly="state == 'settled_released'"/>
+                            <field name="notice_period_days" readonly="state == 'settled_released'"/>
+                            <field name="expected_last_working_day"/>
+                            <field name="actual_last_working_day" readonly="state == 'settled_released'"/>
+                            <field name="served_notice_days"/>
+                            <field name="notice_shortfall_days" decoration-danger="notice_shortfall_days &gt; 0 and not waive_notice_shortfall"/>
+                            <field name="waive_notice_shortfall" readonly="state == 'settled_released'"/>
+                            <field name="released_date" invisible="not released_date"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="1. Multi-Department Exit Clearance" name="clearance">
+                            <div class="mb-2">
+                                <button name="action_generate_clearance_checklist" string="Generate Standard 5-Dept Checklist"
+                                        type="object" class="btn-sm btn-outline-primary"
+                                        invisible="clearance_line_ids"/>
+                            </div>
+                            <field name="clearance_line_ids" readonly="state == 'settled_released'">
+                                <list editable="bottom" decoration-success="is_cleared">
+                                    <field name="department_area"/>
+                                    <field name="checklist_item"/>
+                                    <field name="responsible_user_id" widget="many2one_avatar_user"/>
+                                    <field name="is_cleared" widget="boolean_toggle"/>
+                                    <field name="cleared_date"/>
+                                    <field name="remarks" placeholder="Handover / asset serial / clearance note..."/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="2. Automated Full &amp; Final (F&amp;F) Settlement" name="fnf_settlement">
+                            <group>
+                                <group string="Salary Snapshot &amp; Final Payables (+)">
+                                    <field name="last_gross_salary" readonly="state == 'settled_released'"/>
+                                    <field name="last_basic_salary" readonly="state == 'settled_released'"/>
+                                    <field name="unpaid_salary_days" readonly="state == 'settled_released'"/>
+                                    <field name="unpaid_salary_amount" readonly="state == 'settled_released'"/>
+                                    <field name="encashable_el_days" readonly="state == 'settled_released'"/>
+                                    <field name="leave_encashment_amount" readonly="state == 'settled_released'"/>
+                                    <field name="vested_pf_payable" readonly="state == 'settled_released'"/>
+                                    <field name="gratuity_payable" readonly="state == 'settled_released'"/>
+                                    <field name="other_addition_amount" readonly="state == 'settled_released'"/>
+                                    <field name="total_fnf_additions" decoration-bf="1"/>
+                                </group>
+                                <group string="Final Recoveries / Deductions (-) &amp; Net Settlement">
+                                    <field name="notice_shortfall_recovery" readonly="state == 'settled_released'"/>
+                                    <field name="outstanding_loan_recovery" readonly="state == 'settled_released'"/>
+                                    <field name="asset_damage_recovery" readonly="state == 'settled_released'"/>
+                                    <field name="tax_or_other_deduction" readonly="state == 'settled_released'"/>
+                                    <field name="total_fnf_deductions" decoration-bf="1"/>
+                                    <separator string="Net Payable / (Recoverable)"/>
+                                    <field name="net_settlement_payable" decoration-bf="1" decoration-success="net_settlement_payable &gt;= 0" decoration-danger="net_settlement_payable &lt; 0"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="3. Separation Reason &amp; Exit Interview" name="exit_interview">
+                            <group>
+                                <field name="reason" placeholder="Employee's stated reason for resignation / separation..."/>
+                                <field name="exit_interview_summary" placeholder="Confidential HR exit interview observations, retention feedback &amp; rehire eligibility..."/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_employee_separation" model="ir.actions.act_window">
+        <field name="name">Resignation, Exit Clearance &amp; F&amp;F</field>
+        <field name="res_model">dsl.employee.separation</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Populate Tab 17 "Resignation & Exit" on Employee Profile -->
+    <record id="view_employee_form_inherit_dsl_separation" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.separation</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="DSL_HRMS_employee.view_employee_form_inherit_dsl_dossier"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='dsl_tab_17_exit']" position="inside">
+                <separator string="Resignation, Notice Period, Exit Clearance &amp; Final Settlement (DSL_HRMS_employee_resignation / DSL_HRMS_employee_exit)"/>
+                <field name="dsl_separation_ids" context="{'default_employee_id': id}">
+                    <list decoration-success="state == 'settled_released'">
+                        <field name="name" decoration-bf="1"/>
+                        <field name="separation_type" widget="badge"/>
+                        <field name="submission_date"/>
+                        <field name="notice_period_days"/>
+                        <field name="actual_last_working_day"/>
+                        <field name="all_cleared" widget="boolean_toggle"/>
+                        <field name="currency_id" column_invisible="1"/>
+                        <field name="total_fnf_additions"/>
+                        <field name="total_fnf_deductions"/>
+                        <field name="net_settlement_payable" decoration-bf="1"/>
+                        <field name="state" widget="badge"
+                               decoration-success="state == 'settled_released'"
+                               decoration-info="state in ('submitted', 'notice_clearance', 'fnf_computed')"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+
+    <menuitem id="menu_dsl_employee_separation"
+              name="Exit Clearance &amp; Final Settlement"
+              parent="DSL_HRMS_core.menu_dsl_hrms_self_service_root"
+              action="action_dsl_employee_separation"
+              sequence="50"/>
+</odoo>
+

@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_sep_user,dsl.employee.separation.user,model_dsl_employee_separation,base.group_user,1,1,1,0
+access_dsl_sep_officer,dsl.employee.separation.officer,model_dsl_employee_separation,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_sep_manager,dsl.employee.separation.manager,model_dsl_employee_separation,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_sep_clr_user,dsl.separation.clearance.line.user,model_dsl_separation_clearance_line,base.group_user,1,1,1,0
+access_dsl_sep_clr_officer,dsl.separation.clearance.line.officer,model_dsl_separation_clearance_line,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+
