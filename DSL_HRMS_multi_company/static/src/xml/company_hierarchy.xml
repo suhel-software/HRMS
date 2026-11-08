@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Recursive Company Tree Node Template (Inspired by Reference Image 1) -->
+    <t t-name="DSL_HRMS_multi_company.CompanyTreeNode">
+        <li class="dsl_tree_li">
+            <div class="dsl_company_node_card"
+                 t-att-class="{'is_mother_card': node.is_mother}"
+                 t-on-click="() => this.openCompanyForm(node.id)">
+
+                <!-- Top Row: Company Name + Country Flag -->
+                <div class="dsl_comp_card_top">
+                    <div class="dsl_comp_title_wrap">
+                        <span class="dsl_comp_name" t-esc="node.name"/>
+                        <span class="dsl_comp_subtitle">
+                            <t t-esc="node.country_name"/> · <t t-esc="node.currency_name"/> · Separate COA
+                        </span>
+                    </div>
+                    <img t-att-src="node.flag_url"
+                         t-att-alt="node.country_code"
+                         class="dsl_comp_flag"
+                         onerror="this.style.display='none'"/>
+                </div>
+
+                <!-- Middle Badges: Entity Type, Short Code & License Status -->
+                <div class="dsl_comp_badges">
+                    <span class="dsl_entity_pill" t-att-class="node.company_type">
+                        <t t-esc="node.company_type_label"/>
+                    </span>
+                    <span class="dsl_code_pill" t-esc="node.short_code"/>
+                    <span t-if="node.trade_license_status === 'expired'" class="dsl_lic_dot danger" title="Trade License Expired">● Expired</span>
+                    <span t-elif="node.trade_license_status === 'expiring_soon'" class="dsl_lic_dot warning" title="Trade License Expiring Soon">● Expiring</span>
+                </div>
+
+                <!-- Operational Branches under this Company (with Shared vs Separate COA pill) -->
+                <div t-if="node.branches and node.branches.length" class="dsl_comp_branch_list" t-on-click.stop="">
+                    <div t-foreach="node.branches" t-as="br" t-key="br.id"
+                         class="dsl_comp_branch_chip"
+                         t-on-click="() => this.openBranchForm(br.id)"
+                         t-att-title="br.name + ' (' + br.coa_label + ')'">
+                        <span class="br_name"><i class="fa fa-map-marker me-1"/> <t t-esc="br.code"/>: <t t-esc="br.name"/></span>
+                        <span class="br_coa" t-att-class="br.coa_mode" t-esc="br.coa_label"/>
+                    </div>
+                </div>
+
+                <!-- Bottom Metrics -->
+                <div class="dsl_comp_metrics">
+                    <span title="Active Workforce">
+                        <i class="fa fa-users me-1 text-primary"/> <t t-esc="node.employee_count"/> Staff
+                    </span>
+                    <span title="Departments">
+                        <i class="fa fa-sitemap me-1 text-info"/> <t t-esc="node.department_count"/> Depts
+                    </span>
+                    <span t-if="node.has_branch_module" title="Branches &amp; Plants">
+                        <i class="fa fa-map-marker me-1 text-success"/> <t t-esc="node.branch_count"/> Branches
+                    </span>
+                    <span t-else="" title="Authorized Users">
+                        <i class="fa fa-key me-1 text-secondary"/> <t t-esc="node.user_count"/> Users
+                    </span>
+                </div>
+
+                <div class="dsl_comp_card_actions" t-if="state.canManageCompanies" t-on-click.stop="">
+                    <button class="dsl_comp_mini_btn" t-on-click="() => this.openCompanyForm(node.id)" title="Edit Company, COA &amp; Legal Info">
+                        <i class="fa fa-sliders me-1"/> Configure
+                    </button>
+                    <button t-if="node.has_branch_module" class="dsl_comp_mini_btn" t-on-click="() => this.createCompanyBranch(node.id)" title="Add Branch / Factory under this Company">
+                        <i class="fa fa-plus me-1"/> Branch
+                    </button>
+                    <button class="dsl_comp_mini_btn primary" t-on-click="() => this.createChildCompany(node.id)" title="Add Subsidiary, Sister Concern or Joint Venture">
+                        <i class="fa fa-plus me-1"/> Sub-Co
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recursive Children -->
+            <ul t-if="node.children and node.children.length" class="dsl_tree_ul">
+                <t t-foreach="node.children" t-as="childNode" t-key="childNode.id">
+                    <t t-call="DSL_HRMS_multi_company.CompanyTreeNode">
+                        <t t-set="node" t-value="childNode"/>
+                    </t>
+                </t>
+            </ul>
+        </li>
+    </t>
+
+    <!-- Main Company Hierarchy Studio Screen -->
+    <t t-name="DSL_HRMS_multi_company.CompanyHierarchyStudio">
+        <div class="dsl_company_studio_wrap">
+            <!-- Loading Spinner -->
+            <div t-if="state.loading" class="dsl_studio_loading">
+                <div class="spinner-border text-primary" role="status"/>
+                <span class="mt-2 text-muted">Loading Corporate Group Structure...</span>
+            </div>
+
+            <div t-else="" class="dsl_company_studio_content">
+                <!-- KPI Summary Ribbon -->
+                <div class="dsl_comp_kpi_strip">
+                    <div class="dsl_comp_kpi_item">
+                        <div class="dsl_kpi_icon holding"><i class="fa fa-university"/></div>
+                        <div>
+                            <div class="dsl_kpi_num" t-esc="state.summary.total_entities || 0"/>
+                            <div class="dsl_kpi_lbl">Accessible Entities (Separate COA)</div>
+                        </div>
+                    </div>
+                    <div class="dsl_comp_kpi_item">
+                        <div class="dsl_kpi_icon sub"><i class="fa fa-building-o"/></div>
+                        <div>
+                            <div class="dsl_kpi_num" t-esc="state.summary.subsidiary_count || 0"/>
+                            <div class="dsl_kpi_lbl">Subsidiaries, Sisters &amp; JVs</div>
+                        </div>
+                    </div>
+                    <div class="dsl_comp_kpi_item">
+                        <div class="dsl_kpi_icon staff"><i class="fa fa-users"/></div>
+                        <div>
+                            <div class="dsl_kpi_num" t-esc="state.summary.total_employees || 0"/>
+                            <div class="dsl_kpi_lbl">Accessible Workforce</div>
+                        </div>
+                    </div>
+                    <div class="dsl_comp_kpi_item" t-if="state.hasBranchModule">
+                        <div class="dsl_kpi_icon branch"><i class="fa fa-map-signs"/></div>
+                        <div>
+                            <div class="dsl_kpi_num" t-esc="state.summary.total_branches || 0"/>
+                            <div class="dsl_kpi_lbl">Branches / Plants</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Card (Reference Image 1 Signature Card) -->
+                <div class="dsl_companies_main_card">
+                    <!-- Header Bar -->
+                    <div class="dsl_companies_card_header">
+                        <div class="dsl_header_title_group">
+                            <h2>Companies</h2>
+                            <span class="dsl_header_sub">Mother Company, Subsidiaries, Sister Concerns &amp; Joint Ventures (Separate COA &amp; Access)</span>
+                        </div>
+
+                        <div class="dsl_header_controls">
+                            <!-- Search Input -->
+                            <div class="dsl_comp_search_box">
+                                <i class="fa fa-search"/>
+                                <input type="text"
+                                       placeholder="Search company, code or TIN..."
+                                       t-model="state.searchQuery"/>
+                            </div>
+
+                            <!-- View Mode Switcher -->
+                            <div class="dsl_view_segmented">
+                                <button t-att-class="{'active': state.viewMode === 'tree'}"
+                                        t-on-click="() => this.setViewMode('tree')">
+                                    <i class="fa fa-sitemap me-1"/> Tree View
+                                </button>
+                                <button t-att-class="{'active': state.viewMode === 'table'}"
+                                        t-on-click="() => this.setViewMode('table')">
+                                    <i class="fa fa-list-ul me-1"/> Directory
+                                </button>
+                            </div>
+
+                            <!-- Users & Company Access Control Button -->
+                            <button t-if="state.canManageCompanies"
+                                    class="dsl_btn_users_access"
+                                    t-on-click="() => this.openUsersAccess()"
+                                    title="Manage Company Users &amp; Sub-Company Exclusions">
+                                <i class="fa fa-key"/> Users &amp; Access
+                            </button>
+
+                            <!-- Signature '+ New Company' Button from Reference Image 1 -->
+                            <button t-if="state.canManageCompanies"
+                                    class="dsl_btn_new_company"
+                                    t-on-click="() => this.createNewCompany()">
+                                <span class="plus_sign">+</span> New Company
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mode 1: Interactive Orthogonal Hierarchy Tree -->
+                    <div t-if="state.viewMode === 'tree' and !state.searchQuery.trim()" class="dsl_tree_canvas">
+                        <ul class="dsl_tree_ul root_ul" t-if="state.roots.length">
+                            <t t-foreach="state.roots" t-as="rootNode" t-key="rootNode.id">
+                                <t t-call="DSL_HRMS_multi_company.CompanyTreeNode">
+                                    <t t-set="node" t-value="rootNode"/>
+                                </t>
+                            </t>
+                        </ul>
+                        <div t-else="" class="text-center py-5 text-muted">
+                            No accessible companies found.
+                        </div>
+                    </div>
+
+                    <!-- Mode 2: Directory Table (or Filtered Search Results) -->
+                    <div t-else="" class="dsl_comp_table_wrap">
+                        <table class="dsl_modern_table">
+                            <thead>
+                                <tr>
+                                    <th>Company / Entity</th>
+                                    <th>Classification</th>
+                                    <th>Mother Company</th>
+                                    <th>COA · Currency</th>
+                                    <th>e-TIN / BIN</th>
+                                    <th>Staff</th>
+                                    <th>Users</th>
+                                    <th t-if="state.hasBranchModule">Branches</th>
+                                    <th class="text-end" t-if="state.canManageCompanies">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="filteredCompanies" t-as="comp" t-key="comp.id"
+                                    t-on-click="() => this.openCompanyForm(comp.id)" class="clickable_row">
+                                    <td>
+                                        <div class="fw-bold text-dark" t-esc="comp.name"/>
+                                        <div class="small text-muted" t-esc="comp.short_code"/>
+                                    </td>
+                                    <td>
+                                        <span class="dsl_entity_pill" t-att-class="comp.company_type" t-esc="comp.company_type_label"/>
+                                    </td>
+                                    <td>
+                                        <span t-if="comp.parent_name" t-esc="comp.parent_name"/>
+                                        <span t-else="" class="text-muted fst-italic">Root (Mother Company)</span>
+                                    </td>
+                                    <td>
+                                        <img t-att-src="comp.flag_url" class="dsl_table_flag me-2" alt=""/>
+                                        <strong t-esc="comp.currency_name"/> · <span class="text-success small fw-semibold">Separate COA</span>
+                                    </td>
+                                    <td>
+                                        <div t-if="comp.tin_number" class="small">TIN: <t t-esc="comp.tin_number"/></div>
+                                        <div t-if="comp.bin_number" class="small text-muted">BIN: <t t-esc="comp.bin_number"/></div>
+                                        <span t-if="!comp.tin_number and !comp.bin_number" class="text-muted small">—</span>
+                                    </td>
+                                    <td><span class="badge rounded-pill text-bg-light" t-esc="comp.employee_count"/></td>
+                                    <td><span class="badge rounded-pill text-bg-light" t-esc="comp.user_count"/></td>
+                                    <td t-if="state.hasBranchModule"><span class="badge rounded-pill text-bg-light" t-esc="comp.branch_count"/></td>
+                                    <td class="text-end" t-if="state.canManageCompanies" t-on-click.stop="">
+                                        <button class="dsl_comp_mini_btn me-1" t-on-click="() => this.openCompanyForm(comp.id)">
+                                            Manage
+                                        </button>
+                                        <button class="dsl_comp_mini_btn primary" t-on-click="() => this.createChildCompany(comp.id)">
+                                            + Sub
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

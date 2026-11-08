@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Inherit res.company Form View for BD Legal Compliance, Separate COA & Group Hierarchy -->
+    <record id="view_company_form_inherit_dsl_hrms" model="ir.ui.view">
+        <field name="name">res.company.form.dsl.hrms</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <!-- Smart Stat Buttons -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <field name="has_branch_module" invisible="1"/>
+                <button class="oe_stat_button"
+                        name="action_view_company_employees"
+                        type="object"
+                        icon="fa-users">
+                    <field string="Employees" name="employee_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button"
+                        name="action_view_company_departments"
+                        type="object"
+                        icon="fa-sitemap">
+                    <field string="Departments" name="department_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button"
+                        name="action_view_company_branches"
+                        type="object"
+                        invisible="not has_branch_module"
+                        icon="fa-map-marker">
+                    <field string="Branches" name="dsl_company_branch_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button"
+                        name="action_view_subsidiaries"
+                        type="object"
+                        icon="fa-building-o">
+                    <field string="Sub-Companies" name="subsidiary_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button"
+                        name="action_view_company_users"
+                        type="object"
+                        icon="fa-key">
+                    <field string="User Access" name="user_access_count" widget="statinfo"/>
+                </button>
+            </xpath>
+
+            <!-- Replace Odoo's tax-branch parent_id with Corporate Group Parent (100% Separate COA) -->
+            <xpath expr="//field[@name='parent_id']" position="replace">
+                <field name="parent_id" invisible="1"/>
+                <field name="short_code" placeholder="e.g. DSL-HQ / DSL-TECH"/>
+                <field name="company_type" widget="radio" options="{'horizontal': true}"/>
+                <field name="group_parent_id"
+                       string="Mother / Holding Company"
+                       options="{'no_create': True}"
+                       domain="[('id', '!=', id)]"/>
+                <field name="independent_coa" readonly="1"/>
+                <field name="is_mother_company" invisible="1"/>
+            </xpath>
+
+            <!-- Hide Odoo's tax-branch page & add Corporate Sub-Companies, Sister Concerns & JVs page -->
+            <xpath expr="//page[@name='branches']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Sub-Companies, Sister Concerns &amp; JVs" name="dsl_group_subsidiaries">
+                    <field name="group_child_ids" context="{'default_group_parent_id': id, 'default_company_type': 'subsidiary'}">
+                        <list>
+                            <field name="short_code" decoration-bf="1"/>
+                            <field name="name" decoration-bf="1"/>
+                            <field name="company_type" widget="badge"
+                                   decoration-primary="company_type == 'holding'"
+                                   decoration-info="company_type == 'subsidiary'"
+                                   decoration-success="company_type == 'sister'"
+                                   decoration-warning="company_type == 'associate'"/>
+                            <field name="currency_id"/>
+                            <field name="independent_coa" string="Separate COA"/>
+                            <field name="tin_number"/>
+                            <field name="trade_license_status" widget="badge"
+                                   decoration-success="trade_license_status == 'valid'"
+                                   decoration-warning="trade_license_status == 'expiring_soon'"
+                                   decoration-danger="trade_license_status == 'expired'"
+                                   decoration-muted="trade_license_status == 'not_set'"/>
+                        </list>
+                    </field>
+                </page>
+
+                <!-- Add Bangladesh Legal, Tax & Statutory Compliance Tab -->
+                <page string="BD Legal &amp; Compliance" name="dsl_bd_compliance">
+                    <group>
+                        <group string="Tax &amp; VAT Registration (NBR)">
+                            <field name="tin_number" placeholder="e.g. 5489-2310-8891"/>
+                            <field name="bin_number" placeholder="e.g. 001928374-0101"/>
+                            <field name="tax_zone" placeholder="e.g. Taxes Zone-04, Dhaka"/>
+                            <field name="tax_circle" placeholder="e.g. Circle-78 (Companies)"/>
+                        </group>
+                        <group string="Trade License, RJSC &amp; Labour Compliance">
+                            <field name="trade_license_no" placeholder="e.g. TRAD/DNCC/049182/2025"/>
+                            <field name="trade_license_expiry"/>
+                            <field name="trade_license_status" widget="badge"
+                                   decoration-success="trade_license_status == 'valid'"
+                                   decoration-warning="trade_license_status == 'expiring_soon'"
+                                   decoration-danger="trade_license_status == 'expired'"
+                                   decoration-muted="trade_license_status == 'not_set'"/>
+                            <field name="incorporation_no" placeholder="e.g. C-149281/2018"/>
+                            <field name="incorporation_date"/>
+                            <field name="factory_license_no" placeholder="e.g. DIFE/DHK/10942"/>
+                        </group>
+                    </group>
+                    <group string="Executive Leadership">
+                        <group>
+                            <field name="managing_director_id" widget="many2one_avatar_employee"/>
+                        </group>
+                        <group>
+                            <field name="hr_head_id" widget="many2one_avatar_employee"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 2. Native Odoo 18 Hierarchy View for res.company using group_parent_id / group_child_ids -->
+    <record id="view_company_hierarchy_dsl_hrms" model="ir.ui.view">
+        <field name="name">res.company.hierarchy.dsl.hrms</field>
+        <field name="model">res.company</field>
+        <field name="arch" type="xml">
+            <hierarchy parent_field="group_parent_id" child_field="group_child_ids" draggable="1">
+                <field name="name"/>
+                <field name="company_type"/>
+                <field name="country_id"/>
+                <field name="currency_id"/>
+                <field name="employee_count"/>
+                <field name="color"/>
+                <templates>
+                    <t t-name="hierarchy-box">
+                        <div t-attf-class="o_hierarchy_node_header d-flex justify-content-between align-items-center px-3 py-2 o_hierarchy_node_color_{{ record.color.raw_value }}">
+                            <span class="fw-bold text-truncate"><field name="name"/></span>
+                        </div>
+                        <div class="o_hierarchy_node_body d-flex flex-column p-2 gap-1">
+                            <div class="small text-muted">
+                                <field name="country_id"/> · <field name="currency_id"/> · Separate COA
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <span class="badge rounded-pill text-bg-light">
+                                    <field name="company_type"/>
+                                </span>
+                                <span class="small fw-semibold text-primary">
+                                    <t t-out="record.employee_count.raw_value"/> Staff
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </hierarchy>
+        </field>
+    </record>
+
+    <!-- 3. Modernized Kanban View for res.company -->
+    <record id="view_company_kanban_dsl_hrms" model="ir.ui.view">
+        <field name="name">res.company.kanban.dsl.hrms</field>
+        <field name="model">res.company</field>
+        <field name="priority">5</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="name"/>
+                <field name="short_code"/>
+                <field name="company_type"/>
+                <field name="group_parent_id"/>
+                <field name="country_id"/>
+                <field name="currency_id"/>
+                <field name="tin_number"/>
+                <field name="employee_count"/>
+                <field name="subsidiary_count"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <field name="name" class="fw-bold fs-5 text-dark d-block"/>
+                                <span class="text-muted small">
+                                    <field name="country_id"/> · <field name="currency_id"/> · Separate COA
+                                </span>
+                            </div>
+                            <field name="company_type" widget="badge"
+                                   decoration-primary="company_type == 'holding'"
+                                   decoration-info="company_type == 'subsidiary'"
+                                   decoration-success="company_type == 'sister'"
+                                   decoration-warning="company_type == 'associate'"/>
+                        </div>
+                        <div class="small text-muted mb-2" t-if="record.group_parent_id.raw_value">
+                            <i class="fa fa-sitemap me-1" title="Mother Company"/> Mother Company: <field name="group_parent_id"/>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-auto small">
+                            <span><i class="fa fa-users text-primary me-1" title="Staff"/> <field name="employee_count"/> Staff</span>
+                            <span t-if="record.tin_number.raw_value" class="text-muted">TIN: <field name="tin_number"/></span>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- 4. Window Action (Directory / List / Kanban / Form / Native Hierarchy) -->
+    <record id="action_dsl_hrms_company_hierarchy" model="ir.actions.act_window">
+        <field name="name">Companies &amp; Legal Entities</field>
+        <field name="res_model">res.company</field>
+        <field name="view_mode">hierarchy,kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your Mother Company or Subsidiary Entity (Each with Separate COA)
+            </p>
+        </field>
+    </record>
+
+    <!-- 5. Owl 2 Interactive Visual Company Hierarchy Studio (Primary Action — Inspired by Ref Image 1) -->
+    <record id="action_dsl_hrms_company_tree_studio" model="ir.actions.client">
+        <field name="name">Companies &amp; Group Hierarchy</field>
+        <field name="tag">dsl_hrms_company_hierarchy_studio</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- 6. Menus under DSL HRMS Core -->
+    <menuitem id="menu_dsl_hrms_company_root"
+              name="Companies &amp; Group"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              sequence="15"/>
+
+    <menuitem id="menu_dsl_hrms_company_hierarchy"
+              name="Visual Group Hierarchy"
+              parent="menu_dsl_hrms_company_root"
+              action="action_dsl_hrms_company_tree_studio"
+              sequence="10"/>
+
+    <menuitem id="menu_dsl_hrms_company_directory"
+              name="Company Directory &amp; Compliance"
+              parent="menu_dsl_hrms_company_root"
+              action="action_dsl_hrms_company_hierarchy"
+              sequence="20"/>
+</odoo>

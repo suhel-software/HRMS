@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Inherit Full User Form View for Multi-Company, Role Templates & Per-User Granular Access -->
+    <record id="view_users_form_inherit_dsl_multi_company" model="ir.ui.view">
+        <field name="name">res.users.form.dsl.multi.company</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <!-- Always show Company & Branch section so admin can assign 1 or multiple companies anytime -->
+            <xpath expr="//page[@name='access_rights']/group[1]" position="attributes">
+                <attribute name="invisible">0</attribute>
+                <attribute name="name">dsl_company_branch_group</attribute>
+                <attribute name="string">1 · Company &amp; Branch Access Scope (Single or Multi-Company Access)</attribute>
+            </xpath>
+
+            <!-- Insert Role Templates + Per-User Custom Access Checkboxes right after Company & Branch Access Scope -->
+            <xpath expr="//page[@name='access_rights']/group[1]" position="after">
+                <group string="2 · Access Role Templates (Select One or Multiple Roles)" name="dsl_role_template_group">
+                    <group>
+                        <div class="alert alert-primary py-2 px-3 mb-2 d-flex align-items-center justify-content-between flex-wrap gap-2" colspan="2" role="status">
+                            <div>
+                                <i class="fa fa-shield me-2" title="Role Templates"/>
+                                <strong>Role Template Auto-Fill:</strong>
+                                Select one or multiple Role Templates below (e.g. <em>Employee + Accounts</em> or <em>HR Officer + Line Manager</em>).
+                                You can also increase or decrease individual accesses in Section 3 below!
+                            </div>
+                            <button name="action_open_role_templates_matrix"
+                                    type="object"
+                                    string="View / Edit Role Templates Matrix"
+                                    icon="fa-table"
+                                    class="btn btn-sm btn-primary"/>
+                        </div>
+                        <field name="dsl_role_template_ids"
+                               string="Assigned Role Template(s)"
+                               widget="many2many_checkboxes"
+                               domain="[('code', '!=', 'super_admin')] if not has_mother_company_access else []"
+                               colspan="2"/>
+                    </group>
+                    <group string="Active Role Summary &amp; Landing Workspace">
+                        <field name="dsl_role_badge_label" string="Active Role(s)" readonly="1"/>
+                        <field name="dsl_primary_dashboard"
+                               string="Primary Landing Dashboard"
+                               help="Choose which dashboard opens automatically when this user logs in."/>
+                        <field name="dsl_can_manage_settings"
+                               string="Settings Menu Access"
+                               widget="boolean_toggle"/>
+                        <field name="dsl_can_manage_company_users"
+                               string="Can Create &amp; Manage Company Users"
+                               widget="boolean_toggle"/>
+                        <field name="user_allow_system_modules"
+                               string="HRMS Modules (Apps) Access"
+                               widget="boolean_toggle"
+                               invisible="not has_mother_company_access"/>
+                    </group>
+                </group>
+
+                <group string="3 · Custom Per-User Access Controls (Increase / Decrease Individual Access)" name="dsl_custom_user_access_group" col="3">
+                    <group string="HR &amp; Workforce Modules">
+                        <field name="user_allow_organization" string="Organization &amp; Branches" widget="boolean_toggle"/>
+                        <field name="user_allow_recruitment" string="Recruitment &amp; ATS" widget="boolean_toggle"/>
+                        <field name="user_allow_employee_mgmt" string="Employee Management" widget="boolean_toggle"/>
+                        <field name="user_allow_attendance" string="Attendance &amp; Shift" widget="boolean_toggle"/>
+                        <field name="user_allow_leaves" string="Leave Management" widget="boolean_toggle"/>
+                        <field name="user_allow_performance" string="Performance &amp; 360° KPI" widget="boolean_toggle"/>
+                    </group>
+                    <group string="Payroll, Finance &amp; Reports">
+                        <field name="user_allow_payroll" string="Payroll &amp; Benefits" widget="boolean_toggle"/>
+                        <field name="user_allow_accounting" string="Accounting &amp; Vouchers" widget="boolean_toggle"/>
+                        <field name="user_allow_financial_reports" string="Financial Reports &amp; Ledgers" widget="boolean_toggle"/>
+                    </group>
+                    <group string="Portals &amp; Operations">
+                        <field name="user_allow_self_service" string="Self-Service &amp; Exit (ESS/MSS)" widget="boolean_toggle"/>
+                        <field name="user_allow_operations" string="Operations &amp; Factory" widget="boolean_toggle"/>
+                    </group>
+                </group>
+
+                <group string="4 · Force-Hide Main Menus (Hide Specific Main Menus Even If User Has Access)" name="dsl_hidden_menus_group">
+                    <div class="alert alert-warning py-2 px-3 mb-2" colspan="2" role="status">
+                        <i class="fa fa-eye-slash me-2" title="Force-Hide Main Menus"/>
+                        <strong>Force-Hide Main Menu(s):</strong>
+                        Select any Main Menu(s) from the list below. Even if this user has Role Template or Module access,
+                        any Main Menu selected here will be <strong>strictly hidden</strong> from their sidebar!
+                    </div>
+                    <field name="dsl_hidden_menu_ids"
+                           string="Select Main Menu(s) to Hide"
+                           widget="many2many_tags"
+                           options="{'no_create': True, 'color_field': 'color'}"
+                           placeholder="Click here to select Main Menus from the list to hide from this user..."
+                           colspan="2"/>
+                </group>
+
+                <separator string="5 · Detailed Odoo Module Security Groups (Advanced Fine-Tuning)"/>
+            </xpath>
+
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="has_mother_company_access" invisible="1"/>
+                <field name="dsl_effective_branch_count" invisible="1"/>
+
+                <!-- Mother / Holding Company Full Access Banner & Controls -->
+                <div class="alert alert-success py-2 px-3 mb-2 d-flex align-items-center gap-2"
+                     role="status"
+                     colspan="2"
+                     invisible="not has_mother_company_access or not auto_group_company_access">
+                    <i class="fa fa-check-circle fs-5"/>
+                    <span>
+                        <strong>Mother / Holding Company Full Access:</strong>
+                        Automatically has access to <strong>all Allowed Companies</strong> and
+                        <strong>all Accessible Branches</strong> across the Group (unless restricted below).
+                    </span>
+                </div>
+
+                <field name="auto_group_company_access"
+                       invisible="not has_mother_company_access"/>
+                <field name="dsl_effective_branch_ids"
+                       string="All Accessible Branches (Auto)"
+                       widget="many2many_tags"
+                       context="{'dsl_user_access_config': True}"
+                       readonly="1"
+                       invisible="not has_mother_company_access"/>
+                <field name="excluded_company_ids"
+                       widget="many2many_tags"
+                       options="{'no_create': True, 'color_field': 'color'}"
+                       domain="[('id', '!=', company_id)]"
+                       placeholder="Optional: Select sub-companies to block..."
+                       invisible="not has_mother_company_access or not auto_group_company_access"/>
+                <field name="dsl_excluded_branch_ids"
+                       widget="many2many_tags"
+                       options="{'no_create': True}"
+                       context="{'dsl_user_access_config': True}"
+                       domain="[('company_id', '!=', False)]"
+                       placeholder="Select 1, 2 or more branches to block from access..."
+                       invisible="not has_mother_company_access"/>
+
+                <!-- Subsidiary / Sister Concern / Associate-JV Strict Branch Lock Controls -->
+                <field name="dsl_branch_access_mode"
+                       widget="radio"
+                       invisible="has_mother_company_access"/>
+                <field name="dsl_branch_id"
+                       string="Home / Primary Branch"
+                       options="{'no_create': True}"
+                       context="{'dsl_user_access_config': True}"
+                       placeholder="Optional for Mother HQ (already accesses all branches); Required for single-branch lock"
+                       domain="[('company_id', 'in', company_ids)]"/>
+                <field name="dsl_branch_ids"
+                       widget="many2many_tags"
+                       options="{'no_create': True}"
+                       context="{'dsl_user_access_config': True}"
+                       domain="[('company_id', 'in', company_ids)]"
+                       placeholder="Select 1 branch (strict single-branch) or 2–3 branches (shared cluster)..."
+                       invisible="has_mother_company_access or dsl_branch_access_mode != 'selected'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 1B. Inherit Simple User Creation Form (Invite User Modal) -->
+    <record id="view_users_simple_form_inherit_dsl_multi_company" model="ir.ui.view">
+        <field name="name">res.users.simple.form.dsl.multi.company</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_simple_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="attributes">
+                <attribute name="groups">base.group_user</attribute>
+                <attribute name="options">{'no_create': True}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='company_id']" position="before">
+                <field name="company_ids"
+                       string="Allowed Companies"
+                       widget="many2many_tags"
+                       options="{'no_create': True, 'color_field': 'color'}"/>
+            </xpath>
+            <xpath expr="//field[@name='mobile']" position="after">
+                <field name="has_mother_company_access" invisible="1"/>
+                <field name="dsl_role_template_ids"
+                       string="Access Role Template(s)"
+                       widget="many2many_checkboxes"
+                       domain="[('code', '!=', 'super_admin')] if not has_mother_company_access else []"/>
+                <field name="dsl_primary_dashboard"
+                       string="Landing Dashboard"/>
+                <field name="dsl_hidden_menu_ids"
+                       string="Hide Main Menu(s)"
+                       widget="many2many_tags"
+                       options="{'no_create': True, 'color_field': 'color'}"
+                       placeholder="Optional: Select Main Menus to hide..."/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 2. Inherit User List View to show Company, Role Templates, Dashboard & Allowed Branches -->
+    <record id="view_users_tree_inherit_dsl_multi_company" model="ir.ui.view">
+        <field name="name">res.users.list.dsl.multi.company</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='company_id']" position="after">
+                <field name="dsl_role_template_ids"
+                       string="Role Templates"
+                       widget="many2many_tags"
+                       options="{'color_field': 'color'}"
+                       optional="show"/>
+                <field name="dsl_primary_dashboard"
+                       string="Dashboard"
+                       widget="badge"
+                       decoration-info="dsl_primary_dashboard == 'ess'"
+                       decoration-primary="dsl_primary_dashboard == 'mss'"
+                       decoration-warning="dsl_primary_dashboard == 'accounts'"
+                       decoration-success="dsl_primary_dashboard == 'hr'"
+                       optional="show"/>
+                <field name="dsl_hidden_menu_ids"
+                       string="Hidden Menus"
+                       widget="many2many_tags"
+                       options="{'color_field': 'color'}"
+                       optional="show"/>
+                <field name="company_ids"
+                       string="Allowed Companies / COA"
+                       widget="many2many_tags"
+                       options="{'color_field': 'color'}"
+                       optional="show"/>
+                <field name="dsl_effective_branch_ids"
+                       string="Accessible Branches"
+                       widget="many2many_tags"
+                       optional="show"/>
+                <field name="excluded_company_ids"
+                       string="Excluded Companies"
+                       widget="many2many_tags"
+                       optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 3. Dedicated Action & Menu for Company & Branch User Access Control (Explicitly bound to Full User Form) -->
+    <record id="action_dsl_company_users_access" model="ir.actions.act_window">
+        <field name="name">Users — Company, Role Templates &amp; Access Control</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="base.view_users_tree"/>
+        <field name="search_view_id" ref="base.view_users_search"/>
+        <field name="domain">[('share', '=', False)]</field>
+        <field name="context">{'search_default_no_share': 1, 'show_user_group_warning': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create Mother-HQ, Sub-Company, Single-Branch, or Multi-Company User Accounts with Role Templates
+            </p>
+        </field>
+    </record>
+
+    <record id="action_dsl_company_users_access_view_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="10"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="base.view_users_tree"/>
+        <field name="act_window_id" ref="action_dsl_company_users_access"/>
+    </record>
+
+    <record id="action_dsl_company_users_access_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="20"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="base.view_users_form"/>
+        <field name="act_window_id" ref="action_dsl_company_users_access"/>
+    </record>
+
+    <menuitem id="menu_dsl_hrms_company_users_access"
+              name="Users &amp; Branch Access"
+              parent="menu_dsl_hrms_company_root"
+              action="action_dsl_company_users_access"
+              groups="DSL_HRMS_core.group_dsl_hrms_manager,base.group_erp_manager"
+              sequence="30"/>
+
+    <!-- =========================================================================
+         4. ROLE TEMPLATES & ACCESS MATRIX VIEWS (See & Customize What Each Template Grants)
+         ========================================================================= -->
+    <record id="view_dsl_access_role_template_list" model="ir.ui.view">
+        <field name="name">dsl.access.role.template.list</field>
+        <field name="model">dsl.access.role.template</field>
+        <field name="arch" type="xml">
+            <list string="Role Templates &amp; Access Matrix">
+                <field name="sequence" widget="handle"/>
+                <field name="name" string="Role Template Name" class="fw-bold"/>
+                <field name="code" string="Code" optional="hide"/>
+                <field name="default_dashboard"
+                       string="Default Dashboard"
+                       widget="badge"
+                       decoration-info="default_dashboard == 'ess'"
+                       decoration-primary="default_dashboard == 'mss'"
+                       decoration-warning="default_dashboard == 'accounts'"
+                       decoration-success="default_dashboard == 'hr'"/>
+                <field name="allow_organization" string="Organization" widget="boolean_toggle"/>
+                <field name="allow_recruitment" string="Recruitment" widget="boolean_toggle"/>
+                <field name="allow_employee_mgmt" string="Employees" widget="boolean_toggle"/>
+                <field name="allow_attendance" string="Attendance" widget="boolean_toggle"/>
+                <field name="allow_leaves" string="Leaves" widget="boolean_toggle"/>
+                <field name="allow_performance" string="Performance" widget="boolean_toggle"/>
+                <field name="allow_payroll" string="Payroll" widget="boolean_toggle"/>
+                <field name="allow_accounting" string="Accounting" widget="boolean_toggle"/>
+                <field name="allow_financial_reports" string="Fin. Reports" widget="boolean_toggle"/>
+                <field name="allow_operations" string="Operations" widget="boolean_toggle"/>
+                <field name="allow_settings" string="Settings" widget="boolean_toggle"/>
+                <field name="allow_user_management" string="Create Users" widget="boolean_toggle"/>
+                <field name="user_count" string="Assigned Users" widget="badge" decoration-info="user_count &gt; 0"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_access_role_template_form" model="ir.ui.view">
+        <field name="name">dsl.access.role.template.form</field>
+        <field name="model">dsl.access.role.template</field>
+        <field name="arch" type="xml">
+            <form string="Role Template &amp; Access Matrix">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Role Template Name"/>
+                        <h1><field name="name" placeholder="e.g. HR &amp; Payroll Manager"/></h1>
+                    </div>
+                    <group>
+                        <group string="Template Identity &amp; Landing Workspace">
+                            <field name="code" readonly="1"/>
+                            <field name="sequence"/>
+                            <field name="default_dashboard" string="Default Landing Dashboard"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                        <group string="Description &amp; Scope">
+                            <field name="description" nolabel="1" colspan="2" placeholder="Describe what accesses and responsibilities this role template provides..."/>
+                            <field name="user_count" string="Currently Assigned Users" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Included Module &amp; Menu Accesses" name="included_accesses">
+                            <div class="alert alert-info py-2 px-3 mb-3" role="status">
+                                <i class="fa fa-info-circle me-2"/>
+                                <strong>Template Access Matrix:</strong>
+                                Check or uncheck the modules below to define what this Role Template grants automatically when assigned to a user.
+                            </div>
+                            <group col="3">
+                                <group string="HR &amp; Workforce Modules">
+                                    <field name="allow_organization" widget="boolean_toggle"/>
+                                    <field name="allow_recruitment" widget="boolean_toggle"/>
+                                    <field name="allow_employee_mgmt" widget="boolean_toggle"/>
+                                    <field name="allow_attendance" widget="boolean_toggle"/>
+                                    <field name="allow_leaves" widget="boolean_toggle"/>
+                                    <field name="allow_performance" widget="boolean_toggle"/>
+                                </group>
+                                <group string="Payroll, Finance &amp; Operations">
+                                    <field name="allow_payroll" widget="boolean_toggle"/>
+                                    <field name="allow_accounting" widget="boolean_toggle"/>
+                                    <field name="allow_financial_reports" widget="boolean_toggle"/>
+                                    <field name="allow_operations" widget="boolean_toggle"/>
+                                    <field name="allow_self_service" widget="boolean_toggle"/>
+                                </group>
+                                <group string="Administration &amp; Settings">
+                                    <field name="allow_settings" widget="boolean_toggle"/>
+                                    <field name="allow_user_management" widget="boolean_toggle"/>
+                                    <field name="allow_system_modules" widget="boolean_toggle"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Linked Odoo Security Groups" name="linked_groups">
+                            <p class="text-muted mb-2">
+                                These underlying Odoo security group XML IDs are automatically granted whenever a user is assigned this Role Template:
+                            </p>
+                            <field name="group_xmlids" placeholder="base.group_user,DSL_HRMS_core.group_dsl_hrms_user,..."/>
+                        </page>
+                        <page string="Assigned Users" name="assigned_users">
+                            <field name="user_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="login"/>
+                                    <field name="company_id"/>
+                                    <field name="company_ids" widget="many2many_tags"/>
+                                    <field name="dsl_primary_dashboard" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_access_role_template" model="ir.actions.act_window">
+        <field name="name">Role Templates &amp; Access Matrix</field>
+        <field name="res_model">dsl.access.role.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_dsl_access_role_template_list"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Inspect and customize the permissions included in each Access Role Template
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_dsl_hrms_role_templates"
+              name="Role Templates &amp; Matrix"
+              parent="menu_dsl_hrms_company_root"
+              action="action_dsl_access_role_template"
+              groups="DSL_HRMS_core.group_dsl_hrms_manager,base.group_erp_manager"
+              sequence="35"/>
+</odoo>
