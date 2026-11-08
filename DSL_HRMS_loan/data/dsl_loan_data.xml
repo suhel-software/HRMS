@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_dsl_employee_loan" model="ir.sequence">
+            <field name="name">DSL Employee Loan &amp; Advance</field>
+            <field name="code">dsl.employee.loan</field>
+            <field name="prefix">LOAN-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="loan_policy_salary_advance" model="dsl.loan.policy">
+            <field name="sequence">10</field>
+            <field name="name">Monthly Salary Advance (Interest-Free)</field>
+            <field name="code">POL-SAL-ADV</field>
+            <field name="loan_type">salary_advance</field>
+            <field name="max_basic_multiple">1.0</field>
+            <field name="max_fixed_cap">100000.0</field>
+            <field name="max_installments">3</field>
+            <field name="annual_interest_pct">0.0</field>
+            <field name="notes">Short-term interest-free salary advance recovered automatically in 1 to 3 monthly installments.</field>
+        </record>
+
+        <record id="loan_policy_personal_std" model="dsl.loan.policy">
+            <field name="sequence">20</field>
+            <field name="name">Confirmed Staff Personal Loan (0% Benevolent)</field>
+            <field name="code">POL-PERS-LOAN</field>
+            <field name="loan_type">personal_loan</field>
+            <field name="max_basic_multiple">3.0</field>
+            <field name="max_fixed_cap">500000.0</field>
+            <field name="max_installments">24</field>
+            <field name="annual_interest_pct">0.0</field>
+            <field name="notes">Standard employee welfare loan up to 3x Basic Salary, repayable up to 24 monthly installments via payroll.</field>
+        </record>
+
+        <record id="loan_policy_pf_loan" model="dsl.loan.policy">
+            <field name="sequence">30</field>
+            <field name="name">Provident Fund (PF) Trust Loan</field>
+            <field name="code">POL-PF-LOAN</field>
+            <field name="loan_type">pf_loan</field>
+            <field name="max_basic_multiple">6.0</field>
+            <field name="max_fixed_cap">1000000.0</field>
+            <field name="max_installments">36</field>
+            <field name="annual_interest_pct">5.0</field>
+            <field name="notes">Loan against accumulated Recognized PF Member Balance per Trust Deed rules.</field>
+        </record>
+    </data>
+</odoo>
+

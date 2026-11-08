@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_loan_policy_user,dsl.loan.policy.user,model_dsl_loan_policy,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_loan_policy_manager,dsl.loan.policy.manager,model_dsl_loan_policy,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_employee_loan_user,dsl.employee.loan.user,model_dsl_employee_loan,DSL_HRMS_core.group_dsl_hrms_user,1,1,1,0
+access_dsl_employee_loan_officer,dsl.employee.loan.officer,model_dsl_employee_loan,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_employee_loan_manager,dsl.employee.loan.manager,model_dsl_employee_loan,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_loan_installment_user,dsl.loan.installment.user,model_dsl_loan_installment,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_loan_installment_officer,dsl.loan.installment.officer,model_dsl_loan_installment,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_loan_installment_manager,dsl.loan.installment.manager,model_dsl_loan_installment,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

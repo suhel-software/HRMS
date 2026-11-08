@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_dsl_employee_loan_list" model="ir.ui.view">
+        <field name="name">dsl.employee.loan.list</field>
+        <field name="model">dsl.employee.loan</field>
+        <field name="arch" type="xml">
+            <list string="Employee Loans &amp; Salary Advances"
+                  decoration-info="state == 'approved'"
+                  decoration-primary="state == 'disbursed'"
+                  decoration-success="state == 'settled'"
+                  decoration-muted="state == 'rejected'">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="policy_id"/>
+                <field name="loan_type" widget="badge"/>
+                <field name="deduction_start_date"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="principal_amount" sum="Total Principal"/>
+                <field name="emi_amount" sum="Monthly EMI"/>
+                <field name="total_paid" sum="Total Recovered"/>
+                <field name="balance_amount" sum="Total Outstanding" decoration-bf="1" decoration-danger="balance_amount &gt; 0"/>
+                <field name="state" widget="badge"
+                       decoration-info="state in ('submitted', 'approved')"
+                       decoration-primary="state == 'disbursed'"
+                       decoration-success="state == 'settled'"
+                       decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_employee_loan_form" model="ir.ui.view">
+        <field name="name">dsl.employee.loan.form</field>
+        <field name="model">dsl.employee.loan</field>
+        <field name="arch" type="xml">
+            <form string="Employee Loan / Salary Advance">
+                <header>
+                    <button name="action_compute_installments"
+                            string="⚡ Compute EMI Schedule"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state in ('disbursed', 'settled', 'rejected')"/>
+                    <button name="action_submit"
+                            string="Submit Application"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve"
+                            string="✓ Approve"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state not in ('draft', 'submitted')"/>
+                    <button name="action_disburse"
+                            string="💳 Mark Disbursed (Activate Payroll EMI)"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state != 'approved'"/>
+                    <button name="action_reject"
+                            string="Reject"
+                            type="object"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state not in ('submitted', 'approved')"/>
+                    <button name="action_reset_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state != 'rejected'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved,disbursed,settled"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Employee Loan &amp; Salary Advance Facility</span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Facility Scope">
+                            <field name="employee_id" readonly="state in ('disbursed', 'settled')"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="accounting_company_id"/>
+                            <field name="department_id"/>
+                            <field name="policy_id" readonly="state in ('disbursed', 'settled')"/>
+                            <field name="loan_type"/>
+                            <field name="request_date" readonly="state in ('disbursed', 'settled')"/>
+                            <field name="deduction_start_date" readonly="state in ('disbursed', 'settled')"/>
+                        </group>
+                        <group string="Principal, EMI &amp; Live Balance (৳)">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="current_basic_ref"/>
+                            <field name="principal_amount" readonly="state in ('disbursed', 'settled')" decoration-bf="1"/>
+                            <field name="interest_rate_pct" readonly="state in ('disbursed', 'settled')"/>
+                            <field name="installment_months" readonly="state in ('disbursed', 'settled')"/>
+                            <field name="total_interest_amount"/>
+                            <field name="total_payable" decoration-bf="1"/>
+                            <field name="emi_amount" decoration-bf="1" decoration-primary="1"/>
+                            <field name="total_paid" decoration-success="total_paid &gt; 0"/>
+                            <field name="balance_amount" decoration-bf="1" decoration-danger="balance_amount &gt; 0"/>
+                            <field name="disbursed_date" invisible="not disbursed_date"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page name="emi_schedule_page" string="Monthly Installment (EMI) Schedule">
+                            <field name="installment_ids">
+                                <list editable="bottom"
+                                      decoration-success="is_paid"
+                                      decoration-warning="skip_month and not is_paid">
+                                    <field name="sequence" readonly="1"/>
+                                    <field name="due_date" readonly="is_paid"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="principal_part" sum="Principal" readonly="is_paid"/>
+                                    <field name="interest_part" sum="Interest" readonly="is_paid"/>
+                                    <field name="emi_amount" sum="Total EMI" decoration-bf="1" readonly="is_paid"/>
+                                    <field name="skip_month" readonly="is_paid"/>
+                                    <field name="is_paid"/>
+                                    <field name="payslip_id"/>
+                                    <field name="paid_date"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="reason_page" string="Application Purpose &amp; Approval">
+                            <group>
+                                <field name="approved_by_id"/>
+                            </group>
+                            <field name="reason" nolabel="1" placeholder="Describe reason for loan or salary advance..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_employee_loan" model="ir.actions.act_window">
+        <field name="name">Loans &amp; Salary Advances</field>
+        <field name="res_model">dsl.employee.loan</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Loan Policy Views -->
+    <record id="view_dsl_loan_policy_list" model="ir.ui.view">
+        <field name="name">dsl.loan.policy.list</field>
+        <field name="model">dsl.loan.policy</field>
+        <field name="arch" type="xml">
+            <list string="Loan &amp; Advance Policies">
+                <field name="sequence" widget="handle"/>
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="loan_type" widget="badge"/>
+                <field name="max_basic_multiple"/>
+                <field name="max_fixed_cap"/>
+                <field name="max_installments"/>
+                <field name="annual_interest_pct"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_loan_policy_form" model="ir.ui.view">
+        <field name="name">dsl.loan.policy.form</field>
+        <field name="model">dsl.loan.policy</field>
+        <field name="arch" type="xml">
+            <form string="Loan &amp; Advance Policy">
+                <sheet>
+                    <group>
+                        <group string="Policy Identity">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="loan_type"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Caps, Tenure &amp; Interest">
+                            <field name="max_basic_multiple"/>
+                            <field name="max_fixed_cap"/>
+                            <field name="max_installments"/>
+                            <field name="annual_interest_pct"/>
+                        </group>
+                    </group>
+                    <group string="Policy Terms">
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_loan_policy" model="ir.actions.act_window">
+        <field name="name">Loan &amp; Advance Policies</field>
+        <field name="res_model">dsl.loan.policy</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Employee Smart Button -->
+    <record id="view_employee_form_inherit_dsl_loan" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.loan</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_dsl_loans"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-credit-card"
+                        groups="hr.group_hr_user">
+                    <field name="dsl_loan_count" widget="statinfo" string="Loans"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <menuitem id="menu_dsl_employee_loan"
+              name="Loans &amp; Salary Advances"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_employee_loan"
+              sequence="55"/>
+
+    <menuitem id="menu_dsl_loan_policy_config"
+              name="Loan &amp; Advance Policies"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_loan_policy"
+              sequence="70"/>
+</odoo>
+
