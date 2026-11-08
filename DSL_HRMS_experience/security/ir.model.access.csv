@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_skill_cat_user,dsl.hr.skill.category.user,model_dsl_hr_skill_category,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_skill_cat_officer,dsl.hr.skill.category.officer,model_dsl_hr_skill_category,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_skill_cat_manager,dsl.hr.skill.category.manager,model_dsl_hr_skill_category,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_skill_user,dsl.hr.skill.user,model_dsl_hr_skill,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_skill_officer,dsl.hr.skill.officer,model_dsl_hr_skill,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_skill_manager,dsl.hr.skill.manager,model_dsl_hr_skill,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_emp_skill_user,dsl.employee.skill.user,model_dsl_employee_skill,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_emp_skill_officer,dsl.employee.skill.officer,model_dsl_employee_skill,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_emp_skill_manager,dsl.employee.skill.manager,model_dsl_employee_skill,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_emp_exp_user,dsl.employee.experience.user,model_dsl_employee_experience,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_emp_exp_officer,dsl.employee.experience.officer,model_dsl_employee_experience,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_emp_exp_manager,dsl.employee.experience.manager,model_dsl_employee_experience,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

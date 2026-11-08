@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Skill Categories -->
+        <record id="skill_cat_tech" model="dsl.hr.skill.category">
+            <field name="name">Software, IT &amp; Engineering</field>
+            <field name="sequence">10</field>
+            <field name="color">4</field>
+        </record>
+        <record id="skill_cat_rmg" model="dsl.hr.skill.category">
+            <field name="name">Garments, Textile &amp; Plant Operations</field>
+            <field name="sequence">20</field>
+            <field name="color">10</field>
+        </record>
+        <record id="skill_cat_hr_fin" model="dsl.hr.skill.category">
+            <field name="name">HR, Finance &amp; Statutory Compliance</field>
+            <field name="sequence">30</field>
+            <field name="color">2</field>
+        </record>
+        <record id="skill_cat_lang" model="dsl.hr.skill.category">
+            <field name="name">Languages &amp; Communication</field>
+            <field name="sequence">40</field>
+            <field name="color">5</field>
+        </record>
+        <record id="skill_cat_lead" model="dsl.hr.skill.category">
+            <field name="name">Supply Chain, Port &amp; Leadership</field>
+            <field name="sequence">50</field>
+            <field name="color">3</field>
+        </record>
+
+        <!-- Seeded Skills -->
+        <record id="skill_python_erp" model="dsl.hr.skill">
+            <field name="name">Python &amp; Enterprise ERP Architecture</field>
+            <field name="category_id" ref="skill_cat_tech"/>
+        </record>
+        <record id="skill_cloud_devops" model="dsl.hr.skill">
+            <field name="name">Cloud Infrastructure &amp; DevOps</field>
+            <field name="category_id" ref="skill_cat_tech"/>
+        </record>
+        <record id="skill_rmg_ie" model="dsl.hr.skill">
+            <field name="name">Industrial Engineering (IE) &amp; Line Balancing</field>
+            <field name="category_id" ref="skill_cat_rmg"/>
+        </record>
+        <record id="skill_rmg_qa" model="dsl.hr.skill">
+            <field name="name">Garments Quality Assurance &amp; Accord/RSC Safety</field>
+            <field name="category_id" ref="skill_cat_rmg"/>
+        </record>
+        <record id="skill_dyeing_wash" model="dsl.hr.skill">
+            <field name="name">Textile Dyeing, Finishing &amp; ETP Compliance</field>
+            <field name="category_id" ref="skill_cat_rmg"/>
+        </record>
+        <record id="skill_bd_labour_law" model="dsl.hr.skill">
+            <field name="name">Bangladesh Labour Act &amp; HR Operations</field>
+            <field name="category_id" ref="skill_cat_hr_fin"/>
+        </record>
+        <record id="skill_nbr_tax" model="dsl.hr.skill">
+            <field name="name">Corporate Accounting, VAT &amp; NBR Tax</field>
+            <field name="category_id" ref="skill_cat_hr_fin"/>
+        </record>
+        <record id="skill_bangla" model="dsl.hr.skill">
+            <field name="name">Bangla (Native / Official Drafting)</field>
+            <field name="category_id" ref="skill_cat_lang"/>
+        </record>
+        <record id="skill_english" model="dsl.hr.skill">
+            <field name="name">Business English</field>
+            <field name="category_id" ref="skill_cat_lang"/>
+        </record>
+        <record id="skill_port_logistics" model="dsl.hr.skill">
+            <field name="name">Customs, C&amp;F &amp; Sea Port Logistics</field>
+            <field name="category_id" ref="skill_cat_lead"/>
+        </record>
+    </data>
+</odoo>
+

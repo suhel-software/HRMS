@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Skills Matrix Standalone Views (List, Pivot & SearchPanel) -->
+    <record id="view_dsl_employee_skill_list" model="ir.ui.view">
+        <field name="name">dsl.employee.skill.list</field>
+        <field name="model">dsl.employee.skill</field>
+        <field name="arch" type="xml">
+            <list string="Enterprise Skills Matrix" editable="bottom">
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="department_id" optional="show"/>
+                <field name="category_id"/>
+                <field name="skill_id" decoration-bf="1"/>
+                <field name="proficiency_level" widget="badge"
+                       decoration-success="proficiency_level in ('4', '5')"
+                       decoration-info="proficiency_level == '3'"
+                       decoration-warning="proficiency_level in ('1', '2')"/>
+                <field name="progress_pct" widget="progressbar"/>
+                <field name="years_used"/>
+                <field name="is_primary_skill" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_employee_skill_pivot" model="ir.ui.view">
+        <field name="name">dsl.employee.skill.pivot</field>
+        <field name="model">dsl.employee.skill</field>
+        <field name="arch" type="xml">
+            <pivot string="Skills Matrix Analytics">
+                <field name="department_id" type="row"/>
+                <field name="skill_id" type="col"/>
+                <field name="progress_pct" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_dsl_employee_skill_search" model="ir.ui.view">
+        <field name="name">dsl.employee.skill.search</field>
+        <field name="model">dsl.employee.skill</field>
+        <field name="arch" type="xml">
+            <search string="Search Skills Matrix">
+                <field name="employee_id"/>
+                <field name="skill_id"/>
+                <field name="category_id"/>
+                <filter name="core_skills" string="Core Competencies" domain="[('is_primary_skill', '=', True)]"/>
+                <filter name="experts" string="Experts &amp; Masters (90%+)" domain="[('proficiency_level', 'in', ('4', '5'))]"/>
+                <searchpanel>
+                    <field name="company_id" groups="base.group_multi_company" icon="fa-building" enable_counters="1"/>
+                    <field name="branch_id" icon="fa-map-marker" enable_counters="1"/>
+                    <field name="category_id" icon="fa-star" enable_counters="1"/>
+                    <field name="proficiency_level" icon="fa-signal" enable_counters="1"/>
+                </searchpanel>
+            </search>
+        </field>
+    </record>
+
+    <!-- 2. Prior Work Experience Standalone Views -->
+    <record id="view_dsl_employee_experience_list" model="ir.ui.view">
+        <field name="name">dsl.employee.experience.list</field>
+        <field name="model">dsl.employee.experience</field>
+        <field name="arch" type="xml">
+            <list string="Prior Employment History">
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="employer_name" decoration-bf="1"/>
+                <field name="designation"/>
+                <field name="industry_sector" widget="badge"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="duration_display"/>
+                <field name="is_verified" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_employee_experience_form" model="ir.ui.view">
+        <field name="name">dsl.employee.experience.form</field>
+        <field name="model">dsl.employee.experience</field>
+        <field name="arch" type="xml">
+            <form string="Previous Work Experience">
+                <sheet>
+                    <group>
+                        <group string="Employer &amp; Role">
+                            <field name="employee_id"/>
+                            <field name="company_id" readonly="1" groups="base.group_multi_company"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="employer_name" placeholder="e.g. Square Textiles PLC / TigerIT"/>
+                            <field name="industry_sector"/>
+                            <field name="designation"/>
+                            <field name="department_name"/>
+                            <field name="location"/>
+                        </group>
+                        <group string="Tenure, Compensation &amp; Reference Check">
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="duration_display"/>
+                            <field name="last_drawn_salary"/>
+                            <field name="leaving_reason"/>
+                            <field name="reference_person"/>
+                            <field name="reference_phone"/>
+                            <field name="is_verified"/>
+                            <field name="experience_letter_filename" invisible="1"/>
+                            <field name="experience_letter_file" filename="experience_letter_filename"/>
+                        </group>
+                    </group>
+                    <group string="Key Responsibilities &amp; Achievements">
+                        <field name="responsibilities" nolabel="1" placeholder="Summary of duties, projects or plant lines managed..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- 3. Employee Form Tab & Smart Buttons (04 Experience & 11 Skills & Training) -->
+    <record id="view_employee_form_inherit_dsl_experience" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.experience</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="DSL_HRMS_employee.view_employee_form_inherit_dsl_dossier"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_employee_skills"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-star"
+                        groups="hr.group_hr_user">
+                    <field name="dsl_skill_count" widget="statinfo" string="Skills"/>
+                </button>
+                <button name="action_view_experience_records"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-briefcase"
+                        groups="hr.group_hr_user">
+                    <field name="prior_experience_years" widget="statinfo" string="Prior Yrs"/>
+                </button>
+            </xpath>
+            <xpath expr="//page[@name='dsl_experience_skills_tab']" position="inside">
+                <separator string="Previous Employment History &amp; Reference Verification (DSL_HRMS_experience)"/>
+                <field name="dsl_experience_ids" context="{'default_employee_id': id}">
+                    <list>
+                        <field name="employer_name" decoration-bf="1"/>
+                        <field name="designation"/>
+                        <field name="industry_sector" widget="badge"/>
+                        <field name="date_from"/>
+                        <field name="date_to"/>
+                        <field name="duration_display"/>
+                        <field name="reference_person" optional="show"/>
+                        <field name="is_verified" widget="boolean_toggle"/>
+                    </list>
+                </field>
+            </xpath>
+            <xpath expr="//separator[@name='dsl_training_section_sep']" position="before">
+                <separator string="Competencies, Technical &amp; Language Skills Matrix (DSL_HRMS_employee_skill)"/>
+                <field name="dsl_skill_ids" context="{'default_employee_id': id}">
+                    <list editable="bottom">
+                        <field name="category_id"/>
+                        <field name="skill_id" decoration-bf="1"/>
+                        <field name="proficiency_level"/>
+                        <field name="progress_pct" widget="progressbar"/>
+                        <field name="years_used"/>
+                        <field name="is_primary_skill" widget="boolean_toggle"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 4. Actions & Menus under Workforce -->
+    <record id="action_dsl_skills_matrix" model="ir.actions.act_window">
+        <field name="name">Enterprise Skills &amp; Competency Matrix</field>
+        <field name="res_model">dsl.employee.skill</field>
+        <field name="view_mode">list,pivot</field>
+    </record>
+
+    <record id="action_dsl_employee_experience" model="ir.actions.act_window">
+        <field name="name">Prior Employment &amp; Reference Registry</field>
+        <field name="res_model">dsl.employee.experience</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_skills_matrix"
+              name="Skills Matrix"
+              parent="DSL_HRMS_core.menu_dsl_hrms_workforce"
+              action="action_dsl_skills_matrix"
+              groups="DSL_HRMS_core.group_dsl_hrms_officer"
+              sequence="45"/>
+
+    <menuitem id="menu_dsl_employee_experience"
+              name="Prior Experience"
+              parent="DSL_HRMS_core.menu_dsl_hrms_workforce"
+              action="action_dsl_employee_experience"
+              groups="DSL_HRMS_core.group_dsl_hrms_officer"
+              sequence="46"/>
+</odoo>
