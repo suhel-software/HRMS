@@ -1,0 +1,12 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_pf_policy_user,dsl.pf.policy.user,model_dsl_pf_policy,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_pf_policy_manager,dsl.pf.policy.manager,model_dsl_pf_policy,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_pf_account_user,dsl.pf.account.user,model_dsl_pf_account,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_pf_account_officer,dsl.pf.account.officer,model_dsl_pf_account,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_pf_account_manager,dsl.pf.account.manager,model_dsl_pf_account,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_pf_ledger_line_user,dsl.pf.ledger.line.user,model_dsl_pf_ledger_line,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_pf_ledger_line_officer,dsl.pf.ledger.line.officer,model_dsl_pf_ledger_line,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_pf_ledger_line_manager,dsl.pf.ledger.line.manager,model_dsl_pf_ledger_line,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_pf_profit_officer,dsl.pf.profit.officer,model_dsl_pf_profit_distribution,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_pf_profit_manager,dsl.pf.profit.manager,model_dsl_pf_profit_distribution,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

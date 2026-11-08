@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_dsl_pf_account_list" model="ir.ui.view">
+        <field name="name">dsl.pf.account.list</field>
+        <field name="model">dsl.pf.account</field>
+        <field name="arch" type="xml">
+            <list string="Provident Fund (PF) Member Accounts"
+                  decoration-success="state == 'active'"
+                  decoration-muted="state == 'settled'">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="membership_date"/>
+                <field name="membership_years"/>
+                <field name="vested_employer_pct"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="employee_contribution_total" sum="Total Employee PF"/>
+                <field name="employer_contribution_total" sum="Total Employer PF"/>
+                <field name="profit_credited_total" sum="Total Profit"/>
+                <field name="total_fund_balance" sum="Total Fund Balance" decoration-bf="1"/>
+                <field name="vested_payable_balance" decoration-success="1"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-warning="state == 'frozen'"
+                       decoration-muted="state == 'settled'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_pf_account_form" model="ir.ui.view">
+        <field name="name">dsl.pf.account.form</field>
+        <field name="model">dsl.pf.account</field>
+        <field name="arch" type="xml">
+            <form string="Recognized Provident Fund Member Account">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="active,frozen,settled"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Recognized Provident Fund (PF) Trust Ledger</span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Member &amp; Trust Policy">
+                            <field name="employee_id"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="department_id"/>
+                            <field name="policy_id"/>
+                            <field name="membership_date"/>
+                            <field name="membership_years"/>
+                            <field name="vested_employer_pct"/>
+                        </group>
+                        <group string="50-50 Contribution, Profit &amp; Vested Balance (৳)">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="employee_contribution_total"/>
+                            <field name="employer_contribution_total"/>
+                            <field name="profit_credited_total"/>
+                            <field name="payout_settled_total" invisible="payout_settled_total == 0"/>
+                            <field name="total_fund_balance" decoration-bf="1"/>
+                            <field name="vested_payable_balance" decoration-bf="1" decoration-success="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page name="pf_ledger_page" string="Monthly Contributions &amp; Profit Ledger">
+                            <field name="ledger_line_ids">
+                                <list editable="bottom"
+                                      decoration-success="entry_type == 'annual_profit'"
+                                      decoration-danger="entry_type == 'settlement_payout'">
+                                    <field name="entry_date"/>
+                                    <field name="entry_type" widget="badge"/>
+                                    <field name="description"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="employee_amount" sum="Employee Total"/>
+                                    <field name="employer_amount" sum="Employer Total"/>
+                                    <field name="profit_amount" sum="Profit Total"/>
+                                    <field name="total_amount" sum="Net Entry" decoration-bf="1"/>
+                                    <field name="payslip_id" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="pf_notes_page" string="Nominee &amp; Trust Notes">
+                            <field name="notes" nolabel="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_pf_account" model="ir.actions.act_window">
+        <field name="name">Provident Fund (PF) Accounts</field>
+        <field name="res_model">dsl.pf.account</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Annual Profit Distribution Batch Views -->
+    <record id="view_dsl_pf_profit_dist_list" model="ir.ui.view">
+        <field name="name">dsl.pf.profit.distribution.list</field>
+        <field name="model">dsl.pf.profit.distribution</field>
+        <field name="arch" type="xml">
+            <list string="PF Annual Profit Distribution Batches" decoration-success="state == 'posted'">
+                <field name="name" decoration-bf="1"/>
+                <field name="fiscal_year_label"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="profit_rate_pct"/>
+                <field name="distribution_date"/>
+                <field name="member_count"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="total_profit_distributed" sum="Total Profit" decoration-bf="1"/>
+                <field name="state" widget="badge" decoration-success="state == 'posted'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_pf_profit_dist_form" model="ir.ui.view">
+        <field name="name">dsl.pf.profit.distribution.form</field>
+        <field name="model">dsl.pf.profit.distribution</field>
+        <field name="arch" type="xml">
+            <form string="Annual PF Trust Profit Distribution">
+                <header>
+                    <button name="action_distribute_profit"
+                            string="⚡ Credit Annual Profit to Active Members"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state == 'posted'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">PF Trust Profit Distribution</span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Fiscal Year &amp; Rate">
+                            <field name="fiscal_year_label" readonly="state == 'posted'"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state == 'posted'"/>
+                            <field name="policy_id" readonly="state == 'posted'"/>
+                            <field name="profit_rate_pct" readonly="state == 'posted'"/>
+                            <field name="distribution_date" readonly="state == 'posted'"/>
+                        </group>
+                        <group string="Distribution Summary">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="member_count"/>
+                            <field name="total_profit_distributed" decoration-bf="1"/>
+                        </group>
+                    </group>
+                    <separator string="Credited Member Entries"/>
+                    <field name="ledger_line_ids" readonly="1">
+                        <list>
+                            <field name="pf_account_id"/>
+                            <field name="entry_date"/>
+                            <field name="description"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="profit_amount" sum="Total Credited"/>
+                        </list>
+                    </field>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_pf_profit_dist" model="ir.actions.act_window">
+        <field name="name">PF Annual Profit Distribution</field>
+        <field name="res_model">dsl.pf.profit.distribution</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_dsl_pf_policy_form" model="ir.ui.view">
+        <field name="name">dsl.pf.policy.form</field>
+        <field name="model">dsl.pf.policy</field>
+        <field name="arch" type="xml">
+            <form string="PF Trust Policy">
+                <sheet>
+                    <group>
+                        <group string="Trust Identity &amp; Contribution Rates">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="employee_rate_pct"/>
+                            <field name="employer_rate_pct"/>
+                        </group>
+                        <group string="Vesting Tenure &amp; Return">
+                            <field name="partial_vesting_years"/>
+                            <field name="full_vesting_years"/>
+                            <field name="declared_profit_rate_pct"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <field name="notes" placeholder="PF Trust rules..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_pf_policy" model="ir.actions.act_window">
+        <field name="name">PF Trust Policies</field>
+        <field name="res_model">dsl.pf.policy</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_pf_account"
+              name="Provident Fund (PF)"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_pf_account"
+              sequence="60"/>
+
+    <menuitem id="menu_dsl_pf_profit_dist"
+              name="PF Profit Distribution"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_pf_profit_dist"
+              sequence="62"/>
+
+    <menuitem id="menu_dsl_pf_policy_config"
+              name="PF Trust Policies"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_pf_policy"
+              sequence="72"/>
+</odoo>
+

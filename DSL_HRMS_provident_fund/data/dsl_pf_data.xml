@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_dsl_pf_account" model="ir.sequence">
+            <field name="name">DSL PF Member Account</field>
+            <field name="code">dsl.pf.account</field>
+            <field name="prefix">PF-ACC-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_dsl_pf_profit_dist" model="ir.sequence">
+            <field name="name">DSL PF Profit Distribution</field>
+            <field name="code">dsl.pf.profit.distribution</field>
+            <field name="prefix">PF-PROF-%(year)s-</field>
+            <field name="padding">3</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="pf_policy_bd_recognized_std" model="dsl.pf.policy">
+            <field name="name">Bangladesh NBR Recognized Provident Fund Trust (10% + 10%)</field>
+            <field name="code">BD-RPF-10-10</field>
+            <field name="employee_rate_pct">10.0</field>
+            <field name="employer_rate_pct">10.0</field>
+            <field name="partial_vesting_years">2.0</field>
+            <field name="full_vesting_years">5.0</field>
+            <field name="declared_profit_rate_pct">8.5</field>
+            <field name="notes">Standard Bangladesh Recognized PF Trust: 10% Employee + 10% Employer contribution of Basic Salary; Employer share vests 50% at 2 years and 100% at 5 years.</field>
+        </record>
+    </data>
+</odoo>
+
