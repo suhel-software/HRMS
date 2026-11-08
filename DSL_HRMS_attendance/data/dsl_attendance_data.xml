@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Sequence for Attendance Regularization -->
+        <record id="seq_dsl_attendance_regularization" model="ir.sequence">
+            <field name="name">DSL Attendance Regularization</field>
+            <field name="code">dsl.attendance.regularization</field>
+            <field name="prefix">REG-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Default Group Corporate Attendance Policy (BD Standard: 09:00 AM - 06:00 PM, 15m Grace, Friday Off) -->
+        <record id="policy_dsl_bd_corporate_default" model="dsl.attendance.policy">
+            <field name="name">Bangladesh Corporate Standard (09:00 AM – 06:00 PM)</field>
+            <field name="code">BD-CORP-GEN</field>
+            <field name="company_id" eval="False"/>
+            <field name="branch_id" eval="False"/>
+            <field name="work_start_hour">9.0</field>
+            <field name="work_end_hour">18.0</field>
+            <field name="break_hours">1.0</field>
+            <field name="standard_work_hours">8.0</field>
+            <field name="late_grace_minutes">15</field>
+            <field name="early_out_grace_minutes">15</field>
+            <field name="half_day_threshold_hours">4.0</field>
+            <field name="late_to_leave_count">3</field>
+            <field name="weekly_off_weekday">4</field>
+            <field name="notes">Standard 8-hour net duty (9h gross with 1h lunch/prayer interval) under Bangladesh Labour Act 2006. 15-minute late grace; 3 late arrivals per month = 1 day leave adjustment.</field>
+        </record>
+
+        <!-- Industrial / Factory Floor Policy (08:00 AM - 05:00 PM, 10m Grace, Friday Off) -->
+        <record id="policy_dsl_bd_factory_default" model="dsl.attendance.policy">
+            <field name="name">Bangladesh Factory / Plant Standard (08:00 AM – 05:00 PM)</field>
+            <field name="code">BD-FAC-STD</field>
+            <field name="company_id" eval="False"/>
+            <field name="branch_id" eval="False"/>
+            <field name="work_start_hour">8.0</field>
+            <field name="work_end_hour">17.0</field>
+            <field name="break_hours">1.0</field>
+            <field name="standard_work_hours">8.0</field>
+            <field name="late_grace_minutes">10</field>
+            <field name="early_out_grace_minutes">10</field>
+            <field name="half_day_threshold_hours">4.0</field>
+            <field name="late_to_leave_count">3</field>
+            <field name="weekly_off_weekday">4</field>
+            <field name="notes">Factory &amp; Garments floor attendance policy compliant with Bangladesh Labour Act Sec 100 &amp; 101.</field>
+        </record>
+    </data>
+</odoo>
+

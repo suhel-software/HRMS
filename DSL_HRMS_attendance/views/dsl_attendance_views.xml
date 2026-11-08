@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================================================================== -->
+    <!-- 1. DAILY ATTENDANCE LOG VIEWS (List, Kanban, Calendar, Pivot, Form)-->
+    <!-- ================================================================== -->
+    <record id="view_dsl_attendance_log_list" model="ir.ui.view">
+        <field name="name">dsl.attendance.log.list</field>
+        <field name="model">dsl.attendance.log</field>
+        <field name="arch" type="xml">
+            <list string="Daily Attendance Register"
+                  decoration-danger="status == 'absent'"
+                  decoration-warning="status in ('late', 'half_day')"
+                  decoration-info="status in ('on_leave', 'holiday', 'off_day')">
+                <field name="attendance_date" decoration-bf="1"/>
+                <field name="employee_code" optional="show"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="department_id" optional="hide"/>
+                <field name="schedule_label" optional="show"/>
+                <field name="check_in"/>
+                <field name="check_in_location" optional="show"/>
+                <field name="check_out"/>
+                <field name="check_out_location" optional="show"/>
+                <field name="late_minutes" decoration-warning="late_minutes &gt; 0" optional="show"/>
+                <field name="early_out_minutes" decoration-warning="early_out_minutes &gt; 0" optional="hide"/>
+                <field name="net_worked_hours" widget="float_time" sum="Total Net Hours"/>
+                <field name="extra_hours" widget="float_time" sum="Total Extra Hours" optional="show"/>
+                <field name="source" widget="badge"
+                       decoration-info="source == 'biometric'"
+                       decoration-primary="source == 'gps'"
+                       decoration-success="source == 'regularization'"/>
+                <field name="status" widget="badge"
+                       decoration-success="status == 'present'"
+                       decoration-warning="status in ('late', 'half_day')"
+                       decoration-danger="status == 'absent'"
+                       decoration-info="status in ('on_leave', 'holiday', 'off_day')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_attendance_log_kanban" model="ir.ui.view">
+        <field name="name">dsl.attendance.log.kanban</field>
+        <field name="model">dsl.attendance.log</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="attendance_date"/>
+                <field name="check_in"/>
+                <field name="check_out"/>
+                <field name="net_worked_hours"/>
+                <field name="late_minutes"/>
+                <field name="source"/>
+                <field name="status"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold"><field name="attendance_date"/></span>
+                            <field name="status" widget="badge"
+                                   decoration-success="status == 'present'"
+                                   decoration-warning="status in ('late', 'half_day')"
+                                   decoration-danger="status == 'absent'"
+                                   decoration-info="status in ('on_leave', 'holiday', 'off_day')"/>
+                        </div>
+                        <div class="mb-2">
+                            <field name="employee_id" widget="many2one_avatar_employee"/>
+                        </div>
+                        <div class="text-muted small mb-2">
+                            <i class="fa fa-sign-in text-success me-1" title="Check-In"/>
+                            <field name="check_in"/>
+                            <span class="mx-1">→</span>
+                            <i class="fa fa-sign-out text-primary me-1" title="Check-Out"/>
+                            <field name="check_out"/>
+                        </div>
+                        <footer class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <span class="badge text-bg-light border text-dark">
+                                Net: <field name="net_worked_hours" widget="float_time"/>h
+                            </span>
+                            <field name="source" widget="badge"/>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_dsl_attendance_log_calendar" model="ir.ui.view">
+        <field name="name">dsl.attendance.log.calendar</field>
+        <field name="model">dsl.attendance.log</field>
+        <field name="arch" type="xml">
+            <calendar string="Attendance Calendar"
+                      date_start="attendance_date"
+                      color="status"
+                      mode="month"
+                      quick_create="0">
+                <field name="employee_id"/>
+                <field name="status"/>
+                <field name="net_worked_hours" widget="float_time"/>
+                <field name="source"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_dsl_attendance_log_pivot" model="ir.ui.view">
+        <field name="name">dsl.attendance.log.pivot</field>
+        <field name="model">dsl.attendance.log</field>
+        <field name="arch" type="xml">
+            <pivot string="Attendance Analytics">
+                <field name="branch_id" type="row"/>
+                <field name="employee_id" type="row"/>
+                <field name="status" type="col"/>
+                <field name="net_worked_hours" type="measure"/>
+                <field name="late_minutes" type="measure"/>
+                <field name="extra_hours" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_dsl_attendance_log_graph" model="ir.ui.view">
+        <field name="name">dsl.attendance.log.graph</field>
+        <field name="model">dsl.attendance.log</field>
+        <field name="arch" type="xml">
+            <graph string="Attendance Distribution" type="bar">
+                <field name="attendance_date" interval="day"/>
+                <field name="status"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Full-Width Form with Mandatory Bottom Chatter -->
+    <record id="view_dsl_attendance_log_form" model="ir.ui.view">
+        <field name="name">dsl.attendance.log.form</field>
+        <field name="model">dsl.attendance.log</field>
+        <field name="arch" type="xml">
+            <form string="Daily Attendance Record">
+                <header>
+                    <button name="action_mark_verified"
+                            string="Verify Attendance"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="verified_by_id != False"/>
+                    <field name="status" widget="statusbar"
+                           statusbar_visible="present,late,half_day,absent,on_leave,holiday"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="LATE ARRIVAL" bg_color="text-bg-warning"
+                            invisible="status != 'late'"/>
+                    <widget name="web_ribbon" title="ABSENT" bg_color="text-bg-danger"
+                            invisible="status != 'absent'"/>
+                    <div class="oe_title">
+                        <span class="badge text-bg-primary mb-1"><field name="source"/></span>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Duty Station">
+                            <field name="employee_id"/>
+                            <field name="employee_code" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id"/>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                        </group>
+                        <group string="Date &amp; Applied Schedule">
+                            <field name="attendance_date"/>
+                            <field name="policy_id"/>
+                            <field name="schedule_label" readonly="1"/>
+                            <field name="scheduled_in_hour" widget="float_time" readonly="1"/>
+                            <field name="scheduled_out_hour" widget="float_time" readonly="1"/>
+                            <field name="is_manual_status"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Check-In / Check-Out Timestamps &amp; Area">
+                            <field name="check_in"/>
+                            <field name="check_in_location" placeholder="e.g. Gulshan-2, Dhaka"/>
+                            <field name="check_out"/>
+                            <field name="check_out_location" placeholder="e.g. Mirpur-10, Dhaka"/>
+                            <field name="source"/>
+                            <field name="verified_by_id" invisible="not verified_by_id"/>
+                        </group>
+                        <group string="Calculated Hours, Grace &amp; Extra Duty">
+                            <field name="worked_hours" widget="float_time"/>
+                            <field name="net_worked_hours" widget="float_time"/>
+                            <field name="late_minutes"/>
+                            <field name="early_out_minutes"/>
+                            <field name="extra_hours" widget="float_time"/>
+                        </group>
+                    </group>
+                    <group string="Supervisor / HR Remarks">
+                        <field name="remarks" nolabel="1" placeholder="Optional remarks on late waiver, site duty, or biometric gate log..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dsl_attendance_log_search" model="ir.ui.view">
+        <field name="name">dsl.attendance.log.search</field>
+        <field name="model">dsl.attendance.log</field>
+        <field name="arch" type="xml">
+            <search string="Search Daily Attendance">
+                <field name="employee_id"/>
+                <field name="employee_code"/>
+                <field name="branch_id"/>
+                <field name="department_id"/>
+                <filter name="filter_today" string="Today"
+                        domain="[('attendance_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="filter_present" string="Present (On-Time &amp; Late)"
+                        domain="[('status', 'in', ('present', 'late'))]"/>
+                <filter name="filter_late" string="Late Arrivals"
+                        domain="[('is_late', '=', True)]"/>
+                <filter name="filter_absent" string="Absent"
+                        domain="[('status', '=', 'absent')]"/>
+                <filter name="filter_extra_ot" string="Has Extra / OT Hours"
+                        domain="[('extra_hours', '&gt;', 0)]"/>
+                <separator/>
+                <filter name="src_biometric" string="Biometric Sync" domain="[('source', '=', 'biometric')]"/>
+                <filter name="src_gps" string="GPS Geo-Fence" domain="[('source', '=', 'gps')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="grp_company" string="Company" context="{'group_by': 'company_id'}"/>
+                    <filter name="grp_branch" string="Branch / Plant" context="{'group_by': 'branch_id'}"/>
+                    <filter name="grp_dept" string="Department" context="{'group_by': 'department_id'}"/>
+                    <filter name="grp_emp" string="Employee" context="{'group_by': 'employee_id'}"/>
+                    <filter name="grp_status" string="Status" context="{'group_by': 'status'}"/>
+                    <filter name="grp_date" string="Attendance Date" context="{'group_by': 'attendance_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_dsl_attendance_log" model="ir.actions.act_window">
+        <field name="name">Daily Attendance Register</field>
+        <field name="res_model">dsl.attendance.log</field>
+        <field name="view_mode">list,kanban,calendar,pivot,graph,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Record or Sync Daily Attendance Logs
+            </p>
+            <p>
+                Consolidated daily attendance across Biometric Machines, Mobile GPS Geo-Fence, Web Check-In, and Shift Rosters.
+            </p>
+        </field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 2. ATTENDANCE REGULARIZATION / RECONCILIATION VIEWS                -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_attendance_regularization_list" model="ir.ui.view">
+        <field name="name">dsl.attendance.regularization.list</field>
+        <field name="model">dsl.attendance.regularization</field>
+        <field name="arch" type="xml">
+            <list string="Attendance Regularization Requests"
+                  decoration-warning="state == 'submitted'"
+                  decoration-success="state == 'approved'"
+                  decoration-danger="state == 'rejected'">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="attendance_date"/>
+                <field name="request_type"/>
+                <field name="requested_check_in"/>
+                <field name="requested_check_out"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'submitted'"
+                       decoration-success="state == 'approved'"
+                       decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_attendance_regularization_form" model="ir.ui.view">
+        <field name="name">dsl.attendance.regularization.form</field>
+        <field name="model">dsl.attendance.regularization</field>
+        <field name="arch" type="xml">
+            <form string="Attendance Regularization Request">
+                <header>
+                    <button name="action_submit"
+                            string="Submit for Approval"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve"
+                            string="Approve &amp; Update Attendance"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state not in ('draft', 'submitted')"/>
+                    <button name="action_reject"
+                            string="Reject"
+                            type="object"
+                            class="btn-secondary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state not in ('submitted',)"/>
+                    <button name="action_reset_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            invisible="state not in ('rejected',)"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Date">
+                            <field name="employee_id" readonly="state == 'approved'"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="department_id"/>
+                            <field name="attendance_date" readonly="state == 'approved'"/>
+                            <field name="request_type" readonly="state == 'approved'"/>
+                        </group>
+                        <group string="Requested Punches &amp; Approval">
+                            <field name="requested_check_in" readonly="state == 'approved'"/>
+                            <field name="requested_check_out" readonly="state == 'approved'"/>
+                            <field name="attendance_log_id" invisible="not attendance_log_id"/>
+                            <field name="approved_by_id" invisible="not approved_by_id"/>
+                            <field name="approved_date" invisible="not approved_date"/>
+                        </group>
+                    </group>
+                    <group string="Official Justification / Outdoor Duty Details">
+                        <field name="reason" nolabel="1" readonly="state == 'approved'"
+                               placeholder="Describe why punch was missed or details of client/outdoor visit..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_attendance_regularization" model="ir.actions.act_window">
+        <field name="name">Attendance Regularization</field>
+        <field name="res_model">dsl.attendance.regularization</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 3. ATTENDANCE & GRACE POLICY VIEWS                                 -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_attendance_policy_list" model="ir.ui.view">
+        <field name="name">dsl.attendance.policy.list</field>
+        <field name="model">dsl.attendance.policy</field>
+        <field name="arch" type="xml">
+            <list string="Attendance &amp; Grace Policies">
+                <field name="sequence" widget="handle"/>
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="branch_id"/>
+                <field name="work_start_hour" widget="float_time"/>
+                <field name="work_end_hour" widget="float_time"/>
+                <field name="standard_work_hours" widget="float_time"/>
+                <field name="late_grace_minutes"/>
+                <field name="late_to_leave_count"/>
+                <field name="weekly_off_weekday"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_attendance_policy_form" model="ir.ui.view">
+        <field name="name">dsl.attendance.policy.form</field>
+        <field name="model">dsl.attendance.policy</field>
+        <field name="arch" type="xml">
+            <form string="Attendance &amp; Grace Policy">
+                <sheet>
+                    <div class="oe_title">
+                        <span class="badge text-bg-primary mb-1"><field name="code" placeholder="e.g. BD-CORP-GEN"/></span>
+                        <h1><field name="name" placeholder="e.g. Corporate Head Office Policy"/></h1>
+                    </div>
+                    <group>
+                        <group string="Scope &amp; Standard Schedule">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="work_start_hour" widget="float_time"/>
+                            <field name="work_end_hour" widget="float_time"/>
+                            <field name="break_hours" widget="float_time"/>
+                            <field name="standard_work_hours" widget="float_time"/>
+                            <field name="weekly_off_weekday"/>
+                        </group>
+                        <group string="Bangladesh Grace &amp; Deduction Rules">
+                            <field name="late_grace_minutes"/>
+                            <field name="early_out_grace_minutes"/>
+                            <field name="half_day_threshold_hours" widget="float_time"/>
+                            <field name="late_to_leave_count"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Policy Notes &amp; Statutory Guidelines">
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_attendance_policy" model="ir.actions.act_window">
+        <field name="name">Attendance &amp; Grace Policies</field>
+        <field name="res_model">dsl.attendance.policy</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 4. EXECUTIVE EMPLOYEE PROFILE: TAB 13 "ATTENDANCE & LEAVE"         -->
+    <!-- ================================================================== -->
+    <record id="view_employee_form_inherit_dsl_attendance" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.attendance.tab</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="DSL_HRMS_employee.view_employee_form_inherit_dsl_dossier"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_dsl_attendance_logs"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-calendar-check-o"
+                        groups="hr.group_hr_user">
+                    <field name="dsl_attendance_count" widget="statinfo" string="Attendance"/>
+                </button>
+            </xpath>
+            <xpath expr="//page[@name='dsl_attendance_tab']" position="inside">
+                <group name="dsl_emp_att_config_group">
+                    <group string="Attendance Policy &amp; Duty Rules">
+                        <field name="attendance_policy_id"/>
+                    </group>
+                    <group string="Quick Summary" name="dsl_emp_att_right_group">
+                        <field name="hero_attendance_ratio" readonly="1"/>
+                    </group>
+                </group>
+                <separator string="Recent Daily Attendance Register"/>
+                <field name="dsl_attendance_log_ids" readonly="1">
+                    <list limit="15"
+                          decoration-warning="status in ('late', 'half_day')"
+                          decoration-danger="status == 'absent'">
+                        <field name="attendance_date"/>
+                        <field name="schedule_label"/>
+                        <field name="check_in"/>
+                        <field name="check_in_location" optional="show"/>
+                        <field name="check_out"/>
+                        <field name="check_out_location" optional="show"/>
+                        <field name="late_minutes"/>
+                        <field name="net_worked_hours" widget="float_time"/>
+                        <field name="extra_hours" widget="float_time"/>
+                        <field name="source" widget="badge"/>
+                        <field name="status" widget="badge"
+                               decoration-success="status == 'present'"
+                               decoration-warning="status in ('late', 'half_day')"
+                               decoration-danger="status == 'absent'"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 5. MENUS UNDER TIME & ATTENDANCE + CONFIGURATION                   -->
+    <!-- ================================================================== -->
+    <menuitem id="menu_dsl_attendance_log"
+              name="Daily Attendance"
+              parent="DSL_HRMS_core.menu_dsl_hrms_attendance_root"
+              action="action_dsl_attendance_log"
+              sequence="10"/>
+
+    <menuitem id="menu_dsl_attendance_regularization"
+              name="Attendance Regularization"
+              parent="DSL_HRMS_core.menu_dsl_hrms_attendance_root"
+              action="action_dsl_attendance_regularization"
+              sequence="20"/>
+
+    <menuitem id="menu_dsl_attendance_policy"
+              name="Attendance Policies"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_attendance_policy"
+              sequence="35"/>
+</odoo>
+
