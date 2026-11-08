@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Top-level Root Menu -->
+    <menuitem id="menu_dsl_hrms_root"
+              name="DSL HRMS"
+              web_icon="DSL_HRMS_core,static/description/icon.png"
+              action="DSL_HRMS_dashboard.action_dsl_hrms_dashboard"
+              sequence="1"/>
+
+    <!-- Category Menus under DSL HRMS -->
+    <menuitem id="menu_dsl_hrms_dashboard"
+              name="Dashboard"
+              parent="menu_dsl_hrms_root"
+              action="DSL_HRMS_dashboard.action_dsl_hrms_dashboard"
+              sequence="10"/>
+
+    <menuitem id="menu_dsl_hrms_workforce"
+              name="Workforce"
+              parent="menu_dsl_hrms_root"
+              sequence="20"/>
+
+    <menuitem id="menu_dsl_hrms_attendance_root"
+              name="Time &amp; Attendance"
+              parent="menu_dsl_hrms_root"
+              sequence="30"/>
+
+    <menuitem id="menu_dsl_hrms_leave_root"
+              name="Leaves"
+              parent="menu_dsl_hrms_root"
+              sequence="40"/>
+
+    <menuitem id="menu_dsl_hrms_payroll_root"
+              name="Payroll"
+              parent="menu_dsl_hrms_root"
+              sequence="50"/>
+
+    <menuitem id="menu_dsl_hrms_self_service_root"
+              name="Self-Service"
+              parent="menu_dsl_hrms_root"
+              sequence="60"/>
+
+    <menuitem id="menu_dsl_hrms_talent_root"
+              name="Talent &amp; KPI"
+              parent="menu_dsl_hrms_root"
+              sequence="65"/>
+
+    <menuitem id="menu_dsl_hrms_operations_root"
+              name="Operations &amp; Factory"
+              parent="menu_dsl_hrms_root"
+              sequence="70"/>
+
+    <menuitem id="menu_dsl_hrms_configuration_root"
+              name="Configuration"
+              parent="menu_dsl_hrms_root"
+              sequence="90"/>
+
+    <!-- Submenus under Workforce -->
+    <menuitem id="menu_dsl_hrms_employees"
+              name="Employees"
+              parent="menu_dsl_hrms_workforce"
+              action="hr.open_view_employee_list_my"
+              sequence="10"/>
+
+    <menuitem id="menu_dsl_hrms_departments"
+              name="Departments"
+              parent="menu_dsl_hrms_workforce"
+              action="hr.hr_department_tree_action"
+              sequence="20"/>
+
+    <!-- Settings Submenu -->
+    <menuitem id="menu_dsl_hrms_settings"
+              name="Settings"
+              parent="menu_dsl_hrms_configuration_root"
+              action="action_dsl_hrms_config_settings"
+              sequence="10"/>
+</odoo>

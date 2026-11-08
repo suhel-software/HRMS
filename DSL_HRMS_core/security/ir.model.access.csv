@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_branch_core_user,dsl.branch.core.user,model_dsl_branch,base.group_user,1,0,0,0
+access_dsl_branch_core_officer,dsl.branch.core.officer,model_dsl_branch,group_dsl_hrms_officer,1,1,0,0
+access_dsl_branch_core_manager,dsl.branch.core.manager,model_dsl_branch,group_dsl_hrms_manager,1,1,1,1
+access_dsl_role_template_user,dsl.access.role.template.user,model_dsl_access_role_template,base.group_user,1,0,0,0
+access_dsl_role_template_manager,dsl.access.role.template.manager,model_dsl_access_role_template,group_dsl_hrms_manager,1,1,1,0
+access_dsl_role_template_system,dsl.access.role.template.system,model_dsl_access_role_template,base.group_system,1,1,1,1
+access_dsl_main_menu_user,dsl.hrms.main.menu.user,model_dsl_hrms_main_menu,base.group_user,1,0,0,0
+access_dsl_main_menu_manager,dsl.hrms.main.menu.manager,model_dsl_hrms_main_menu,group_dsl_hrms_manager,1,1,1,0
+access_dsl_main_menu_system,dsl.hrms.main.menu.system,model_dsl_hrms_main_menu,base.group_system,1,1,1,1
+access_dsl_res_config_settings_manager,dsl.res.config.settings.manager,base.model_res_config_settings,group_dsl_hrms_manager,1,1,1,1
+access_dsl_res_config_settings_erp_mgr,dsl.res.config.settings.erp.mgr,base.model_res_config_settings,base.group_erp_manager,1,1,1,1
+access_dsl_res_company_manager,dsl.res.company.manager,base.model_res_company,group_dsl_hrms_manager,1,1,0,0
+access_dsl_res_company_erp_mgr,dsl.res.company.erp.mgr,base.model_res_company,base.group_erp_manager,1,1,0,0

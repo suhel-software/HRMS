@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_dsl_hrms" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.dsl.hrms</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="DSL HRMS" string="DSL HRMS" name="dsl_hrms">
+                    <block title="General Settings" id="dsl_hrms_general">
+                        <setting string="System Name" help="Custom brand name displayed across the system">
+                            <field name="dsl_hrms_system_name"/>
+                        </setting>
+                        <setting string="Default Currency Symbol" help="Currency symbol used for compensation and reports">
+                            <field name="dsl_hrms_default_currency_symbol"/>
+                        </setting>
+                    </block>
+                    <block title="Module Integrations" id="dsl_hrms_modules">
+                        <setting string="GPS Tracking" help="Allow employees to punch in via mobile GPS location">
+                            <field name="dsl_hrms_enable_gps"/>
+                        </setting>
+                        <setting string="Multi-Level Approval" help="Enable sequential hierarchy approvals for leaves and requisitions">
+                            <field name="dsl_hrms_enable_multi_level_approval"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_config_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'dsl_hrms'}</field>
+    </record>
+</odoo>
+
