@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Manpower Requisition Views -->
+    <record id="view_dsl_manpower_requisition_list" model="ir.ui.view">
+        <field name="name">dsl.manpower.requisition.list</field>
+        <field name="model">dsl.manpower.requisition</field>
+        <field name="arch" type="xml">
+            <list string="Manpower Requisitions" decoration-success="state == 'approved_open'" decoration-muted="state in ('fulfilled', 'cancelled')">
+                <field name="name" decoration-bf="1"/>
+                <field name="job_title_display" decoration-bf="1"/>
+                <field name="department_id"/>
+                <field name="branch_id" optional="show"/>
+                <field name="employment_category" widget="badge"/>
+                <field name="vacancies"/>
+                <field name="applicant_count"/>
+                <field name="hired_count"/>
+                <field name="budgeted_max_gross" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'submitted'"
+                       decoration-success="state == 'approved_open'"
+                       decoration-primary="state == 'fulfilled'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_manpower_requisition_form" model="ir.ui.view">
+        <field name="name">dsl.manpower.requisition.form</field>
+        <field name="model">dsl.manpower.requisition</field>
+        <field name="arch" type="xml">
+            <form string="Departmental Manpower Requisition">
+                <header>
+                    <button name="action_submit" string="Submit for Approval" type="object"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_approve_open" string="Approve &amp; Open Hiring" type="object"
+                            class="btn-success" invisible="state != 'submitted'"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"/>
+                    <button name="action_close_fulfilled" string="Mark Fulfilled" type="object"
+                            class="btn-secondary" invisible="state != 'approved_open'"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state in ('fulfilled', 'cancelled')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved_open,fulfilled"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Manpower Requisition Ref."/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Position &amp; Department">
+                            <field name="job_title_display"/>
+                            <field name="job_id"/>
+                            <field name="department_id"/>
+                            <field name="grade_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                        </group>
+                        <group string="Headcount &amp; Compensation Budget">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="requested_by_id" widget="many2one_avatar_user"/>
+                            <field name="request_date"/>
+                            <field name="target_join_date"/>
+                            <field name="employment_category"/>
+                            <field name="vacancies"/>
+                            <field name="hired_count"/>
+                            <field name="budgeted_min_gross"/>
+                            <field name="budgeted_max_gross"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Job Specification &amp; Requirements" name="spec">
+                            <field name="job_requirements" placeholder="Specify academic qualifications, technical stack, BD industry experience..."/>
+                        </page>
+                        <page string="Shortlisted &amp; Applied Candidates" name="candidates">
+                            <field name="applicant_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="candidate_name"/>
+                                    <field name="mobile"/>
+                                    <field name="average_score"/>
+                                    <field name="stage" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_manpower_requisition" model="ir.actions.act_window">
+        <field name="name">Manpower Requisitions</field>
+        <field name="res_model">dsl.manpower.requisition</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- 2. Candidate ATS Pipeline Views (Kanban + List + Form) -->
+    <record id="view_dsl_job_applicant_kanban" model="ir.ui.view">
+        <field name="name">dsl.job.applicant.kanban</field>
+        <field name="model">dsl.job.applicant</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="stage" class="o_kanban_small_column">
+                <field name="candidate_name"/>
+                <field name="job_id"/>
+                <field name="average_score"/>
+                <field name="stage"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="fw-bold fs-6"><field name="candidate_name"/></div>
+                        <div class="text-muted small"><field name="job_id"/> • <field name="department_id"/></div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span class="badge text-bg-light"><field name="source"/></span>
+                            <span class="badge text-bg-primary">Score: <field name="average_score"/></span>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_dsl_job_applicant_list" model="ir.ui.view">
+        <field name="name">dsl.job.applicant.list</field>
+        <field name="model">dsl.job.applicant</field>
+        <field name="arch" type="xml">
+            <list string="Candidate ATS Pipeline" decoration-success="stage == 'hired'">
+                <field name="name" decoration-bf="1"/>
+                <field name="candidate_name" decoration-bf="1"/>
+                <field name="mobile"/>
+                <field name="job_id"/>
+                <field name="department_id"/>
+                <field name="source" optional="show"/>
+                <field name="average_score"/>
+                <field name="offered_gross" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="stage" widget="badge"
+                       decoration-info="stage in ('shortlisted', 'written_tech', 'viva_board')"
+                       decoration-warning="stage == 'offered'"
+                       decoration-success="stage == 'hired'"
+                       decoration-danger="stage == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_job_applicant_form" model="ir.ui.view">
+        <field name="name">dsl.job.applicant.form</field>
+        <field name="model">dsl.job.applicant</field>
+        <field name="arch" type="xml">
+            <form string="Candidate Application &amp; Interview Scorecard">
+                <header>
+                    <button name="action_shortlist" string="Shortlist CV" type="object"
+                            class="btn-primary" invisible="stage != 'applied'"/>
+                    <button name="action_move_interview" string="Schedule Panel Interview" type="object"
+                            class="btn-primary" invisible="stage not in ('shortlisted', 'written_tech')"/>
+                    <button name="action_issue_offer" string="Issue Offer" type="object"
+                            class="btn-primary" invisible="stage != 'viva_board'"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <button name="action_print_offer_letter" string="Print Offer Letter" type="object"
+                            class="btn-secondary" invisible="stage not in ('offered', 'hired')"/>
+                    <button name="action_hire_create_employee" string="Hire &amp; Create Employee (1-Click)" type="object"
+                            class="btn-success" invisible="stage != 'offered' or hired_employee_id"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <button name="action_reject" string="Reject" type="object"
+                            invisible="stage in ('hired', 'rejected')"/>
+                    <field name="stage" widget="statusbar" options="{'clickable': '1'}"
+                           statusbar_visible="applied,shortlisted,viva_board,offered,hired"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="candidate_name" string="Candidate Full Name"/>
+                        <h1><field name="candidate_name" placeholder="e.g. Tanvir Ahmed"/></h1>
+                        <div class="text-muted"><field name="name" readonly="1"/></div>
+                    </div>
+                    <group>
+                        <group string="Candidate Contact &amp; Source">
+                            <field name="mobile"/>
+                            <field name="email"/>
+                            <field name="nid_number"/>
+                            <field name="source"/>
+                            <field name="total_experience_years"/>
+                            <field name="hired_employee_id" invisible="not hired_employee_id"/>
+                        </group>
+                        <group string="Target Role &amp; Offer Terms">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="requisition_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                            <field name="expected_gross"/>
+                            <field name="offered_gross"/>
+                            <field name="proposed_joining_date"/>
+                            <field name="average_score" decoration-bf="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Interview Panel Scorecard (/100)" name="scorecard">
+                            <field name="score_line_ids">
+                                <list editable="bottom">
+                                    <field name="interviewer_id" widget="many2one_avatar_user"/>
+                                    <field name="round_name"/>
+                                    <field name="technical_score"/>
+                                    <field name="communication_score"/>
+                                    <field name="culture_fit_score"/>
+                                    <field name="total_score" decoration-bf="1"/>
+                                    <field name="recommendation" widget="badge"/>
+                                    <field name="remarks"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="CV Summary &amp; Screening Notes" name="notes">
+                            <field name="resume_notes" placeholder="Paste candidate profile summary, portfolio links, or notice period..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_job_applicant" model="ir.actions.act_window">
+        <field name="name">Candidate ATS Pipeline</field>
+        <field name="res_model">dsl.job.applicant</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_manpower_requisition"
+              name="Manpower Requisitions"
+              parent="DSL_HRMS_core.menu_dsl_hrms_talent_root"
+              action="action_dsl_manpower_requisition"
+              sequence="10"/>
+
+    <menuitem id="menu_dsl_job_applicant"
+              name="Candidate ATS Pipeline"
+              parent="DSL_HRMS_core.menu_dsl_hrms_talent_root"
+              action="action_dsl_job_applicant"
+              sequence="20"/>
+</odoo>
+

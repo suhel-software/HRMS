@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_mpr_user,dsl.manpower.requisition.user,model_dsl_manpower_requisition,base.group_user,1,1,1,0
+access_dsl_mpr_officer,dsl.manpower.requisition.officer,model_dsl_manpower_requisition,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_app_user,dsl.job.applicant.user,model_dsl_job_applicant,base.group_user,1,1,1,0
+access_dsl_app_officer,dsl.job.applicant.officer,model_dsl_job_applicant,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_score_user,dsl.applicant.interview.score.user,model_dsl_applicant_interview_score,base.group_user,1,1,1,1
+
