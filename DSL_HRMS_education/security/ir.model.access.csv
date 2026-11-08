@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_emp_education_user,dsl.employee.education.user,model_dsl_employee_education,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_emp_education_officer,dsl.employee.education.officer,model_dsl_employee_education,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_emp_education_manager,dsl.employee.education.manager,model_dsl_employee_education,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_emp_cert_user,dsl.employee.certification.user,model_dsl_employee_certification,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_emp_cert_officer,dsl.employee.certification.officer,model_dsl_employee_certification,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_emp_cert_manager,dsl.employee.certification.manager,model_dsl_employee_certification,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+
