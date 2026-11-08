@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_dsl_visitor_pass_list" model="ir.ui.view">
+        <field name="name">dsl.visitor.pass.list</field>
+        <field name="model">dsl.visitor.pass</field>
+        <field name="arch" type="xml">
+            <list string="Visitor Gate Pass &amp; Security Log" decoration-info="state == 'checked_in'" decoration-success="state == 'checked_out'">
+                <field name="name" decoration-bf="1"/>
+                <field name="visitor_name" decoration-bf="1"/>
+                <field name="visitor_mobile"/>
+                <field name="visitor_org"/>
+                <field name="host_employee_id" widget="many2one_avatar_employee"/>
+                <field name="purpose" widget="badge"/>
+                <field name="check_in_time"/>
+                <field name="check_out_time"/>
+                <field name="state" widget="badge" decoration-info="state == 'checked_in'" decoration-success="state == 'checked_out'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_visitor_pass_form" model="ir.ui.view">
+        <field name="name">dsl.visitor.pass.form</field>
+        <field name="model">dsl.visitor.pass</field>
+        <field name="arch" type="xml">
+            <form string="Visitor Gate Pass &amp; Security Log">
+                <header>
+                    <button name="action_gate_check_in" string="Security Gate Check-In" type="object" class="btn-primary" invisible="state != 'pre_registered'"/>
+                    <button name="action_gate_check_out" string="Security Gate Check-Out" type="object" class="btn-success" invisible="state != 'checked_in'"/>
+                    <button name="action_deny_entry" string="Deny Entry" type="object" invisible="state in ('checked_out', 'denied')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="pre_registered,checked_in,checked_out"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="visitor_name" string="Visitor Name"/>
+                        <h1><field name="visitor_name" placeholder="e.g. Mr. Hasan Mahmud"/></h1>
+                        <div class="text-muted"><field name="name" readonly="1"/></div>
+                    </div>
+                    <group>
+                        <group string="Visitor Identity &amp; Badge">
+                            <field name="visitor_mobile"/>
+                            <field name="visitor_org"/>
+                            <field name="nid_or_passport"/>
+                            <field name="badge_card_no"/>
+                            <field name="carried_items"/>
+                        </group>
+                        <group string="Host Employee &amp; Gate Timestamps">
+                            <field name="host_employee_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="visit_date"/>
+                            <field name="purpose"/>
+                            <field name="check_in_time"/>
+                            <field name="check_out_time"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_visitor_pass" model="ir.actions.act_window">
+        <field name="name">Visitor Gate Passes</field>
+        <field name="res_model">dsl.visitor.pass</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_visitor_pass"
+              name="Visitor Gate Pass"
+              parent="DSL_HRMS_core.menu_dsl_hrms_operations_root"
+              action="action_dsl_visitor_pass"
+              sequence="30"/>
+</odoo>
+

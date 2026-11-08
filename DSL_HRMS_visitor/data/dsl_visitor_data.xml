@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_dsl_visitor_pass" model="ir.sequence">
+            <field name="name">Visitor Gate Pass</field>
+            <field name="code">dsl.visitor.pass</field>
+            <field name="prefix">VIS-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>
+
