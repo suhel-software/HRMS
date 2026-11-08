@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_dsl_canteen_meal_log" model="ir.sequence">
+            <field name="name">Canteen Meal Token</field>
+            <field name="code">dsl.canteen.meal.log</field>
+            <field name="prefix">MEAL-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="meal_item_corporate_lunch" model="dsl.canteen.meal.item">
+            <field name="name">Corporate Standard Lunch (ভাত, মাছ/মুরগি, ডাল ও সবজি)</field>
+            <field name="meal_slot">lunch</field>
+            <field name="unit_cost">140.0</field>
+            <field name="company_subsidy">80.0</field>
+        </record>
+        <record id="meal_item_factory_lunch" model="dsl.canteen.meal.item">
+            <field name="name">Factory Subsidized Meal (ফ্যাক্টরি লাঞ্চ/টিফিন)</field>
+            <field name="meal_slot">lunch</field>
+            <field name="unit_cost">90.0</field>
+            <field name="company_subsidy">60.0</field>
+        </record>
+    </data>
+</odoo>
+

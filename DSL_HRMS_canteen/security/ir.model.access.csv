@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_meal_item_user,dsl.canteen.meal.item.user,model_dsl_canteen_meal_item,base.group_user,1,0,0,0
+access_dsl_meal_item_officer,dsl.canteen.meal.item.officer,model_dsl_canteen_meal_item,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_meal_log_user,dsl.canteen.meal.log.user,model_dsl_canteen_meal_log,base.group_user,1,1,1,0
+access_dsl_meal_log_officer,dsl.canteen.meal.log.officer,model_dsl_canteen_meal_log,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+
