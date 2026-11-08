@@ -1,0 +1,841 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Executive SaaS Employee Profile Form (Hero Card + Pill Tabs + 3-Col Overview Bento) -->
+    <record id="view_employee_form_inherit_dsl_dossier" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.dossier</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="priority" eval="95"/>
+        <field name="arch" type="xml">
+            <!-- Header: Confirm Employment Action + Clean Statusbar -->
+            <xpath expr="//header" position="inside">
+                <button name="action_confirm_employment"
+                        string="Confirm Employment"
+                        type="object"
+                        class="btn-primary"
+                        groups="hr.group_hr_user"
+                        invisible="employment_status != 'probation' or not id"/>
+            </xpath>
+
+            <!-- Smart Button Hook (kept in DOM for plug-and-play sub-modules, hidden visually via CSS) -->
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_nominees"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-shield"
+                        groups="hr.group_hr_user">
+                    <field name="nominee_count" widget="statinfo" string="Nominees"/>
+                </button>
+            </xpath>
+
+            <!-- Replace Legacy Title/Avatar Block with Executive Split-Sidebar Profile Card -->
+            <xpath expr="//sheet/div[hasclass('row')][1]" position="replace">
+                <!-- Left Vertical Profile Sidebar Card (Avatar + Identity + Chips + Quick Stats) -->
+                <div class="dsl-emp-hero-card">
+                    <div class="dsl-emp-hero-left">
+                        <div class="dsl-emp-avatar-wrap">
+                            <field name="image_1920"
+                                   widget="image"
+                                   class="oe_avatar"
+                                   options="{'zoom': true, 'preview_image': 'avatar_128'}"/>
+                            <span class="dsl-emp-status-dot"
+                                  invisible="employment_status != 'confirmed'"
+                                  title="Active &amp; Confirmed"/>
+                            <span class="dsl-emp-status-dot dsl-dot-probation"
+                                  invisible="employment_status != 'probation'"
+                                  title="On Probation"/>
+                            <span class="dsl-emp-status-dot dsl-dot-warning"
+                                  invisible="employment_status in ('confirmed', 'probation')"
+                                  title="Attention"/>
+                        </div>
+
+                        <div class="dsl-emp-identity">
+                            <div class="dsl-emp-name-row">
+                                <field name="name"
+                                       placeholder="Employee Full Name"
+                                       required="True"
+                                       class="dsl-emp-name-field"/>
+                            </div>
+
+                            <div class="dsl-emp-status-center-row">
+                                <span class="dsl-status-pill pill-confirmed"
+                                      invisible="employment_status != 'confirmed'">
+                                    <i class="fa fa-circle me-1" style="font-size: 7px;" title="Active"/>Active
+                                </span>
+                                <span class="dsl-status-pill pill-probation"
+                                      invisible="employment_status != 'probation'">On Probation</span>
+                                <span class="dsl-status-pill pill-notice"
+                                      invisible="employment_status != 'notice_period'">Serving Notice</span>
+                                <span class="dsl-status-pill pill-danger"
+                                      invisible="employment_status not in ('suspended', 'separated')">Separated</span>
+                            </div>
+
+                            <div class="dsl-emp-id-row">
+                                <span class="dsl-emp-id-badge">
+                                    <i class="fa fa-id-card-o me-1 text-primary" title="Employee ID"/>
+                                    Emp ID:
+                                    <field name="employee_code"
+                                           readonly="1"
+                                           class="dsl-emp-code-val d-inline-block ms-1"/>
+                                </span>
+                            </div>
+
+                            <div class="dsl-emp-sidebar-chips">
+                                <div class="dsl-meta-chip" invisible="not job_id">
+                                    <i class="fa fa-sitemap chip-icon-blue" title="Designation"/>
+                                    <field name="job_id" readonly="1" options="{'no_open': True}"/>
+                                </div>
+                                <div class="dsl-meta-chip" invisible="not department_id">
+                                    <i class="fa fa-users chip-icon-rose" title="Department"/>
+                                    <field name="department_id" readonly="1" options="{'no_open': True}"/>
+                                </div>
+                                <div class="dsl-meta-chip">
+                                    <i class="fa fa-university chip-icon-indigo" title="Company"/>
+                                    <field name="company_id" readonly="1" options="{'no_open': True}"/>
+                                </div>
+                                <div class="dsl-meta-chip" invisible="not branch_id">
+                                    <i class="fa fa-map-marker chip-icon-cyan" title="Branch"/>
+                                    <field name="branch_id" readonly="1" options="{'no_open': True}"/>
+                                </div>
+                                <div class="dsl-meta-chip" invisible="not blood_group">
+                                    <i class="fa fa-tint chip-icon-red" title="Blood Group"/>
+                                    <span>Blood: </span>
+                                    <field name="blood_group" readonly="1" class="ms-1"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats Section at Bottom of Left Sidebar Card -->
+                    <div class="dsl-sidebar-quick-stats" groups="hr.group_hr_user">
+                        <div class="dsl-qs-header">
+                            <i class="fa fa-bar-chart" title="Quick Stats"/>
+                            <span>Quick Stats</span>
+                        </div>
+                        <div class="dsl-emp-kpi-grid">
+                            <div class="dsl-hero-kpi-box kpi-blue">
+                                <div class="dsl-kpi-icon">
+                                    <i class="fa fa-users" title="Total Attendance"/>
+                                </div>
+                                <div>
+                                    <div class="dsl-kpi-label">Total Attendance</div>
+                                    <div class="dsl-kpi-value"><field name="hero_attendance_ratio"/></div>
+                                    <div class="dsl-kpi-sub"><field name="hero_attendance_pct_label"/></div>
+                                </div>
+                            </div>
+
+                            <div class="dsl-hero-kpi-box kpi-green">
+                                <div class="dsl-kpi-icon">
+                                    <i class="fa fa-calendar-check-o" title="Leave Taken"/>
+                                </div>
+                                <div>
+                                    <div class="dsl-kpi-label">Leave Taken</div>
+                                    <div class="dsl-kpi-value"><field name="hero_leave_days_label"/></div>
+                                    <div class="dsl-kpi-sub">(This Year)</div>
+                                </div>
+                            </div>
+
+                            <div class="dsl-hero-kpi-box kpi-purple kpi-full-row">
+                                <div class="dsl-kpi-icon">
+                                    <i class="fa fa-clock-o" title="Working Since"/>
+                                </div>
+                                <div>
+                                    <div class="dsl-kpi-label">Working Since</div>
+                                    <div class="dsl-kpi-value"><field name="joining_date_formatted"/></div>
+                                    <div class="dsl-kpi-sub">(<field name="service_length_display"/>)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+
+            <!-- Move Legacy Top Form Group & Properties cleanly inside Employment Tab -->
+            <xpath expr="//div[@id='o_work_employee_main']/group[1]" position="before">
+                <xpath expr="//sheet/group[1]" position="move"/>
+            </xpath>
+            <xpath expr="//page[@name='public']" position="inside">
+                <xpath expr="//sheet/field[@name='employee_properties']" position="move"/>
+            </xpath>
+
+            <!-- Place 01 Basic Information before 07 Employment Details for strict 01..18 tab ordering -->
+            <xpath expr="//page[@name='public']" position="before">
+                <xpath expr="//page[@name='personal_information']" position="move"/>
+            </xpath>
+
+            <!-- Rename Core Notebook Tabs to Clean, Concise Enterprise Labels -->
+            <xpath expr="//page[@name='personal_information']" position="attributes">
+                <attribute name="string">Basic Info</attribute>
+            </xpath>
+            <xpath expr="//page[@name='public']" position="attributes">
+                <attribute name="string">Job Details</attribute>
+            </xpath>
+            <xpath expr="//page[@name='hr_settings']" position="attributes">
+                <attribute name="string">Activity &amp; Settings</attribute>
+            </xpath>
+
+            <!-- TAB 0 (DEFAULT ACTIVE PILL): Overview — 3-Column Bento Dashboard -->
+            <xpath expr="//notebook/page[1]" position="before">
+                <page name="dsl_overview_tab" string="Overview" groups="hr.group_hr_user">
+                    <div class="dsl-overview-bento">
+                        <!-- Column 1: Basic Information -->
+                        <div class="dsl-bento-col">
+                            <div class="dsl-bento-card dsl-bento-emerald-card">
+                                <div class="dsl-bento-header">
+                                    <div class="dsl-bento-title">
+                                        <i class="fa fa-user" title="Basic Information"/>
+                                        <span>Basic Information</span>
+                                    </div>
+                                </div>
+                                <div class="dsl-kv-list">
+                                    <div class="dsl-kv-row">
+                                        <span class="dsl-kv-label">Full Name</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="name" readonly="1"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row" invisible="not name_bn">
+                                        <span class="dsl-kv-label">নাম (বাংলায়)</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="name_bn" readonly="1"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row">
+                                        <span class="dsl-kv-label">Employee ID</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="employee_code" readonly="1"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row">
+                                        <span class="dsl-kv-label">Designation</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="job_id" readonly="1" options="{'no_open': True}"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row">
+                                        <span class="dsl-kv-label">Department</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="department_id" readonly="1" options="{'no_open': True}"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row">
+                                        <span class="dsl-kv-label">Branch</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="branch_id" readonly="1" options="{'no_open': True}"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row">
+                                        <span class="dsl-kv-label">Company</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="company_id" readonly="1" options="{'no_open': True}"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row">
+                                        <span class="dsl-kv-label">Joining Date</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="joining_date_formatted"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row" invisible="not confirmation_date">
+                                        <span class="dsl-kv-label">Confirm Date</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="confirmation_date" readonly="1"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row">
+                                        <span class="dsl-kv-label">Status</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val">
+                                            <span class="dsl-confirmed-active-pill" invisible="employment_status != 'confirmed'">
+                                                Confirmed / Active
+                                            </span>
+                                            <field name="employment_status" widget="badge"
+                                                   invisible="employment_status == 'confirmed'"
+                                                   decoration-info="employment_status == 'probation'"
+                                                   decoration-warning="employment_status == 'notice_period'"
+                                                   decoration-danger="employment_status in ('suspended', 'separated')"/>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 2: Contact Information + Quick Actions -->
+                        <div class="dsl-bento-col">
+                            <div class="dsl-bento-card">
+                                <div class="dsl-bento-header">
+                                    <div class="dsl-bento-title">
+                                        <i class="fa fa-phone" title="Contact Information"/>
+                                        <span>Contact Information</span>
+                                    </div>
+                                </div>
+                                <div class="dsl-kv-list">
+                                    <div class="dsl-kv-row">
+                                        <span class="dsl-kv-label">Mobile</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="overview_mobile_display"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row">
+                                        <span class="dsl-kv-label">Email</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val dsl-val-link">
+                                            <field name="work_email" readonly="1"/>
+                                        </span>
+                                    </div>
+                                    <div class="dsl-kv-row">
+                                        <span class="dsl-kv-label">Address</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="overview_address_display"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row" invisible="not blood_group">
+                                        <span class="dsl-kv-label">Blood Group</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="blood_group" readonly="1"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row" invisible="not nid_number">
+                                        <span class="dsl-kv-label">Smart NID</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="nid_number" readonly="1"/></span>
+                                    </div>
+                                    <div class="dsl-kv-row" invisible="not emergency_phone">
+                                        <span class="dsl-kv-label">Emergency</span>
+                                        <span class="dsl-kv-sep">:</span>
+                                        <span class="dsl-kv-val"><field name="emergency_phone" readonly="1"/></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="dsl-bento-card dsl-card-compact">
+                                <div class="dsl-bento-header">
+                                    <div class="dsl-bento-title">
+                                        <i class="fa fa-th-large" title="Quick Actions"/>
+                                        <span>Quick Actions</span>
+                                    </div>
+                                </div>
+                                <div class="dsl-quick-actions-grid">
+                                    <button name="action_quick_open_documents"
+                                            type="object"
+                                            class="btn dsl-qa-btn qa-blue"
+                                            invisible="not id">
+                                        <i class="fa fa-folder-open" title="Documents"/>
+                                        <span>Documents</span>
+                                    </button>
+                                    <button name="action_quick_open_skills"
+                                            type="object"
+                                            class="btn dsl-qa-btn qa-green"
+                                            invisible="not id">
+                                        <i class="fa fa-star" title="Skills"/>
+                                        <span>Skills</span>
+                                    </button>
+                                    <button name="action_quick_open_family"
+                                            type="object"
+                                            class="btn dsl-qa-btn qa-purple"
+                                            invisible="not id">
+                                        <i class="fa fa-users" title="Family"/>
+                                        <span>Family</span>
+                                    </button>
+                                    <button name="action_quick_open_nominees"
+                                            type="object"
+                                            class="btn dsl-qa-btn qa-amber"
+                                            invisible="not id">
+                                        <i class="fa fa-shield" title="Nominees"/>
+                                        <span>Nominees</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Column 3: Attendance Summary Donut + Recent Activities -->
+                        <div class="dsl-bento-col">
+                            <div class="dsl-bento-card dsl-card-compact">
+                                <div class="dsl-bento-header">
+                                    <div class="dsl-bento-title">
+                                        <i class="fa fa-pie-chart" title="Attendance Summary"/>
+                                        <span>Attendance Summary</span>
+                                    </div>
+                                    <span class="dsl-period-pill">This Month</span>
+                                </div>
+                                <div class="dsl-att-summary-wrap">
+                                    <div class="dsl-att-donut-box">
+                                        <field name="overview_attendance_ring_html" nolabel="1"/>
+                                    </div>
+                                    <div class="dsl-att-stats-row">
+                                        <div class="dsl-att-stat-item">
+                                            <div class="stat-lbl">
+                                                <i class="fa fa-check-circle text-success" title="Present"/> Present
+                                            </div>
+                                            <div class="stat-num"><field name="overview_present_days"/></div>
+                                        </div>
+                                        <div class="dsl-att-stat-item">
+                                            <div class="stat-lbl">
+                                                <i class="fa fa-times-circle text-danger" title="Absent"/> Absent
+                                            </div>
+                                            <div class="stat-num"><field name="overview_absent_days"/></div>
+                                        </div>
+                                        <div class="dsl-att-stat-item">
+                                            <div class="stat-lbl">
+                                                <i class="fa fa-clock-o text-info" title="Late"/> Late
+                                            </div>
+                                            <div class="stat-num">0 Days</div>
+                                        </div>
+                                        <div class="dsl-att-stat-item">
+                                            <div class="stat-lbl">
+                                                <i class="fa fa-umbrella text-warning" title="On Leave"/> On Leave
+                                            </div>
+                                            <div class="stat-num"><field name="overview_leave_days"/></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="dsl-bento-card">
+                                <div class="dsl-bento-header">
+                                    <div class="dsl-bento-title">
+                                        <i class="fa fa-history" title="Recent Activities"/>
+                                        <span>Recent Activities</span>
+                                    </div>
+                                    <span class="dsl-period-pill">Timeline</span>
+                                </div>
+                                <field name="overview_recent_activities_html" nolabel="1"/>
+                            </div>
+                        </div>
+                    </div>
+                </page>
+            </xpath>
+
+            <!-- TABS 02..06 (Placed strictly after 01 Basic Information & before 07 Employment Details) -->
+            <xpath expr="//notebook/page[@name='personal_information']" position="after">
+                <!-- TAB 02: Contact Information (Addresses EN/BN + dsl.employee.contact + dsl.employee.emergency) -->
+                <page name="dsl_contact_info_tab" string="Contacts" groups="hr.group_hr_user">
+                    <group>
+                        <group string="Present / Mailing Address (EN &amp; বাংলা)">
+                            <field name="present_village_house" placeholder="House, Road, Block / Village"/>
+                            <field name="present_address_bn" placeholder="বর্তমান ঠিকানা (বাংলায়) — বাড়ি/রোড/গ্রাম"/>
+                            <field name="present_post_office" placeholder="Post Office"/>
+                            <field name="present_thana_upazila" placeholder="Police Station / Thana / Upazila"/>
+                            <field name="present_district" placeholder="District (e.g. Dhaka, Gazipur, Chattogram)"/>
+                            <field name="present_postcode" placeholder="Post Code (e.g. 1212)"/>
+                        </group>
+                        <group string="Permanent Address (NID / Village Home)">
+                            <field name="same_as_present_address"/>
+                            <field name="permanent_village_house" readonly="same_as_present_address"/>
+                            <field name="permanent_address_bn" placeholder="স্থায়ী ঠিকানা (বাংলায়)" readonly="same_as_present_address"/>
+                            <field name="permanent_post_office" readonly="same_as_present_address"/>
+                            <field name="permanent_thana_upazila" readonly="same_as_present_address"/>
+                            <field name="permanent_district" readonly="same_as_present_address"/>
+                            <field name="permanent_postcode" readonly="same_as_present_address"/>
+                        </group>
+                    </group>
+
+                    <separator string="Address &amp; Contact Directory (DSL_HRMS_employee_contact)"/>
+                    <field name="contact_line_ids" context="{'default_employee_id': id}">
+                        <list editable="bottom">
+                            <field name="address_type" widget="badge"/>
+                            <field name="village_house" decoration-bf="1"/>
+                            <field name="address_bn"/>
+                            <field name="thana_upazila"/>
+                            <field name="district"/>
+                            <field name="postcode" optional="show"/>
+                            <field name="mobile"/>
+                            <field name="email" optional="show"/>
+                            <field name="is_primary" widget="boolean_toggle"/>
+                        </list>
+                    </field>
+
+                    <separator string="Emergency Contact Persons — ICE (DSL_HRMS_employee_emergency)"/>
+                    <field name="emergency_line_ids" context="{'default_employee_id': id}">
+                        <list editable="bottom">
+                            <field name="name" decoration-bf="1"/>
+                            <field name="name_bn" optional="show"/>
+                            <field name="relationship" widget="badge"/>
+                            <field name="phone"/>
+                            <field name="alt_phone" optional="show"/>
+                            <field name="address"/>
+                            <field name="is_primary" widget="boolean_toggle"/>
+                        </list>
+                    </field>
+                    <group string="Primary Emergency Contact Summary">
+                        <group>
+                            <field name="emergency_contact"/>
+                            <field name="emergency_phone"/>
+                        </group>
+                        <group>
+                            <field name="emergency_relation"/>
+                            <field name="emergency_address"/>
+                        </group>
+                    </group>
+                </page>
+
+                <!-- TAB 03: Education (Populated by DSL_HRMS_education) -->
+                <page name="dsl_education_tab" string="Education" groups="hr.group_hr_user"/>
+
+                <!-- TAB 04: Experience (Populated by DSL_HRMS_experience) -->
+                <page name="dsl_experience_skills_tab" string="Experience" groups="hr.group_hr_user"/>
+
+                <!-- TAB 05: Family & Nominee (Family injected by DSL_HRMS_family + Nominees below) -->
+                <page name="dsl_family_tab" string="Family &amp; Nominee" groups="hr.group_hr_user">
+                    <separator name="dsl_nominee_section_sep" string="Statutory Nominees — PF, Gratuity &amp; Group Insurance (DSL_HRMS_employee_nominee)"/>
+                    <field name="nominee_ids" context="{'default_employee_id': id}">
+                        <list editable="bottom">
+                            <field name="name" decoration-bf="1"/>
+                            <field name="name_bn" optional="show"/>
+                            <field name="relationship"/>
+                            <field name="benefit_scope"/>
+                            <field name="share_percentage" sum="Total Share (%)"/>
+                            <field name="nid_or_birth_reg"/>
+                            <field name="phone"/>
+                            <field name="is_minor" optional="show"/>
+                            <field name="guardian_name" invisible="not is_minor" optional="show"/>
+                        </list>
+                    </field>
+                </page>
+
+                <!-- TAB 06: Documents (Populated by DSL_HRMS_document) -->
+                <page name="dsl_document_vault_tab" string="Documents" groups="hr.group_hr_user"/>
+            </xpath>
+
+            <!-- TAB 07: Employment Details (Hardware Biometric/RFID, Bonus Eligibility & Immutable Job History) -->
+            <xpath expr="//page[@name='public']//group[@name='departure']" position="before">
+                <group string="Employment Status, Lifecycle &amp; Festival Bonus">
+                    <field name="employee_code" readonly="1"/>
+                    <field name="employment_category"/>
+                    <field name="employment_status"/>
+                    <field name="joining_date"/>
+                    <field name="service_length_display"/>
+                    <field name="confirmation_date"/>
+                    <field name="retirement_date" groups="hr.group_hr_user"/>
+                    <field name="festival_bonus_eligible" groups="hr.group_hr_user"/>
+                    <field name="festival_bonus_eligible_from" invisible="not festival_bonus_eligible" groups="hr.group_hr_user"/>
+                </group>
+                <group string="Biometric Device, RFID Card &amp; Duty Location">
+                    <field name="biometric_device_id" placeholder="e.g. BIO-1001"/>
+                    <field name="rfid_card_no" placeholder="e.g. RFID-0098412"/>
+                    <field name="duty_work_location" placeholder="e.g. Corporate HQ Level-8 / Sewing Line-A1"/>
+                </group>
+            </xpath>
+
+            <xpath expr="//page[@name='public']" position="inside">
+                <separator string="Organizational Placement &amp; Immutable Job History (DSL_HRMS_employee_job)"/>
+                <field name="job_history_ids" context="{'default_employee_id': id, 'default_company_id': company_id, 'default_branch_id': branch_id, 'default_department_id': department_id, 'default_job_id': job_id, 'default_grade_id': grade_id}">
+                    <list editable="bottom" decoration-success="is_current">
+                        <field name="company_id"/>
+                        <field name="branch_id"/>
+                        <field name="department_id"/>
+                        <field name="job_id" decoration-bf="1"/>
+                        <field name="grade_id"/>
+                        <field name="employment_category"/>
+                        <field name="manager_id" optional="show"/>
+                        <field name="cost_center_id" optional="show"/>
+                        <field name="effective_from"/>
+                        <field name="effective_to"/>
+                        <field name="change_reason" widget="badge"/>
+                        <field name="is_current" widget="boolean_toggle"/>
+                        <field name="remarks" optional="show"/>
+                    </list>
+                </field>
+            </xpath>
+
+            <!-- TABS 08..17 (Placed strictly after 07 Employment Details & before 18 Activity History) -->
+            <xpath expr="//page[@name='public']" position="after">
+                <!-- TAB 08: Contract History (DSL_HRMS_employee_contract) -->
+                <page name="dsl_tab_08_contract" string="Contracts" groups="hr.group_hr_user">
+                    <group>
+                        <group string="Current Probation &amp; Confirmation Policy">
+                            <field name="joining_date" readonly="1"/>
+                            <field name="probation_months"/>
+                            <field name="probation_end_date"/>
+                            <field name="confirmation_date"/>
+                        </group>
+                        <group string="Statutory Notice &amp; Superannuation">
+                            <field name="notice_period_days"/>
+                            <field name="retirement_date"/>
+                        </group>
+                    </group>
+                    <separator string="Employment Contract &amp; Agreement Register (DSL_HRMS_employee_contract)"/>
+                    <field name="contract_history_ids" context="{'default_employee_id': id}">
+                        <list editable="bottom" decoration-success="state == 'active'">
+                            <field name="name" decoration-bf="1"/>
+                            <field name="contract_type" widget="badge"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="probation_months"/>
+                            <field name="confirmation_date"/>
+                            <field name="notice_period_days"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="contract_gross"/>
+                            <field name="state" widget="badge"
+                                   decoration-success="state == 'active'"
+                                   decoration-info="state == 'draft'"
+                                   decoration-danger="state == 'terminated'"/>
+                            <field name="notes" optional="show"/>
+                        </list>
+                    </field>
+                </page>
+
+                <!-- TAB 09: Salary & Benefits (Populated by DSL_HRMS_salary_structure & DSL_HRMS_payroll_bd) -->
+                <page name="dsl_payroll_tab" string="Salary &amp; Benefits" groups="hr.group_hr_user"/>
+
+                <!-- TAB 10: Bank & Tax (DSL_HRMS_employee_bank + DSL_HRMS_employee_tax) -->
+                <page name="dsl_tab_10_bank_tax" string="Bank &amp; Tax" groups="hr.group_hr_user">
+                    <group>
+                        <group string="Primary Salary Disbursement Mode (BEFTN / MFS)">
+                            <field name="payment_method"/>
+                            <field name="salary_bank_name" invisible="payment_method not in ('bank', 'mixed')"/>
+                            <field name="salary_bank_branch" invisible="payment_method not in ('bank', 'mixed')"/>
+                            <field name="salary_bank_routing_no" invisible="payment_method not in ('bank', 'mixed')"/>
+                            <field name="salary_bank_account_no" invisible="payment_method not in ('bank', 'mixed')"/>
+                            <field name="mfs_provider" invisible="payment_method != 'mfs'"/>
+                            <field name="mfs_account_no" invisible="payment_method != 'mfs'"/>
+                        </group>
+                        <group string="Bangladesh NBR Tax Identity &amp; Declaration">
+                            <field name="personal_tin" placeholder="12-digit NBR e-TIN"/>
+                            <field name="tax_zone_emp" placeholder="e.g. Taxes Zone-04, Dhaka"/>
+                            <field name="tax_circle_emp" placeholder="e.g. Circle-78 (Salary)"/>
+                            <field name="tax_exemption_notes" placeholder="DPS / Sanchaypatra / LIP rebate declaration notes..."/>
+                        </group>
+                    </group>
+                    <separator string="Bank (BEFTN) &amp; Mobile Banking (MFS) Accounts (DSL_HRMS_employee_bank)"/>
+                    <field name="bank_account_line_ids" context="{'default_employee_id': id, 'default_account_holder_name': name}">
+                        <list editable="bottom" decoration-success="is_primary">
+                            <field name="account_type" widget="badge"/>
+                            <field name="bank_name" decoration-bf="1"/>
+                            <field name="branch_name"/>
+                            <field name="account_holder_name"/>
+                            <field name="account_number" decoration-bf="1"/>
+                            <field name="routing_number"/>
+                            <field name="split_percentage" sum="Total Split (%)"/>
+                            <field name="is_primary" widget="boolean_toggle"/>
+                            <field name="is_verified" widget="boolean_toggle"/>
+                        </list>
+                    </field>
+                </page>
+
+                <!-- TAB 11: Skills & Training (Skills injected by DSL_HRMS_experience + Training below) -->
+                <page name="dsl_tab_11_skills_training" string="Skills &amp; Training" groups="hr.group_hr_user">
+                    <separator name="dsl_training_section_sep" string="Professional Training &amp; Workshop History (DSL_HRMS_employee_training)"/>
+                    <field name="training_line_ids" context="{'default_employee_id': id}">
+                        <list editable="bottom">
+                            <field name="name" decoration-bf="1"/>
+                            <field name="institute_name"/>
+                            <field name="training_type" widget="badge"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="duration_hours"/>
+                            <field name="evaluation_score"/>
+                            <field name="certificate_filename" column_invisible="1"/>
+                            <field name="certificate_file" filename="certificate_filename" widget="binary"/>
+                        </list>
+                    </field>
+                </page>
+
+                <!-- TAB 12: Assets (Populated by DSL_HRMS_onboarding) -->
+                <page name="dsl_tab_12_assets" string="Assets" groups="hr.group_hr_user"/>
+
+                <!-- TAB 13: Attendance & Leave (Populated by DSL_HRMS_attendance, Shift, Overtime & Leave) -->
+                <page name="dsl_attendance_tab" string="Attendance &amp; Leave" groups="hr.group_hr_user"/>
+
+                <!-- TAB 14: Performance (Populated by DSL_HRMS_appraisal) -->
+                <page name="dsl_tab_14_performance" string="Performance" groups="hr.group_hr_user"/>
+
+                <!-- TAB 15: Promotion & Transfer (DSL_HRMS_employee_promotion & DSL_HRMS_employee_transfer) -->
+                <page name="dsl_tab_15_promo_transfer" string="Career &amp; Transfer" groups="hr.group_hr_user">
+                    <separator string="Promotion &amp; Grade Elevation History (DSL_HRMS_employee_promotion)"/>
+                    <field name="promotion_line_ids" context="{'default_employee_id': id, 'default_previous_job_id': job_id, 'default_previous_grade_id': grade_id}">
+                        <list editable="bottom" decoration-success="state == 'approved'">
+                            <field name="name" decoration-bf="1"/>
+                            <field name="previous_job_id"/>
+                            <field name="new_job_id" decoration-bf="1"/>
+                            <field name="previous_grade_id"/>
+                            <field name="new_grade_id"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="previous_gross"/>
+                            <field name="new_gross"/>
+                            <field name="effective_date"/>
+                            <field name="remarks"/>
+                            <field name="state" widget="badge"
+                                   decoration-success="state == 'approved'"
+                                   decoration-warning="state == 'draft'"/>
+                            <button name="action_approve_promotion"
+                                    string="Approve &amp; Apply"
+                                    type="object"
+                                    icon="fa-check"
+                                    class="btn-primary"
+                                    invisible="state == 'approved'"/>
+                        </list>
+                    </field>
+
+                    <separator string="Inter-Company, Inter-Branch &amp; Department Transfer History (DSL_HRMS_employee_transfer)"/>
+                    <field name="transfer_line_ids" context="{'default_employee_id': id, 'default_previous_company_id': company_id, 'default_new_company_id': company_id, 'default_previous_branch_id': branch_id, 'default_previous_department_id': department_id}">
+                        <list editable="bottom" decoration-success="state == 'approved'">
+                            <field name="name" decoration-bf="1"/>
+                            <field name="transfer_type" widget="badge"/>
+                            <field name="previous_company_id" optional="show"/>
+                            <field name="new_company_id" optional="show"/>
+                            <field name="previous_branch_id"/>
+                            <field name="new_branch_id" decoration-bf="1"/>
+                            <field name="previous_department_id"/>
+                            <field name="new_department_id" decoration-bf="1"/>
+                            <field name="effective_date"/>
+                            <field name="remarks"/>
+                            <field name="state" widget="badge"
+                                   decoration-success="state == 'approved'"
+                                   decoration-warning="state == 'draft'"/>
+                            <button name="action_approve_transfer"
+                                    string="Approve &amp; Apply"
+                                    type="object"
+                                    icon="fa-exchange"
+                                    class="btn-primary"
+                                    invisible="state == 'approved'"/>
+                        </list>
+                    </field>
+                </page>
+
+                <!-- TAB 16: Disciplinary Records (DSL_HRMS_employee_disciplinary) -->
+                <page name="dsl_tab_16_disciplinary" string="Disciplinary" groups="hr.group_hr_user">
+                    <separator string="Disciplinary Warnings, Show Cause Notices &amp; Enquiries (BD Labour Act Sec 23–25)"/>
+                    <field name="disciplinary_line_ids" context="{'default_employee_id': id}">
+                        <list editable="bottom" decoration-danger="action_type in ('suspension', 'dismissal')" decoration-warning="action_type == 'show_cause'">
+                            <field name="name" decoration-bf="1"/>
+                            <field name="action_type" widget="badge"/>
+                            <field name="incident_date"/>
+                            <field name="notice_date"/>
+                            <field name="violation_summary" decoration-bf="1"/>
+                            <field name="employee_explanation"/>
+                            <field name="action_taken"/>
+                            <field name="remarks" optional="show"/>
+                            <field name="state" widget="badge"
+                                   decoration-success="state == 'closed'"
+                                   decoration-warning="state in ('open', 'hearing')"/>
+                        </list>
+                    </field>
+                </page>
+
+                <!-- TAB 17: Resignation & Exit (Populated by DSL_HRMS_separation) -->
+                <page name="dsl_tab_17_exit" string="Exit &amp; Clearance" groups="hr.group_hr_user"/>
+            </xpath>
+
+            <!-- TAB 18: Activity History & HR Settings -->
+            <xpath expr="//page[@name='hr_settings']/group" position="before">
+                <div class="mb-3" groups="hr.group_hr_user">
+                    <separator string="Employee Lifecycle Activity Timeline &amp; Audit Snapshot"/>
+                    <field name="overview_recent_activities_html" nolabel="1"/>
+                </div>
+            </xpath>
+
+            <!-- TAB 01: Basic Information — Bangladesh Bilingual Name, NID Verification, Blood Group & Family Lineage -->
+            <xpath expr="//field[@name='identification_id']" position="before">
+                <field name="name_bn" placeholder="কর্মীর পূর্ণ নাম (বাংলায়)..."/>
+                <field name="blood_group"/>
+                <field name="religion"/>
+                <field name="nid_number" placeholder="10, 13, or 17-digit Smart NID"/>
+                <field name="nid_verification_status" widget="badge"
+                       decoration-success="nid_verification_status == 'verified'"
+                       decoration-warning="nid_verification_status in ('unverified', 'pending')"
+                       decoration-danger="nid_verification_status == 'mismatch'"/>
+                <field name="nid_verified_by_id" invisible="nid_verification_status != 'verified'"/>
+                <field name="nid_verified_date" invisible="nid_verification_status != 'verified'"/>
+                <field name="birth_reg_no" placeholder="17-digit Birth Registration No."/>
+                <field name="personal_tin" placeholder="12-digit NBR e-TIN"/>
+                <field name="driving_license_no"/>
+                <field name="passport_expiry_date"/>
+                <field name="age_years"/>
+            </xpath>
+
+            <xpath expr="//page[@name='personal_information']/group" position="before">
+                <div class="d-flex justify-content-between align-items-center mb-2" groups="hr.group_hr_user">
+                    <span class="text-muted small fw-semibold">
+                        <i class="fa fa-id-card-o me-1" title="NID Verification"/>
+                        Bangladesh National ID (Smart NID), Demographics &amp; Parental Lineage
+                    </span>
+                    <button name="action_verify_nid"
+                            string="✓ Verify Smart NID (EC)"
+                            type="object"
+                            class="btn btn-sm btn-success"
+                            invisible="nid_verification_status == 'verified'"/>
+                </div>
+            </xpath>
+
+            <xpath expr="//page[@name='personal_information']/group" position="after">
+                <group string="Parental &amp; Spouse Lineage (EN / বাংলা)" groups="hr.group_hr_user">
+                    <group>
+                        <field name="father_name"/>
+                        <field name="father_name_bn"/>
+                        <field name="spouse_name_bn" invisible="marital not in ['married', 'cohabitant']"/>
+                    </group>
+                    <group>
+                        <field name="mother_name"/>
+                        <field name="mother_name_bn"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 2. Enhance Employee List View -->
+    <record id="view_employee_tree_inherit_dsl_dossier" model="ir.ui.view">
+        <field name="name">hr.employee.list.dsl.dossier</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="before">
+                <field name="employee_code" decoration-bf="1" optional="show"/>
+            </xpath>
+            <xpath expr="//field[@name='job_id']" position="after">
+                <field name="joining_date" optional="show"/>
+                <field name="service_length_display" optional="show"/>
+                <field name="blood_group" optional="hide"/>
+                <field name="employment_category" optional="hide"/>
+                <field name="employment_status" widget="badge" optional="show"
+                       decoration-success="employment_status == 'confirmed'"
+                       decoration-info="employment_status == 'probation'"
+                       decoration-warning="employment_status == 'notice_period'"
+                       decoration-danger="employment_status in ('suspended', 'separated')"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 3. Enhance Employee Kanban Card -->
+    <record id="hr_kanban_view_employees_inherit_dsl_dossier" model="ir.ui.view">
+        <field name="name">hr.employee.kanban.dsl.dossier</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.hr_kanban_view_employees"/>
+        <field name="arch" type="xml">
+            <xpath expr="//kanban" position="inside">
+                <field name="employee_code"/>
+                <field name="blood_group"/>
+                <field name="employment_status"/>
+                <field name="service_length_display"/>
+            </xpath>
+            <xpath expr="//field[@name='name']" position="before">
+                <div class="d-flex align-items-center gap-1 mb-1" t-if="record.employee_code.raw_value">
+                    <span class="badge rounded-pill text-bg-light border text-dark fw-semibold">
+                        <field name="employee_code"/>
+                    </span>
+                    <span t-if="record.blood_group.raw_value"
+                          class="badge rounded-pill text-bg-danger">
+                        <field name="blood_group"/>
+                    </span>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 4. Enhance Employee Search & SearchPanel -->
+    <record id="view_employee_filter_inherit_dsl_dossier" model="ir.ui.view">
+        <field name="name">hr.employee.search.dsl.dossier</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="/search/field[@name='name']" position="attributes">
+                <attribute name="filter_domain">['|', '|', '|', ('name', 'ilike', self), ('employee_code', 'ilike', self), ('name_bn', 'ilike', self), ('work_email', 'ilike', self)]</attribute>
+            </xpath>
+            <xpath expr="/search/field[@name='job_id']" position="after">
+                <field name="employee_code"/>
+                <field name="blood_group"/>
+            </xpath>
+            <xpath expr="//searchpanel" position="inside">
+                <field name="employment_status" icon="fa-check-circle" enable_counters="1"/>
+            </xpath>
+            <xpath expr="//filter[@name='newly_hired']" position="after">
+                <filter name="on_probation" string="On Probation" domain="[('employment_status', '=', 'probation')]"/>
+                <filter name="confirmed_staff" string="Confirmed Staff" domain="[('employment_status', '=', 'confirmed')]"/>
+            </xpath>
+            <xpath expr="//group" position="inside">
+                <filter name="group_emp_status" string="Employment Status" domain="[]" context="{'group_by': 'employment_status'}"/>
+                <filter name="group_emp_category" string="Employment Category" domain="[]" context="{'group_by': 'employment_category'}"/>
+                <filter name="group_blood" string="Blood Group" domain="[]" context="{'group_by': 'blood_group'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

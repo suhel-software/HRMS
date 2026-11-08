@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_dsl_employee_nominee_list" model="ir.ui.view">
+        <field name="name">dsl.employee.nominee.list</field>
+        <field name="model">dsl.employee.nominee</field>
+        <field name="arch" type="xml">
+            <list string="Statutory Nominees">
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="relationship"/>
+                <field name="benefit_scope" widget="badge"/>
+                <field name="share_percentage"/>
+                <field name="nid_or_birth_reg"/>
+                <field name="phone"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_employee_nominee_form" model="ir.ui.view">
+        <field name="name">dsl.employee.nominee.form</field>
+        <field name="model">dsl.employee.nominee</field>
+        <field name="arch" type="xml">
+            <form string="Statutory Nominee">
+                <sheet>
+                    <field name="photo" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Nominee Full Name"/>
+                        </h1>
+                        <h3>
+                            <field name="name_bn" placeholder="নমিনির নাম (বাংলায়)"/>
+                        </h3>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Benefit Allocation">
+                            <field name="employee_id"/>
+                            <field name="company_id" readonly="1" groups="base.group_multi_company"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="relationship"/>
+                            <field name="benefit_scope"/>
+                            <field name="share_percentage"/>
+                        </group>
+                        <group string="Identity &amp; Contact">
+                            <field name="nid_or_birth_reg"/>
+                            <field name="date_of_birth"/>
+                            <field name="phone"/>
+                            <field name="address"/>
+                            <field name="is_minor"/>
+                            <field name="guardian_name" invisible="not is_minor" required="is_minor"/>
+                            <field name="guardian_nid" invisible="not is_minor"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_employee_nominee" model="ir.actions.act_window">
+        <field name="name">Statutory Nominees (PF, Gratuity &amp; Insurance)</field>
+        <field name="res_model">dsl.employee.nominee</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_employee_nominee"
+              name="Statutory Nominees"
+              parent="DSL_HRMS_core.menu_dsl_hrms_workforce"
+              action="action_dsl_employee_nominee"
+              groups="DSL_HRMS_core.group_dsl_hrms_officer"
+              sequence="52"/>
+</odoo>
+
