@@ -1,0 +1,745 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="DSL_HRMS_ess.EssPortal">
+        <div class="dsl_ess_wrap">
+            <div t-if="state.loading" class="text-center py-5 text-muted">
+                <i class="fa fa-circle-o-notch fa-spin me-2" title="Loading"/>
+                Loading Employee Self-Service (ESS) Workspace...
+            </div>
+
+            <t t-elif="state.data.has_employee">
+                <!-- MASTER SPLIT-SIDEBAR WORKSPACE -->
+                <div class="dsl_ess_split_layout">
+
+                    <!-- =======================================================
+                         LEFT SIDEBAR CARD: Profile + Live Attendance Punch + Info
+                         ======================================================= -->
+                    <aside class="dsl_ess_sidebar_card">
+                        <div class="dsl_ess_profile_top">
+                            <div class="dsl_ess_avatar_ring">
+                                <span class="dsl_ess_avatar_initials" t-esc="state.data.employee.initials"/>
+                                <span class="dsl_ess_online_dot" title="Active Employee"/>
+                            </div>
+
+                            <h3 class="dsl_ess_emp_name" t-esc="state.data.employee.name"/>
+                            <div t-if="state.data.employee.name_bn" class="dsl_ess_emp_name_bn" t-esc="state.data.employee.name_bn"/>
+
+                            <div class="dsl_ess_badges_row">
+                                <span class="dsl_ess_status_pill">
+                                    <i class="fa fa-circle me-1" style="font-size: 7px;" title="Active"/>
+                                    <t t-esc="state.data.employee.status_label"/>
+                                </span>
+                                <span class="dsl_ess_code_pill">
+                                    <i class="fa fa-id-badge me-1" title="Employee ID"/>
+                                    <t t-esc="state.data.employee.code"/>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Live Web Attendance Punch Box inside Sidebar -->
+                        <div class="dsl_ess_punch_box">
+                            <div class="dsl_ess_punch_hdr">
+                                <span><i class="fa fa-clock-o me-1 text-emerald" title="Shift"/> Today's Attendance</span>
+                                <span class="dsl_ess_punch_tag" t-if="state.data.attendance.checked_out">Completed</span>
+                                <span class="dsl_ess_punch_tag tag-active" t-elif="state.data.attendance.checked_in">Checked In</span>
+                                <span class="dsl_ess_punch_tag tag-pending" t-else="">Pending</span>
+                            </div>
+                            <div class="dsl_ess_punch_times">
+                                <div class="punch_time_col">
+                                    <span class="pt_lbl">In Time</span>
+                                    <strong class="pt_val" t-esc="state.data.attendance.check_in_str"/>
+                                </div>
+                                <div class="punch_time_divider"/>
+                                <div class="punch_time_col">
+                                    <span class="pt_lbl">Out Time</span>
+                                    <strong class="pt_val" t-esc="state.data.attendance.check_out_str"/>
+                                </div>
+                            </div>
+                            <button class="btn dsl_ess_punch_btn" t-on-click="onWebPunch">
+                                <i class="fa fa-hand-pointer-o me-1" title="Web Punch"/>
+                                <t t-if="!state.data.attendance.checked_in">Punch Check-In Now</t>
+                                <t t-elif="!state.data.attendance.checked_out">Punch Check-Out Now</t>
+                                <t t-else="">Shift Completed ✓</t>
+                            </button>
+                            <div class="dsl_ess_punch_sub_btns">
+                                <button class="btn btn-sm dsl_ess_mini_btn" t-on-click="openRegularize">
+                                    <i class="fa fa-history me-1" title="Regularize"/> Regularize
+                                </button>
+                                <button class="btn btn-sm dsl_ess_mini_btn" t-on-click="openGpsAttendance">
+                                    <i class="fa fa-map-marker me-1" title="GPS"/> GPS Log
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Employee Metadata Chips -->
+                        <div class="dsl_ess_meta_stack">
+                            <div class="dsl_ess_meta_item">
+                                <i class="fa fa-sitemap icon-blue" title="Designation"/>
+                                <span t-esc="state.data.employee.job"/>
+                            </div>
+                            <div class="dsl_ess_meta_item">
+                                <i class="fa fa-users icon-rose" title="Department"/>
+                                <span t-esc="state.data.employee.department"/>
+                            </div>
+                            <div class="dsl_ess_meta_item">
+                                <i class="fa fa-map-marker icon-cyan" title="Branch"/>
+                                <span t-esc="state.data.employee.branch"/>
+                            </div>
+                            <div class="dsl_ess_meta_item">
+                                <i class="fa fa-user-circle-o icon-purple" title="Supervisor"/>
+                                <span>Reports to: <strong t-esc="state.data.employee.manager"/></span>
+                            </div>
+                            <div class="dsl_ess_meta_item">
+                                <i class="fa fa-calendar icon-emerald" title="Tenure"/>
+                                <span>Joined: <strong t-esc="state.data.employee.joining_date"/> (<t t-esc="state.data.employee.service_length"/>)</span>
+                            </div>
+                        </div>
+
+                        <!-- Open My Full Employee Dossier Button -->
+                        <button class="btn dsl_ess_dossier_btn" t-on-click="openMyProfile">
+                            <i class="fa fa-id-card-o me-2" title="My Profile"/>
+                            Open My Full Profile Dossier
+                        </button>
+                    </aside>
+
+                    <!-- =======================================================
+                         RIGHT MAIN WORKSPACE: 4 KPI Cards + 5 Clean Tabs + Bento
+                         ======================================================= -->
+                    <main class="dsl_ess_main_workspace">
+
+                        <!-- 1. TOP 4 EXECUTIVE KPI CARDS -->
+                        <div class="dsl_ess_kpi_row">
+                            <div class="dsl_ess_kpi_card kpi_blue" t-on-click="openAttendanceLogs">
+                                <div class="kpi_top">
+                                    <span class="kpi_title">This Month Attendance</span>
+                                    <span class="kpi_icon"><i class="fa fa-calendar-check-o" title="Attendance"/></span>
+                                </div>
+                                <div class="kpi_val"><t t-esc="state.data.attendance.present_month"/> Days Present</div>
+                                <div class="kpi_sub">
+                                    Today In: <strong t-esc="state.data.attendance.check_in_str"/> · Late: <strong t-esc="state.data.attendance.late_month"/> · OT: <strong t-esc="state.data.attendance.ot_hours_month"/>h
+                                </div>
+                            </div>
+
+                            <div class="dsl_ess_kpi_card kpi_emerald" t-on-click="openMyPayslips">
+                                <div class="kpi_top">
+                                    <span class="kpi_title">Latest Digital Payslip</span>
+                                    <span class="kpi_icon"><i class="fa fa-money" title="Payslip"/></span>
+                                </div>
+                                <t t-if="state.data.latest_payslip">
+                                    <div class="kpi_val text-emerald">৳ <t t-esc="state.data.latest_payslip.net"/></div>
+                                    <div class="kpi_sub">
+                                        <t t-esc="state.data.latest_payslip.month"/> · Gross ৳<t t-esc="state.data.latest_payslip.gross"/>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="kpi_val">৳ 0.00</div>
+                                    <div class="kpi_sub">No payslip generated yet</div>
+                                </t>
+                            </div>
+
+                            <div class="dsl_ess_kpi_card kpi_purple" t-on-click="openProvidentFund">
+                                <div class="kpi_top">
+                                    <span class="kpi_title">Accumulated Provident Fund</span>
+                                    <span class="kpi_icon"><i class="fa fa-shield" title="Provident Fund"/></span>
+                                </div>
+                                <div class="kpi_val">৳ <t t-esc="state.data.pf_balance"/></div>
+                                <div class="kpi_sub">
+                                    Employee + Employer + Profit (<t t-esc="state.data.pf_summary.vested_pct"/>% Vested)
+                                </div>
+                            </div>
+
+                            <div class="dsl_ess_kpi_card kpi_amber" t-on-click="openApplyLoan">
+                                <div class="kpi_top">
+                                    <span class="kpi_title">Active Loan &amp; Leave Balance</span>
+                                    <span class="kpi_icon"><i class="fa fa-credit-card" title="Loan &amp; Leave"/></span>
+                                </div>
+                                <div class="kpi_val">৳ <t t-esc="state.data.loan_balance"/></div>
+                                <div class="kpi_sub">
+                                    Available Leave Quota: <strong class="text-emerald"><t t-esc="state.data.total_leave_remaining"/> Days</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. CLEAN 5-TAB WORKSPACE BAR (Zero Clutter!) -->
+                        <div class="dsl_ess_tabs_bar">
+                            <button t-attf-class="dsl_ess_tab_btn {{ state.activeTab === 'overview' ? 'active' : '' }}"
+                                    t-on-click="() => this.setTab('overview')">
+                                <i class="fa fa-th-large me-1" title="Overview"/> Overview &amp; Quick Hub
+                            </button>
+                            <button t-attf-class="dsl_ess_tab_btn {{ state.activeTab === 'time_leave' ? 'active' : '' }}"
+                                    t-on-click="() => this.setTab('time_leave')">
+                                <i class="fa fa-clock-o me-1" title="Attendance &amp; Leave"/> Time, Shift &amp; Leave
+                            </button>
+                            <button t-attf-class="dsl_ess_tab_btn {{ state.activeTab === 'pay_benefits' ? 'active' : '' }}"
+                                    t-on-click="() => this.setTab('pay_benefits')">
+                                <i class="fa fa-credit-card me-1" title="Payroll &amp; PF"/> Salary, PF, Loan &amp; Tax
+                            </button>
+                            <button t-attf-class="dsl_ess_tab_btn {{ state.activeTab === 'kpi_career' ? 'active' : '' }}"
+                                    t-on-click="() => this.setTab('kpi_career')">
+                                <i class="fa fa-line-chart me-1" title="Performance &amp; KPI"/> KPI, 360° &amp; Career
+                                <span t-if="state.data.pending_reviews_count" class="dsl_tab_badge" t-esc="state.data.pending_reviews_count"/>
+                            </button>
+                            <button t-attf-class="dsl_ess_tab_btn {{ state.activeTab === 'letters_support' ? 'active' : '' }}"
+                                    t-on-click="() => this.setTab('letters_support')">
+                                <i class="fa fa-certificate me-1" title="Letters, Assets &amp; Support"/> Letters, Assets &amp; Desk
+                            </button>
+                        </div>
+
+                        <!-- ===================================================
+                             CORPORATE HR ANNOUNCEMENTS & NOTICE BOARD BANNER (ESS)
+                             =================================================== -->
+                        <div class="dsl_ess_bento_card dsl_ess_announcement_board" t-if="state.data.announcements and state.data.announcements.length">
+                            <div class="bento_hdr">
+                                <span class="bento_title">
+                                    <i class="fa fa-bullhorn text-emerald me-2" title="HR Announcements"/>
+                                    📢 Official HR Announcements &amp; Notice Board
+                                </span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="bento_pill"><t t-esc="state.data.announcements.length"/> Active Circulars</span>
+                                    <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openAnnouncements">
+                                        <i class="fa fa-external-link me-1" title="All Notices"/> View All Notices
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="dsl_ess_notice_grid">
+                                <div t-foreach="state.data.announcements" t-as="ann" t-key="ann.id"
+                                     t-attf-class="dsl_ess_notice_card notice_{{ ann.badge_color }} {{ ann.is_pinned ? 'is_pinned' : '' }}"
+                                     t-on-click="() => this.openAnnouncementRecord(ann.id)">
+                                    <div class="notice_top_row">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <span t-if="ann.is_pinned" class="notice_pin_tag">
+                                                <i class="fa fa-thumb-tack me-1" title="Pinned"/> PINNED
+                                            </span>
+                                            <span t-attf-class="notice_cat_tag tag_{{ ann.badge_color }}">
+                                                <i t-attf-class="fa {{ ann.icon }} me-1" title="Category"/>
+                                                <t t-esc="ann.category_label"/>
+                                            </span>
+                                            <span class="notice_scope_tag" t-esc="ann.scope_label"/>
+                                        </div>
+                                        <span class="notice_date">
+                                            <i class="fa fa-calendar-o me-1" title="Date"/>
+                                            <t t-esc="ann.publish_date"/>
+                                        </span>
+                                    </div>
+                                    <div class="notice_title" t-esc="ann.title"/>
+                                    <div class="notice_summary" t-esc="ann.summary"/>
+                                    <div class="notice_footer">
+                                        <span class="notice_ref"><t t-esc="ann.name"/> · By <t t-esc="ann.author"/></span>
+                                        <span class="notice_read_link">Read Full Circular <i class="fa fa-arrow-right ms-1" title="Read"/></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ===================================================
+                             TAB 1: OVERVIEW & 1-CLICK SELF-SERVICE HUB (3-Col Bento)
+                             =================================================== -->
+                        <div t-if="state.activeTab === 'overview'" class="dsl_ess_bento_3col">
+
+                            <!-- Column 1: 1-Click Self-Service Action Hub (All 12 Actions) -->
+                            <div class="dsl_ess_bento_card card_emerald_glow">
+                                <div class="bento_hdr">
+                                    <span class="bento_title"><i class="fa fa-bolt text-emerald me-2" title="Actions"/>1-Click Self-Service Hub</span>
+                                    <span class="bento_pill">12 Shortcuts</span>
+                                </div>
+                                <div class="dsl_ess_action_tiles_grid">
+                                    <button class="ess_tile tile_emerald" t-on-click="openApplyLeave">
+                                        <i class="fa fa-plane" title="Apply Leave"/>
+                                        <span>Apply Leave</span>
+                                    </button>
+                                    <button class="ess_tile tile_blue" t-on-click="openRegularize">
+                                        <i class="fa fa-history" title="Regularize"/>
+                                        <span>Regularize Punch</span>
+                                    </button>
+                                    <button class="ess_tile tile_indigo" t-on-click="openMyPayslips">
+                                        <i class="fa fa-money" title="Payslips"/>
+                                        <span>Digital Payslips</span>
+                                    </button>
+                                    <button class="ess_tile tile_purple" t-on-click="openSalaryDocRequests">
+                                        <i class="fa fa-file-text-o" title="Salary Docs"/>
+                                        <span>Salary Cert / Docs</span>
+                                    </button>
+                                    <button class="ess_tile tile_amber" t-on-click="openApplyLoan">
+                                        <i class="fa fa-credit-card" title="Loan"/>
+                                        <span>Loan / Advance</span>
+                                    </button>
+                                    <button class="ess_tile tile_cyan" t-on-click="openRequestLetter">
+                                        <i class="fa fa-certificate" title="NOC"/>
+                                        <span>Visa NOC / Letter</span>
+                                    </button>
+                                    <button class="ess_tile tile_rose" t-on-click="openOvertime">
+                                        <i class="fa fa-clock-o" title="Overtime"/>
+                                        <span>Apply Overtime</span>
+                                    </button>
+                                    <button class="ess_tile tile_emerald" t-on-click="openProvidentFund">
+                                        <i class="fa fa-shield" title="PF Ledger"/>
+                                        <span>PF &amp; Gratuity</span>
+                                    </button>
+                                    <button class="ess_tile tile_blue" t-on-click="openMyKpis">
+                                        <i class="fa fa-bullseye" title="KPIs"/>
+                                        <span>My KPIs &amp; 360°</span>
+                                    </button>
+                                    <button class="ess_tile tile_purple" t-on-click="openDocumentVault">
+                                        <i class="fa fa-folder-open" title="Document Vault"/>
+                                        <span>Document Vault</span>
+                                    </button>
+                                    <button class="ess_tile tile_amber" t-on-click="openCanteen">
+                                        <i class="fa fa-cutlery" title="Canteen"/>
+                                        <span>Canteen Meal</span>
+                                    </button>
+                                    <button class="ess_tile tile_rose" t-on-click="openHelpdesk">
+                                        <i class="fa fa-headphones" title="Helpdesk"/>
+                                        <span>Raise HR Ticket</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Column 2: My Yearly Leave Quotas + Upcoming Holidays -->
+                            <div class="dsl_ess_bento_col">
+                                <div class="dsl_ess_bento_card">
+                                    <div class="bento_hdr">
+                                        <span class="bento_title"><i class="fa fa-calendar-plus-o text-blue me-2" title="Leave Quotas"/>My Leave Quotas</span>
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openApplyLeave">+ Apply Leave</button>
+                                    </div>
+                                    <div t-if="state.data.leave_cards.length" class="dsl_ess_leave_list">
+                                        <div class="dsl_ess_leave_item" t-foreach="state.data.leave_cards" t-as="lv" t-key="lv.id">
+                                            <div class="lv_top">
+                                                <div>
+                                                    <span class="lv_code" t-esc="lv.code"/>
+                                                    <span class="lv_name" t-esc="lv.name"/>
+                                                </div>
+                                                <span class="lv_rem_badge"><t t-esc="lv.remaining"/> Days Left</span>
+                                            </div>
+                                            <div class="lv_progress_track">
+                                                <div class="lv_progress_fill" t-attf-style="width: {{ lv.usage_pct }}%;"/>
+                                            </div>
+                                            <div class="lv_meta">
+                                                <span>Entitled: <strong t-esc="lv.entitled"/>d</span>
+                                                <span>Taken: <strong t-esc="lv.taken"/>d</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div t-else="" class="text-muted small py-2">No active leave allocations found.</div>
+                                </div>
+
+                                <div class="dsl_ess_bento_card">
+                                    <div class="bento_hdr">
+                                        <span class="bento_title"><i class="fa fa-star text-amber me-2" title="Holidays"/>Upcoming Holidays</span>
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openHolidays">Calendar</button>
+                                    </div>
+                                    <div t-if="state.data.upcoming_holidays.length" class="dsl_ess_mini_list">
+                                        <div class="mini_row" t-foreach="state.data.upcoming_holidays" t-as="hol" t-key="hol.id">
+                                            <div>
+                                                <div class="mini_title" t-esc="hol.name"/>
+                                                <div class="mini_sub" t-esc="hol.type"/>
+                                            </div>
+                                            <span class="mini_badge" t-esc="hol.date"/>
+                                        </div>
+                                    </div>
+                                    <div t-else="" class="text-muted small">No upcoming holidays listed.</div>
+                                </div>
+                            </div>
+
+                            <!-- Column 3: Recent Requests Tracker + Recent Attendance -->
+                            <div class="dsl_ess_bento_col">
+                                <div class="dsl_ess_bento_card">
+                                    <div class="bento_hdr">
+                                        <span class="bento_title"><i class="fa fa-bell-o text-purple me-2" title="Requests"/>My Recent Requests &amp; Status</span>
+                                        <span class="bento_pill">Live Tracker</span>
+                                    </div>
+                                    <div t-if="state.data.recent_feed.length" class="dsl_ess_mini_list">
+                                        <div class="mini_row" t-foreach="state.data.recent_feed" t-as="fd" t-key="fd_index">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span t-attf-class="feed_icon feed_{{ fd.color }}">
+                                                    <i t-attf-class="fa {{ fd.icon }}" title="Activity"/>
+                                                </span>
+                                                <div>
+                                                    <div class="mini_title" t-esc="fd.title"/>
+                                                    <div class="mini_sub" t-esc="fd.sub"/>
+                                                </div>
+                                            </div>
+                                            <span class="mini_badge badge_emerald" t-esc="fd.badge"/>
+                                        </div>
+                                    </div>
+                                    <div t-else="" class="text-muted small py-2">No recent requests submitted yet.</div>
+                                </div>
+
+                                <div class="dsl_ess_bento_card">
+                                    <div class="bento_hdr">
+                                        <span class="bento_title"><i class="fa fa-clock-o text-emerald me-2" title="Logs"/>Recent Attendance</span>
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openAttendanceLogs">View All</button>
+                                    </div>
+                                    <div t-if="state.data.attendance.recent_logs.length" class="dsl_ess_mini_list">
+                                        <div class="mini_row" t-foreach="state.data.attendance.recent_logs.slice(0, 4)" t-as="att" t-key="att.id">
+                                            <div>
+                                                <div class="mini_title" t-esc="att.date"/>
+                                                <div class="mini_sub">In: <t t-esc="att.check_in"/> · Out: <t t-esc="att.check_out"/></div>
+                                            </div>
+                                            <span t-attf-class="mini_badge {{ att.is_late ? 'badge_amber' : 'badge_emerald' }}" t-esc="att.status"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ===================================================
+                             TAB 2: TIME, SHIFT & LEAVE WORKSPACE
+                             =================================================== -->
+                        <div t-if="state.activeTab === 'time_leave'" class="dsl_ess_bento_2col">
+                            <div class="dsl_ess_bento_card">
+                                <div class="bento_hdr">
+                                    <span class="bento_title"><i class="fa fa-clock-o text-blue me-2" title="Attendance"/>My Attendance &amp; Shift Logs</span>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openRegularize">Regularize</button>
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openOvertime">Apply OT</button>
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openShiftRoster">Shift Roster</button>
+                                    </div>
+                                </div>
+                                <div class="mb-2 small text-muted">
+                                    Assigned Shift: <strong t-esc="state.data.employee.shift_label"/>
+                                </div>
+                                <table class="table dsl_ess_table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Check-In</th>
+                                            <th>Check-Out</th>
+                                            <th>Hours</th>
+                                            <th class="text-end">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.attendance.recent_logs" t-as="lg" t-key="lg.id">
+                                            <td class="fw-semibold" t-esc="lg.date"/>
+                                            <td t-esc="lg.check_in"/>
+                                            <td t-esc="lg.check_out"/>
+                                            <td t-esc="lg.hours"/>
+                                            <td class="text-end">
+                                                <span t-attf-class="mini_badge {{ lg.is_late ? 'badge_amber' : 'badge_emerald' }}" t-esc="lg.status"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="dsl_ess_bento_card">
+                                <div class="bento_hdr">
+                                    <span class="bento_title"><i class="fa fa-plane text-emerald me-2" title="Leaves"/>My Leave Requests &amp; Quotas</span>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openApplyLeave">+ Apply Leave</button>
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openLeaveQuotas">Allocations</button>
+                                    </div>
+                                </div>
+                                <table class="table dsl_ess_table mb-0" t-if="state.data.recent_leaves.length">
+                                    <thead>
+                                        <tr>
+                                            <th>Ref</th>
+                                            <th>Leave Type</th>
+                                            <th>Period</th>
+                                            <th>Days</th>
+                                            <th class="text-end">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.recent_leaves" t-as="lr" t-key="lr.id">
+                                            <td class="fw-semibold" t-esc="lr.name"/>
+                                            <td t-esc="lr.leave_type"/>
+                                            <td><t t-esc="lr.date_from"/> → <t t-esc="lr.date_to"/></td>
+                                            <td><t t-esc="lr.days"/>d</td>
+                                            <td class="text-end">
+                                                <span class="mini_badge badge_emerald" t-esc="lr.state_label"/>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div t-else="" class="text-muted small py-3">No leave applications found.</div>
+                            </div>
+                        </div>
+
+                        <!-- ===================================================
+                             TAB 3: SALARY, PF, LOAN & TAX WORKSPACE
+                             =================================================== -->
+                        <div t-if="state.activeTab === 'pay_benefits'" class="dsl_ess_bento_3col">
+                            <!-- Col 1: Active Compensation Package & Tax -->
+                            <div class="dsl_ess_bento_card card_emerald_glow">
+                                <div class="bento_hdr">
+                                    <span class="bento_title"><i class="fa fa-bank text-emerald me-2" title="Compensation"/>My Salary Structure</span>
+                                    <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openSalaryPackage">Details</button>
+                                </div>
+                                <t t-if="state.data.compensation">
+                                    <div class="dsl_ess_kv_list">
+                                        <div class="kv_row"><span>Structure</span><strong t-esc="state.data.compensation.structure"/></div>
+                                        <div class="kv_row"><span>Basic Salary</span><strong>৳ <t t-esc="state.data.compensation.basic"/></strong></div>
+                                        <div class="kv_row"><span>House Rent (HRA)</span><strong>৳ <t t-esc="state.data.compensation.house_rent"/></strong></div>
+                                        <div class="kv_row"><span>Medical Allowance</span><strong>৳ <t t-esc="state.data.compensation.medical"/></strong></div>
+                                        <div class="kv_row"><span>Conveyance</span><strong>৳ <t t-esc="state.data.compensation.conveyance"/></strong></div>
+                                        <div class="kv_row kv_highlight"><span>Total Monthly Gross</span><strong class="text-emerald">৳ <t t-esc="state.data.compensation.gross"/></strong></div>
+                                        <div class="kv_row"><span>Bank Account</span><strong t-esc="state.data.employee.bank_acc"/></div>
+                                        <div class="kv_row"><span>Monthly Tax (TDS)</span><strong>৳ <t t-esc="state.data.tax_summary.monthly_tds"/></strong></div>
+                                    </div>
+                                </t>
+                                <div t-else="" class="text-muted small py-3">No active salary package assigned.</div>
+                                <div class="mt-3 d-flex gap-2">
+                                    <button class="btn btn-sm dsl_ess_hdr_btn flex-fill" t-on-click="openTaxAssessment">
+                                        <i class="fa fa-percent me-1" title="Tax"/> My Tax Assessment
+                                    </button>
+                                    <button class="btn btn-sm dsl_ess_hdr_btn flex-fill" t-on-click="openSalaryDocRequests">
+                                        <i class="fa fa-certificate me-1" title="Salary Certificate"/> Salary Certificates
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Col 2: Digital Payslips History -->
+                            <div class="dsl_ess_bento_card">
+                                <div class="bento_hdr">
+                                    <span class="bento_title"><i class="fa fa-money text-blue me-2" title="Payslips"/>My Digital Payslips</span>
+                                    <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openMyPayslips">All Payslips</button>
+                                </div>
+                                <div t-if="state.data.recent_payslips.length" class="dsl_ess_mini_list">
+                                    <div class="mini_row" t-foreach="state.data.recent_payslips" t-as="sp" t-key="sp.id">
+                                        <div>
+                                            <div class="mini_title"><t t-esc="sp.month"/> (<t t-esc="sp.name"/>)</div>
+                                            <div class="mini_sub">Gross: ৳<t t-esc="sp.gross"/> · Ded: ৳<t t-esc="sp.deductions"/></div>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold text-emerald">৳ <t t-esc="sp.net"/></div>
+                                            <span class="mini_badge badge_emerald" t-esc="sp.state"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div t-else="" class="text-muted small py-3">No payslips found.</div>
+                            </div>
+
+                            <!-- Col 3: Provident Fund & Loans -->
+                            <div class="dsl_ess_bento_col">
+                                <div class="dsl_ess_bento_card">
+                                    <div class="bento_hdr">
+                                        <span class="bento_title"><i class="fa fa-shield text-purple me-2" title="PF"/>Provident Fund &amp; Gratuity</span>
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openProvidentFund">PF Ledger</button>
+                                    </div>
+                                    <div class="dsl_ess_kv_list">
+                                        <div class="kv_row"><span>Employee Contribution</span><strong>৳ <t t-esc="state.data.pf_summary.emp_contrib"/></strong></div>
+                                        <div class="kv_row"><span>Employer Contribution</span><strong>৳ <t t-esc="state.data.pf_summary.co_contrib"/></strong></div>
+                                        <div class="kv_row"><span>Credited Trust Profit</span><strong>৳ <t t-esc="state.data.pf_summary.profit"/></strong></div>
+                                        <div class="kv_row kv_highlight"><span>Total PF Balance</span><strong class="text-emerald">৳ <t t-esc="state.data.pf_summary.total"/></strong></div>
+                                    </div>
+                                </div>
+
+                                <div class="dsl_ess_bento_card">
+                                    <div class="bento_hdr">
+                                        <span class="bento_title"><i class="fa fa-credit-card text-amber me-2" title="Loans"/>My Loans &amp; Advances</span>
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openApplyLoan">+ Apply Loan</button>
+                                    </div>
+                                    <div t-if="state.data.loans_list.length" class="dsl_ess_mini_list">
+                                        <div class="mini_row" t-foreach="state.data.loans_list" t-as="ln" t-key="ln.id">
+                                            <div>
+                                                <div class="mini_title"><t t-esc="ln.name"/> (<t t-esc="ln.type"/>)</div>
+                                                <div class="mini_sub">Principal: ৳<t t-esc="ln.principal"/> · EMI: ৳<t t-esc="ln.emi"/></div>
+                                            </div>
+                                            <div class="text-end">
+                                                <div class="fw-bold">৳ <t t-esc="ln.balance"/></div>
+                                                <span class="mini_badge badge_amber" t-esc="ln.state"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div t-else="" class="text-muted small py-2">No active loans or advances.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ===================================================
+                             TAB 4: KPI, 360° APPRAISAL & CAREER WORKSPACE
+                             =================================================== -->
+                        <div t-if="state.activeTab === 'kpi_career'" class="dsl_ess_bento_2col">
+                            <div class="dsl_ess_bento_card">
+                                <div class="bento_hdr">
+                                    <span class="bento_title"><i class="fa fa-bullseye text-emerald me-2" title="KPIs"/>My Assigned KPIs &amp; Achievements</span>
+                                    <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openMyKpis">Open KPI Workspace</button>
+                                </div>
+                                <table class="table dsl_ess_table mb-0" t-if="state.data.kpis_list.length">
+                                    <thead>
+                                        <tr>
+                                            <th>KPI Objective</th>
+                                            <th class="text-end">Weight</th>
+                                            <th class="text-end">Target</th>
+                                            <th class="text-end">Actual</th>
+                                            <th class="text-end">Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="state.data.kpis_list" t-as="kp" t-key="kp.id">
+                                            <td class="fw-semibold" t-esc="kp.name"/>
+                                            <td class="text-end"><t t-esc="kp.weight"/>%</td>
+                                            <td class="text-end" t-esc="kp.target"/>
+                                            <td class="text-end" t-esc="kp.actual"/>
+                                            <td class="text-end"><span class="mini_badge badge_emerald"><t t-esc="kp.achievement_pct"/>%</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div t-else="" class="text-muted small py-3">No KPIs assigned for the current cycle.</div>
+                            </div>
+
+                            <div class="dsl_ess_bento_col">
+                                <div class="dsl_ess_bento_card">
+                                    <div class="bento_hdr">
+                                        <span class="bento_title"><i class="fa fa-line-chart text-blue me-2" title="Assessments"/>360° Performance Assessments</span>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openReviewerInbox">
+                                                Reviewer Inbox (<t t-esc="state.data.pending_reviews_count"/>)
+                                            </button>
+                                            <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openMyAssessments">My Appraisals</button>
+                                        </div>
+                                    </div>
+                                    <div t-if="state.data.assessments_list.length" class="dsl_ess_mini_list">
+                                        <div class="mini_row" t-foreach="state.data.assessments_list" t-as="asm" t-key="asm.id">
+                                            <div>
+                                                <div class="mini_title" t-esc="asm.name"/>
+                                                <div class="mini_sub"><t t-esc="asm.cycle"/> · Score: <strong t-esc="asm.score"/></div>
+                                            </div>
+                                            <span class="mini_badge badge_emerald" t-esc="asm.state"/>
+                                        </div>
+                                    </div>
+                                    <div t-else="" class="text-muted small py-2">No performance assessments recorded yet.</div>
+                                </div>
+
+                                <div class="dsl_ess_bento_card">
+                                    <div class="bento_hdr">
+                                        <span class="bento_title"><i class="fa fa-graduation-cap text-purple me-2" title="Qualifications"/>Qualifications, Family &amp; Nominees</span>
+                                    </div>
+                                    <div class="dsl_ess_action_tiles_grid" style="grid-template-columns: repeat(4, 1fr);">
+                                        <button class="ess_tile tile_blue" t-on-click="openEducation">
+                                            <i class="fa fa-graduation-cap" title="Degrees"/>
+                                            <span>Degrees (<t t-esc="state.data.employee.degrees_count"/>)</span>
+                                        </button>
+                                        <button class="ess_tile tile_emerald" t-on-click="openSkills">
+                                            <i class="fa fa-star" title="Skills"/>
+                                            <span>Skills (<t t-esc="state.data.employee.skills_count"/>)</span>
+                                        </button>
+                                        <button class="ess_tile tile_purple" t-on-click="openFamily">
+                                            <i class="fa fa-users" title="Family"/>
+                                            <span>Family Info</span>
+                                        </button>
+                                        <button class="ess_tile tile_amber" t-on-click="openNominees">
+                                            <i class="fa fa-shield" title="Nominees"/>
+                                            <span>Nominees</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ===================================================
+                             TAB 5: LETTERS, VAULT, ASSETS & SUPPORT DESK
+                             =================================================== -->
+                        <div t-if="state.activeTab === 'letters_support'" class="dsl_ess_bento_3col">
+                            <!-- Col 1: Salary Doc Requests & HR Letters -->
+                            <div class="dsl_ess_bento_card">
+                                <div class="bento_hdr">
+                                    <span class="bento_title"><i class="fa fa-certificate text-emerald me-2" title="Certificates"/>Salary Docs &amp; HR Letters</span>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openSalaryDocRequests">+ Salary Doc</button>
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openRequestLetter">+ NOC</button>
+                                    </div>
+                                </div>
+                                <div class="dsl_ess_mini_list">
+                                    <div class="mini_row" t-foreach="state.data.salary_doc_reqs" t-as="sd" t-key="sd.id">
+                                        <div>
+                                            <div class="mini_title" t-esc="sd.doc_type"/>
+                                            <div class="mini_sub"><t t-esc="sd.name"/> · <t t-esc="sd.date"/></div>
+                                        </div>
+                                        <span class="mini_badge badge_emerald" t-esc="sd.state"/>
+                                    </div>
+                                    <div class="mini_row" t-foreach="state.data.hr_letters_list" t-as="hl" t-key="hl.id">
+                                        <div>
+                                            <div class="mini_title" t-esc="hl.type"/>
+                                            <div class="mini_sub"><t t-esc="hl.name"/> · <t t-esc="hl.purpose"/></div>
+                                        </div>
+                                        <span class="mini_badge badge_blue" t-esc="hl.state"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Col 2: Digital Document Vault & Assigned Assets -->
+                            <div class="dsl_ess_bento_col">
+                                <div class="dsl_ess_bento_card">
+                                    <div class="bento_hdr">
+                                        <span class="bento_title"><i class="fa fa-laptop text-blue me-2" title="Assets"/>Assigned Company Assets</span>
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openMyAssets">All Assets</button>
+                                    </div>
+                                    <div t-if="state.data.assets_list.length" class="dsl_ess_mini_list">
+                                        <div class="mini_row" t-foreach="state.data.assets_list" t-as="ast" t-key="ast.id">
+                                            <div>
+                                                <div class="mini_title" t-esc="ast.name"/>
+                                                <div class="mini_sub"><t t-esc="ast.code"/> · <t t-esc="ast.category"/></div>
+                                            </div>
+                                            <span class="mini_badge badge_emerald" t-esc="ast.state"/>
+                                        </div>
+                                    </div>
+                                    <div t-else="" class="text-muted small py-2">No company assets currently assigned.</div>
+                                </div>
+
+                                <div class="dsl_ess_bento_card">
+                                    <div class="bento_hdr">
+                                        <span class="bento_title"><i class="fa fa-folder-open text-purple me-2" title="Vault"/>Digital Document Vault</span>
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openDocumentVault">Open Vault</button>
+                                    </div>
+                                    <div t-if="state.data.docs_list.length" class="dsl_ess_mini_list">
+                                        <div class="mini_row" t-foreach="state.data.docs_list" t-as="dc" t-key="dc.id">
+                                            <div>
+                                                <div class="mini_title" t-esc="dc.name"/>
+                                                <div class="mini_sub"><t t-esc="dc.type"/> · Ref: <t t-esc="dc.ref"/></div>
+                                            </div>
+                                            <span class="mini_badge badge_emerald" t-esc="dc.status"/>
+                                        </div>
+                                    </div>
+                                    <div t-else="" class="text-muted small py-2">No verified documents in vault.</div>
+                                </div>
+                            </div>
+
+                            <!-- Col 3: HR Helpdesk, Canteen, Fleet & Separation -->
+                            <div class="dsl_ess_bento_col">
+                                <div class="dsl_ess_bento_card">
+                                    <div class="bento_hdr">
+                                        <span class="bento_title"><i class="fa fa-headphones text-amber me-2" title="Helpdesk"/>HR Helpdesk &amp; Grievance</span>
+                                        <button class="btn btn-sm dsl_ess_hdr_btn" t-on-click="openHelpdesk">+ New Ticket</button>
+                                    </div>
+                                    <div t-if="state.data.tickets_list.length" class="dsl_ess_mini_list">
+                                        <div class="mini_row" t-foreach="state.data.tickets_list" t-as="tk" t-key="tk.id">
+                                            <div>
+                                                <div class="mini_title" t-esc="tk.subject"/>
+                                                <div class="mini_sub"><t t-esc="tk.name"/> · Priority: <t t-esc="tk.priority"/></div>
+                                            </div>
+                                            <span class="mini_badge badge_amber" t-esc="tk.state"/>
+                                        </div>
+                                    </div>
+                                    <div t-else="" class="text-muted small py-2">No open helpdesk tickets.</div>
+                                </div>
+
+                                <div class="dsl_ess_bento_card">
+                                    <div class="bento_hdr">
+                                        <span class="bento_title"><i class="fa fa-sliders text-rose me-2" title="Services"/>Facility Services &amp; Exit</span>
+                                    </div>
+                                    <div class="dsl_ess_action_tiles_grid" style="grid-template-columns: repeat(3, 1fr);">
+                                        <button class="ess_tile tile_amber" t-on-click="openCanteen">
+                                            <i class="fa fa-cutlery" title="Canteen"/>
+                                            <span>Book Meal</span>
+                                        </button>
+                                        <button class="ess_tile tile_cyan" t-on-click="openVehicleReq">
+                                            <i class="fa fa-car" title="Vehicle"/>
+                                            <span>Pool Vehicle</span>
+                                        </button>
+                                        <button class="ess_tile tile_rose" t-on-click="openSeparation">
+                                            <i class="fa fa-sign-out" title="Exit"/>
+                                            <span>Exit / Resign</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </main>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

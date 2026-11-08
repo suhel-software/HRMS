@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_dsl_hr_letter" model="ir.actions.report">
+        <field name="name">Official HR Certificate / NOC</field>
+        <field name="model">dsl.hr.letter.request</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">DSL_HRMS_ess.report_dsl_hr_letter_document</field>
+        <field name="report_file">DSL_HRMS_ess.report_dsl_hr_letter_document</field>
+        <field name="binding_model_id" ref="model_dsl_hr_letter_request"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_dsl_hr_letter_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <div class="page" style="font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #0f172a; line-height: 1.7;">
+                    <div style="border-bottom: 3px solid #1e3a8a; padding-bottom: 12px; margin-bottom: 28px; display: flex; justify-content: space-between;">
+                        <div>
+                            <h2 style="margin: 0; color: #1e3a8a; font-weight: 800;" t-esc="o.company_id.name"/>
+                            <div style="font-size: 13px; color: #475569;" t-if="o.branch_id" t-esc="o.branch_id.name"/>
+                        </div>
+                        <div style="text-align: right; font-size: 13px;">
+                            <div>Ref: <strong t-esc="o.name"/></div>
+                            <div>Date: <strong t-esc="o.issued_date or o.request_date"/></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 22px; font-weight: 700;" t-esc="o.addressed_to"/>
+
+                    <h4 style="text-align: center; text-decoration: underline; margin-bottom: 24px; font-weight: 800;">
+                        <t t-esc="dict(o._fields['letter_type'].selection).get(o.letter_type)"/>
+                    </h4>
+
+                    <p style="font-size: 14.5px; text-align: justify;">
+                        This is to certify that <strong t-esc="o.employee_id.name"/>
+                        (Employee ID: <strong t-esc="o.employee_id.employee_code or 'N/A'"/>)
+                        is a bona fide employee of <strong t-esc="o.company_id.name"/>,
+                        serving as <strong t-esc="o.job_id.name or 'Executive'"/>
+                        in the <strong t-esc="o.department_id.name or 'Operations'"/> Department
+                        since <strong t-esc="o.joining_date_snapshot or o.employee_id.joining_date"/>.
+                    </p>
+
+                    <p t-if="o.letter_type in ('salary_certificate', 'bank_intro')" style="font-size: 14.5px;">
+                        Currently, their certified monthly gross compensation is
+                        <strong>BDT <t t-esc="'{:,.2f}'.format(o.monthly_gross_snapshot or 0.0)"/></strong>
+                        per month, subject to applicable statutory deductions under Bangladesh law.
+                    </p>
+
+                    <p style="font-size: 14.5px;">
+                        This certificate is issued upon the employee's request for the purpose of:
+                        <strong t-esc="o.purpose"/>. The management has no objection in this regard.
+                    </p>
+
+                    <p t-if="o.hr_remarks" style="font-size: 14px;" t-esc="o.hr_remarks"/>
+
+                    <div style="margin-top: 64px;">
+                        <div><strong>Authorized Signatory</strong></div>
+                        <div>Human Resources Division</div>
+                        <div t-esc="o.company_id.name"/>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>
+

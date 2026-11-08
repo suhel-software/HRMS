@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ESS Interactive OWL Workspace Action -->
+    <record id="action_dsl_ess_portal" model="ir.actions.client">
+        <field name="name">My Self-Service (ESS)</field>
+        <field name="tag">dsl_hrms_ess_portal</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- HR Certificate & NOC Views -->
+    <record id="view_dsl_hr_letter_request_list" model="ir.ui.view">
+        <field name="name">dsl.hr.letter.request.list</field>
+        <field name="model">dsl.hr.letter.request</field>
+        <field name="arch" type="xml">
+            <list string="HR Certificates, Salary Letters &amp; NOC Requests"
+                  decoration-info="state == 'requested'"
+                  decoration-success="state == 'issued'">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="letter_type" widget="badge"/>
+                <field name="addressed_to"/>
+                <field name="purpose"/>
+                <field name="request_date"/>
+                <field name="issued_date"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'requested'"
+                       decoration-success="state == 'issued'"
+                       decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hr_letter_request_form" model="ir.ui.view">
+        <field name="name">dsl.hr.letter.request.form</field>
+        <field name="model">dsl.hr.letter.request</field>
+        <field name="arch" type="xml">
+            <form string="Official HR Certificate &amp; NOC Request">
+                <header>
+                    <button name="action_submit"
+                            string="Submit Request to HR"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve_issue"
+                            string="✓ Approve &amp; Issue Certificate"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state not in ('draft', 'requested')"/>
+                    <button name="action_print_letter"
+                            string="🖨️ Print Official Certificate / NOC"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'issued'"/>
+                    <button name="action_reject"
+                            string="Reject"
+                            type="object"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state != 'requested'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,requested,issued"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Official HR Certificate &amp; NOC</span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Letter Type">
+                            <field name="employee_id" readonly="state == 'issued'"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                            <field name="letter_type" readonly="state == 'issued'"/>
+                        </group>
+                        <group string="Addressee &amp; Certified Snapshot">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="addressed_to" readonly="state == 'issued'"/>
+                            <field name="purpose" readonly="state == 'issued'"/>
+                            <field name="request_date" readonly="state == 'issued'"/>
+                            <field name="joining_date_snapshot"/>
+                            <field name="monthly_gross_snapshot"/>
+                            <field name="issued_date" invisible="not issued_date"/>
+                        </group>
+                    </group>
+                    <group string="HR Verification &amp; Custom Clause">
+                        <field name="hr_remarks" nolabel="1" placeholder="Optional custom clause or passport/visa travel dates..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hr_letter_request" model="ir.actions.act_window">
+        <field name="name">HR Letters &amp; NOC</field>
+        <field name="res_model">dsl.hr.letter.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Corporate HR Announcements & Notice Board Views -->
+    <record id="view_dsl_hr_announcement_list" model="ir.ui.view">
+        <field name="name">dsl.hr.announcement.list</field>
+        <field name="model">dsl.hr.announcement</field>
+        <field name="arch" type="xml">
+            <list string="HR Announcements &amp; Official Notice Board"
+                  decoration-info="state == 'draft'"
+                  decoration-success="state == 'published'"
+                  decoration-muted="state == 'archived'">
+                <field name="is_pinned" widget="boolean_favorite" string="Pin"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="title" decoration-bf="1"/>
+                <field name="category" widget="badge"
+                       decoration-danger="category == 'urgent'"
+                       decoration-warning="category in ('policy', 'payroll')"
+                       decoration-info="category in ('general', 'event')"
+                       decoration-success="category == 'holiday'"/>
+                <field name="priority" widget="badge"
+                       decoration-danger="priority == 'urgent'"
+                       decoration-warning="priority == 'high'"
+                       decoration-info="priority == 'normal'"/>
+                <field name="audience_type" widget="badge"/>
+                <field name="department_id" optional="show"/>
+                <field name="branch_id" optional="hide"/>
+                <field name="publish_date"/>
+                <field name="expiry_date" optional="show"/>
+                <field name="published_by_id" widget="many2one_avatar_user"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'published'"
+                       decoration-muted="state == 'archived'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hr_announcement_form" model="ir.ui.view">
+        <field name="name">dsl.hr.announcement.form</field>
+        <field name="model">dsl.hr.announcement</field>
+        <field name="arch" type="xml">
+            <form string="Official HR Announcement &amp; Circular">
+                <header>
+                    <button name="action_publish"
+                            string="📢 Publish Announcement"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state == 'published'"/>
+                    <button name="action_archive_notice"
+                            string="Archive Notice"
+                            type="object"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state != 'published'"/>
+                    <button name="action_reset_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,published,archived"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Corporate HR Notice &amp; Official Circular</span>
+                        <h1><field name="title" placeholder="e.g. Festival Bonus &amp; Eid-ul-Fitr Holiday Circular 2026..."/></h1>
+                        <div class="text-muted">
+                            Ref: <field name="name" readonly="1" class="oe_inline"/>
+                        </div>
+                    </div>
+                    <group>
+                        <group string="Notice Classification &amp; Priority">
+                            <field name="category"/>
+                            <field name="priority" widget="radio" options="{'horizontal': true}"/>
+                            <field name="is_pinned" widget="boolean_toggle"/>
+                            <field name="publish_date"/>
+                            <field name="expiry_date"/>
+                        </group>
+                        <group string="Target Audience &amp; Scope">
+                            <field name="audience_type"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id" invisible="audience_type != 'branch'" required="audience_type == 'branch'"/>
+                            <field name="department_id" invisible="audience_type != 'department'" required="audience_type == 'department'"/>
+                            <field name="published_by_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Dashboard Executive Summary (Shown on ESS, MSS &amp; HR Dashboards)">
+                        <field name="summary" nolabel="1" placeholder="Write a concise 1-2 line summary displayed on the Employee, Manager, and HR Dashboards..."/>
+                    </group>
+                    <notebook>
+                        <page string="Full Circular &amp; Official Notice Body" name="notice_body">
+                            <field name="body_html" placeholder="Write full official circular details here..."/>
+                        </page>
+                        <page string="Signed Circular PDF &amp; Attachments" name="attachments">
+                            <field name="attachment_ids" widget="many2many_binary"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hr_announcement" model="ir.actions.act_window">
+        <field name="name">HR Announcements &amp; Notice Board</field>
+        <field name="res_model">dsl.hr.announcement</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_ess_portal"
+              name="My Self-Service (ESS)"
+              parent="DSL_HRMS_core.menu_dsl_hrms_self_service_root"
+              action="action_dsl_ess_portal"
+              sequence="10"/>
+
+    <menuitem id="menu_dsl_hr_announcement"
+              name="HR Announcements &amp; Notices"
+              parent="DSL_HRMS_core.menu_dsl_hrms_self_service_root"
+              action="action_dsl_hr_announcement"
+              sequence="25"/>
+
+    <menuitem id="menu_dsl_hr_letter_request"
+              name="HR Certificates &amp; NOC"
+              parent="DSL_HRMS_core.menu_dsl_hrms_self_service_root"
+              action="action_dsl_hr_letter_request"
+              sequence="30"/>
+</odoo>

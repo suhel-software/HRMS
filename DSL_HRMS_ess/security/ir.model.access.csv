@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_hr_letter_user,dsl.hr.letter.request.user,model_dsl_hr_letter_request,DSL_HRMS_core.group_dsl_hrms_user,1,1,1,0
+access_dsl_hr_letter_officer,dsl.hr.letter.request.officer,model_dsl_hr_letter_request,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_hr_letter_manager,dsl.hr.letter.request.manager,model_dsl_hr_letter_request,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_hr_announcement_base_user,dsl.hr.announcement.base.user,model_dsl_hr_announcement,base.group_user,1,0,0,0
+access_dsl_hr_announcement_hrms_user,dsl.hr.announcement.hrms.user,model_dsl_hr_announcement,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_hr_announcement_officer,dsl.hr.announcement.officer,model_dsl_hr_announcement,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_hr_announcement_manager,dsl.hr.announcement.manager,model_dsl_hr_announcement,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
