@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_dsl_emp_tax_assessment" model="ir.sequence">
+            <field name="name">DSL NBR Tax Assessment Sheet</field>
+            <field name="code">dsl.employee.tax.assessment</field>
+            <field name="prefix">TAX-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Pre-seeded Bangladesh NBR Income Tax Act 2023 Policy (FY 2026-27 / AY 2027-28) -->
+        <record id="nbr_policy_fy_2026_2027" model="dsl.tax.fiscal.policy">
+            <field name="sequence">10</field>
+            <field name="name">Bangladesh NBR Income Tax Act 2023 — FY 2026-27 (AY 2027-28)</field>
+            <field name="fiscal_year">2026-2027</field>
+            <field name="assessment_year">2027-2028</field>
+            <field name="exemption_divisor">3.0</field>
+            <field name="max_exemption_cap">450000.0</field>
+            <field name="threshold_general">350000.0</field>
+            <field name="threshold_female_senior">400000.0</field>
+            <field name="threshold_disabled">475000.0</field>
+            <field name="threshold_freedom_fighter">500000.0</field>
+            <field name="rebate_taxable_pct">3.0</field>
+            <field name="rebate_investment_pct">15.0</field>
+            <field name="rebate_max_cap">1000000.0</field>
+            <field name="dps_annual_cap">120000.0</field>
+            <field name="sanchaypatra_annual_cap">500000.0</field>
+            <field name="min_tax_dhaka_ctg">5000.0</field>
+            <field name="min_tax_other_city">4000.0</field>
+            <field name="min_tax_non_city">3000.0</field>
+            <field name="notes">National Board of Revenue (NBR) Income Tax Act 2023 (আয়কর আইন, ২০২৩): 1/3rd Exemption up to ৳4,50,000, Section 78 Investment Rebate, and Progressive Tax Slabs.</field>
+        </record>
+
+        <!-- Progressive NBR Slabs above the 0% Threshold -->
+        <record id="nbr_slab_1_5pct" model="dsl.tax.slab.line">
+            <field name="policy_id" ref="nbr_policy_fy_2026_2027"/>
+            <field name="sequence">10</field>
+            <field name="name">Next ৳1,00,000 @ 5%</field>
+            <field name="slab_amount">100000.0</field>
+            <field name="rate_pct">5.0</field>
+        </record>
+        <record id="nbr_slab_2_10pct" model="dsl.tax.slab.line">
+            <field name="policy_id" ref="nbr_policy_fy_2026_2027"/>
+            <field name="sequence">20</field>
+            <field name="name">Next ৳4,00,000 @ 10%</field>
+            <field name="slab_amount">400000.0</field>
+            <field name="rate_pct">10.0</field>
+        </record>
+        <record id="nbr_slab_3_15pct" model="dsl.tax.slab.line">
+            <field name="policy_id" ref="nbr_policy_fy_2026_2027"/>
+            <field name="sequence">30</field>
+            <field name="name">Next ৳5,00,000 @ 15%</field>
+            <field name="slab_amount">500000.0</field>
+            <field name="rate_pct">15.0</field>
+        </record>
+        <record id="nbr_slab_4_20pct" model="dsl.tax.slab.line">
+            <field name="policy_id" ref="nbr_policy_fy_2026_2027"/>
+            <field name="sequence">40</field>
+            <field name="name">Next ৳5,00,000 @ 20%</field>
+            <field name="slab_amount">500000.0</field>
+            <field name="rate_pct">20.0</field>
+        </record>
+        <record id="nbr_slab_5_25pct" model="dsl.tax.slab.line">
+            <field name="policy_id" ref="nbr_policy_fy_2026_2027"/>
+            <field name="sequence">50</field>
+            <field name="name">Next ৳20,00,000 @ 25%</field>
+            <field name="slab_amount">2000000.0</field>
+            <field name="rate_pct">25.0</field>
+        </record>
+        <record id="nbr_slab_6_30pct_balance" model="dsl.tax.slab.line">
+            <field name="policy_id" ref="nbr_policy_fy_2026_2027"/>
+            <field name="sequence">60</field>
+            <field name="name">Remaining Balance @ 30%</field>
+            <field name="slab_amount">0.0</field>
+            <field name="rate_pct">30.0</field>
+        </record>
+    </data>
+</odoo>
+

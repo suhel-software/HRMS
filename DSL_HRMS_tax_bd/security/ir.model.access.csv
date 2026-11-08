@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_tax_fiscal_policy_user,dsl.tax.fiscal.policy.user,model_dsl_tax_fiscal_policy,base.group_user,1,0,0,0
+access_dsl_tax_fiscal_policy_officer,dsl.tax.fiscal.policy.officer,model_dsl_tax_fiscal_policy,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_tax_fiscal_policy_manager,dsl.tax.fiscal.policy.manager,model_dsl_tax_fiscal_policy,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_tax_slab_line_user,dsl.tax.slab.line.user,model_dsl_tax_slab_line,base.group_user,1,0,0,0
+access_dsl_tax_slab_line_officer,dsl.tax.slab.line.officer,model_dsl_tax_slab_line,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_tax_slab_line_manager,dsl.tax.slab.line.manager,model_dsl_tax_slab_line,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_emp_tax_assessment_officer,dsl.employee.tax.assessment.officer,model_dsl_employee_tax_assessment,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_emp_tax_assessment_manager,dsl.employee.tax.assessment.manager,model_dsl_employee_tax_assessment,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

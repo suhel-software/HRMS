@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================================================================== -->
+    <!-- 1. EMPLOYEE ANNUAL NBR TAX & REBATE SHEET VIEWS                    -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_emp_tax_assessment_list" model="ir.ui.view">
+        <field name="name">dsl.employee.tax.assessment.list</field>
+        <field name="model">dsl.employee.tax.assessment</field>
+        <field name="arch" type="xml">
+            <list string="Employee NBR Income Tax &amp; Rebate Sheets"
+                  decoration-success="state == 'active'">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="personal_tin" optional="show"/>
+                <field name="taxpayer_category"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="annual_gross_income" sum="Total Annual Gross"/>
+                <field name="exempted_income" sum="Total Exempted"/>
+                <field name="annual_taxable_income" sum="Total Taxable"/>
+                <field name="investment_tax_rebate" sum="Total Rebate"/>
+                <field name="net_annual_tax" sum="Total Net Tax" decoration-bf="1"/>
+                <field name="monthly_tds_amount" sum="Monthly TDS" decoration-bf="1"/>
+                <field name="state" widget="badge" decoration-success="state == 'active'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_emp_tax_assessment_form" model="ir.ui.view">
+        <field name="name">dsl.employee.tax.assessment.form</field>
+        <field name="model">dsl.employee.tax.assessment</field>
+        <field name="arch" type="xml">
+            <form string="NBR Annual Income Tax &amp; Rebate Worksheet">
+                <header>
+                    <button name="action_sync_from_compensation"
+                            string="⚡ Sync Active Salary Package"
+                            type="object"
+                            class="btn-primary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">NBR Income Tax Assessment &amp; Section 78 Rebate Sheet</span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Taxpayer Profile &amp; Zone">
+                            <field name="employee_id"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="department_id"/>
+                            <field name="personal_tin"/>
+                            <field name="fiscal_policy_id"/>
+                            <field name="taxpayer_category"/>
+                            <field name="location_zone"/>
+                        </group>
+                        <group string="NBR Statutory Tax Summary (৳)">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="annual_gross_income"/>
+                            <field name="exempted_income"/>
+                            <field name="annual_taxable_income" decoration-bf="1"/>
+                            <field name="zero_tax_threshold"/>
+                            <field name="gross_slab_tax"/>
+                            <field name="investment_tax_rebate"/>
+                            <field name="net_annual_tax" decoration-bf="1"/>
+                            <field name="tds_already_deducted"/>
+                            <field name="remaining_months"/>
+                            <field name="monthly_tds_amount" decoration-bf="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page name="income_inv_page" string="Annual Salary &amp; Section 78 Investments">
+                            <group>
+                                <group string="Projected Annual Salary Income (৳)">
+                                    <field name="monthly_gross_salary"/>
+                                    <field name="projected_festival_bonus"/>
+                                    <field name="other_taxable_income"/>
+                                </group>
+                                <group string="NBR Approved Investments for Tax Rebate (৳)">
+                                    <field name="dps_deposit"/>
+                                    <field name="sanchaypatra_investment"/>
+                                    <field name="life_insurance_premium"/>
+                                    <field name="pf_annual_contribution"/>
+                                    <field name="listed_shares_investment"/>
+                                    <field name="eligible_investment_total" decoration-bf="1"/>
+                                </group>
+                            </group>
+                            <group string="Challan / Tax Return Notes">
+                                <field name="notes" nolabel="1" placeholder="Record Treasury Challan / A-Challan reference numbers..."/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_emp_tax_assessment" model="ir.actions.act_window">
+        <field name="name">NBR Income Tax &amp; TDS Sheets</field>
+        <field name="res_model">dsl.employee.tax.assessment</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 2. NBR FISCAL YEAR TAX SLAB POLICY VIEWS                           -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_tax_fiscal_policy_list" model="ir.ui.view">
+        <field name="name">dsl.tax.fiscal.policy.list</field>
+        <field name="model">dsl.tax.fiscal.policy</field>
+        <field name="arch" type="xml">
+            <list string="NBR Fiscal Year Income Tax Policies">
+                <field name="sequence" widget="handle"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="fiscal_year"/>
+                <field name="assessment_year"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="max_exemption_cap"/>
+                <field name="threshold_general"/>
+                <field name="threshold_female_senior"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_tax_fiscal_policy_form" model="ir.ui.view">
+        <field name="name">dsl.tax.fiscal.policy.form</field>
+        <field name="model">dsl.tax.fiscal.policy</field>
+        <field name="arch" type="xml">
+            <form string="NBR Fiscal Year Tax Slab Policy">
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">NBR Income Tax Act 2023 Configuration</span>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Fiscal Year &amp; 1/3rd Exemption">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="fiscal_year"/>
+                            <field name="assessment_year"/>
+                            <field name="exemption_divisor"/>
+                            <field name="max_exemption_cap"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="0% Tax-Free Thresholds by Category">
+                            <field name="threshold_general"/>
+                            <field name="threshold_female_senior"/>
+                            <field name="threshold_disabled"/>
+                            <field name="threshold_freedom_fighter"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Section 78 Investment Rebate Caps">
+                            <field name="rebate_taxable_pct"/>
+                            <field name="rebate_investment_pct"/>
+                            <field name="rebate_max_cap"/>
+                            <field name="dps_annual_cap"/>
+                            <field name="sanchaypatra_annual_cap"/>
+                        </group>
+                        <group string="Location-Based Minimum Tax Floor">
+                            <field name="min_tax_dhaka_ctg"/>
+                            <field name="min_tax_other_city"/>
+                            <field name="min_tax_non_city"/>
+                        </group>
+                    </group>
+
+                    <separator string="Progressive NBR Tax Slabs (Above 0% Threshold)"/>
+                    <field name="slab_ids">
+                        <list editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="name"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="slab_amount"/>
+                            <field name="rate_pct"/>
+                        </list>
+                    </field>
+                    <group string="Finance Act / SRO Notes">
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_tax_fiscal_policy" model="ir.actions.act_window">
+        <field name="name">NBR Tax Slabs &amp; Fiscal Policy</field>
+        <field name="res_model">dsl.tax.fiscal.policy</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Link NBR Tax Sheet on Payslip Form -->
+    <record id="view_dsl_payslip_form_inherit_nbr_tax" model="ir.ui.view">
+        <field name="name">dsl.payslip.form.nbr.tax</field>
+        <field name="model">dsl.payslip</field>
+        <field name="inherit_id" ref="DSL_HRMS_payroll_bd.view_dsl_payslip_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='tds_deducted']" position="after">
+                <field name="tax_assessment_id" invisible="not tax_assessment_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Populate Tab 10 "Bank & Tax" on Employee Profile with NBR Tax Assessments -->
+    <record id="view_employee_form_inherit_dsl_tax_bd" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.tax.bd</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="DSL_HRMS_employee.view_employee_form_inherit_dsl_dossier"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='dsl_tab_10_bank_tax']" position="inside">
+                <separator string="NBR Annual Tax Assessment &amp; Investment Rebate Sheets (DSL_HRMS_employee_tax)"/>
+                <field name="dsl_tax_assessment_ids" context="{'default_employee_id': id}">
+                    <list decoration-success="state == 'active'">
+                        <field name="name" decoration-bf="1"/>
+                        <field name="fiscal_policy_id"/>
+                        <field name="taxpayer_category" widget="badge"/>
+                        <field name="location_zone"/>
+                        <field name="currency_id" column_invisible="1"/>
+                        <field name="annual_gross_income"/>
+                        <field name="exempted_income"/>
+                        <field name="annual_taxable_income"/>
+                        <field name="investment_tax_rebate"/>
+                        <field name="net_annual_tax" decoration-bf="1"/>
+                        <field name="monthly_tds_amount" decoration-bf="1"/>
+                        <field name="state" widget="badge"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Printable NBR Salary & Tax Deduction Certificate -->
+    <record id="action_report_dsl_tax_certificate" model="ir.actions.report">
+        <field name="name">NBR Salary &amp; AIT Deduction Certificate</field>
+        <field name="model">dsl.employee.tax.assessment</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">DSL_HRMS_tax_bd.report_dsl_tax_certificate_doc</field>
+        <field name="report_file">DSL_HRMS_tax_bd.report_dsl_tax_certificate_doc</field>
+        <field name="print_report_name">'NBR_Tax_Certificate_%s' % (object.employee_id.employee_code or object.employee_id.name)</field>
+        <field name="binding_model_id" ref="model_dsl_employee_tax_assessment"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_dsl_tax_certificate_doc">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="t">
+                <div class="page" style="font-family: 'Segoe UI', Arial, sans-serif; padding: 28px; color: #0f172a;">
+                    <h2 style="margin: 0; color: #1e3a8a; font-weight: 800;" t-esc="t.company_id.name"/>
+                    <div style="font-size: 14px; font-weight: 700; color: #2563eb; margin: 6px 0 18px;">
+                        SALARY &amp; INCOME TAX DEDUCTION CERTIFICATE (INCOME TAX ACT 2023)
+                    </div>
+                    <p style="font-size: 13px;">
+                        This is to certify that <strong t-esc="t.employee_id.name"/> (ID: <strong t-esc="t.employee_id.employee_code or '—'"/>,
+                        e-TIN: <strong t-esc="t.personal_tin or 'Not Provided'"/>) has the following projected salary &amp; tax assessment for
+                        Income Year <strong t-esc="t.fiscal_policy_id.fiscal_year"/> (Assessment Year <strong t-esc="t.fiscal_policy_id.assessment_year"/>):
+                    </p>
+                    <table class="table table-sm table-bordered" style="font-size: 13px;">
+                        <tr><th>Projected Annual Gross Salary</th><td style="text-align:right;">৳ <t t-esc="'{:,.2f}'.format(t.annual_gross_income)"/></td></tr>
+                        <tr><th>Less: 1/3rd Statutory Exemption (Max ৳4,50,000)</th><td style="text-align:right;">- ৳ <t t-esc="'{:,.2f}'.format(t.exempted_income)"/></td></tr>
+                        <tr style="background:#f8fafc; font-weight:700;"><th>Net Taxable Salary Income</th><td style="text-align:right;">৳ <t t-esc="'{:,.2f}'.format(t.annual_taxable_income)"/></td></tr>
+                        <tr><th>Gross Slab Tax Liability</th><td style="text-align:right;">৳ <t t-esc="'{:,.2f}'.format(t.gross_slab_tax)"/></td></tr>
+                        <tr><th>Less: Section 78 Investment Tax Rebate</th><td style="text-align:right;">- ৳ <t t-esc="'{:,.2f}'.format(t.investment_tax_rebate)"/></td></tr>
+                        <tr style="background:#ecfdf5; font-weight:800; color:#047857;"><th>Net Annual Payable Income Tax</th><td style="text-align:right;">৳ <t t-esc="'{:,.2f}'.format(t.net_annual_tax)"/></td></tr>
+                        <tr><th>Monthly Payroll TDS Deduction</th><td style="text-align:right;">৳ <t t-esc="'{:,.2f}'.format(t.monthly_tds_amount)"/></td></tr>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- ================================================================== -->
+    <!-- 3. MENUS UNDER PAYROLL + CONFIGURATION                             -->
+    <!-- ================================================================== -->
+    <menuitem id="menu_dsl_emp_tax_assessment"
+              name="NBR Income Tax &amp; TDS"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_emp_tax_assessment"
+              sequence="40"/>
+
+    <menuitem id="menu_dsl_tax_fiscal_policy_config"
+              name="NBR Tax Slabs &amp; Fiscal Policy"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_tax_fiscal_policy"
+              sequence="70"/>
+</odoo>
+
