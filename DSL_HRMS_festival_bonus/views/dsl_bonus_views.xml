@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_dsl_festival_bonus_run_list" model="ir.ui.view">
+        <field name="name">dsl.festival.bonus.run.list</field>
+        <field name="model">dsl.festival.bonus.run</field>
+        <field name="arch" type="xml">
+            <list string="Festival, Eid, Puja &amp; Performance Bonus Batches"
+                  decoration-info="state == 'computed'"
+                  decoration-primary="state == 'approved'"
+                  decoration-success="state == 'paid'">
+                <field name="name" decoration-bf="1"/>
+                <field name="title" decoration-bf="1"/>
+                <field name="bonus_type" widget="badge"/>
+                <field name="religion_filter"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="effective_date"/>
+                <field name="employee_count"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="total_bonus_amount" sum="Total Bonus" decoration-bf="1"/>
+                <field name="payout_mode" widget="badge"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'computed'"
+                       decoration-primary="state == 'approved'"
+                       decoration-success="state == 'paid'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_festival_bonus_run_form" model="ir.ui.view">
+        <field name="name">dsl.festival.bonus.run.form</field>
+        <field name="model">dsl.festival.bonus.run</field>
+        <field name="arch" type="xml">
+            <form string="Festival, Eid, Puja &amp; Performance Bonus Batch">
+                <header>
+                    <button name="action_generate_bonus_sheet"
+                            string="⚡ Generate &amp; Compute Bonus Sheet"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state == 'paid'"/>
+                    <button name="action_approve"
+                            string="✓ Approve Bonus Batch"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state != 'computed'"/>
+                    <button name="action_export_bonus_advice_csv"
+                            string="📥 Export BEFTN &amp; MFS Bonus Advice (CSV)"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="employee_count == 0"/>
+                    <button name="action_mark_paid"
+                            string="💳 Mark Disbursed / Paid"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state not in ('computed', 'approved')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label"><field name="name" readonly="1"/></span>
+                        <h1><field name="title" placeholder="e.g. Eid-ul-Fitr 2027 Festival Bonus Sheet"/></h1>
+                    </div>
+                    <group>
+                        <group string="Festival, Scope &amp; Religion Filter">
+                            <field name="bonus_type" readonly="state == 'paid'"/>
+                            <field name="religion_filter" readonly="state == 'paid'"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state == 'paid'"/>
+                            <field name="branch_id" readonly="state == 'paid'"/>
+                            <field name="department_id" readonly="state == 'paid'"/>
+                            <field name="effective_date" readonly="state == 'paid'"/>
+                        </group>
+                        <group string="Formula, Pro-Ration &amp; Summary (৳)">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="calculation_basis" readonly="state == 'paid'"/>
+                            <field name="rate_or_amount" readonly="state == 'paid'"/>
+                            <field name="min_full_bonus_months" readonly="state == 'paid'"/>
+                            <field name="prorate_under_tenure" readonly="state == 'paid'"/>
+                            <field name="payout_mode" readonly="state == 'paid'"/>
+                            <field name="employee_count"/>
+                            <field name="total_bonus_amount" decoration-bf="1" decoration-success="1"/>
+                            <field name="advice_csv_filename" invisible="1"/>
+                            <field name="advice_csv_file" filename="advice_csv_filename" invisible="not advice_csv_file"/>
+                        </group>
+                    </group>
+
+                    <separator string="Computed Employee Bonus Breakdown"/>
+                    <field name="line_ids">
+                        <list editable="bottom">
+                            <field name="employee_id" widget="many2one_avatar_employee"/>
+                            <field name="joining_date"/>
+                            <field name="service_months"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="basic_salary" sum="Total Basic"/>
+                            <field name="gross_salary" optional="show"/>
+                            <field name="eligibility_pct"/>
+                            <field name="bonus_amount" sum="Total Bonus" decoration-bf="1"/>
+                            <field name="payment_method"/>
+                            <field name="bank_name" optional="show"/>
+                            <field name="bank_account_no" optional="show"/>
+                        </list>
+                    </field>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_festival_bonus_run" model="ir.actions.act_window">
+        <field name="name">Festival &amp; Performance Bonus</field>
+        <field name="res_model">dsl.festival.bonus.run</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_festival_bonus_run"
+              name="Festival &amp; Performance Bonus"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_festival_bonus_run"
+              sequence="68"/>
+</odoo>
+

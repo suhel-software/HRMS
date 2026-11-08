@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_festival_bonus_run_user,dsl.festival.bonus.run.user,model_dsl_festival_bonus_run,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_festival_bonus_run_officer,dsl.festival.bonus.run.officer,model_dsl_festival_bonus_run,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_festival_bonus_run_manager,dsl.festival.bonus.run.manager,model_dsl_festival_bonus_run,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_festival_bonus_line_user,dsl.festival.bonus.line.user,model_dsl_festival_bonus_line,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_festival_bonus_line_officer,dsl.festival.bonus.line.officer,model_dsl_festival_bonus_line,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_festival_bonus_line_manager,dsl.festival.bonus.line.manager,model_dsl_festival_bonus_line,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+
