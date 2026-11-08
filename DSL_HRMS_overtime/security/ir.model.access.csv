@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_overtime_policy_user,dsl.overtime.policy.user,model_dsl_overtime_policy,base.group_user,1,0,0,0
+access_dsl_overtime_policy_officer,dsl.overtime.policy.officer,model_dsl_overtime_policy,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_overtime_policy_manager,dsl.overtime.policy.manager,model_dsl_overtime_policy,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_overtime_request_user,dsl.overtime.request.user,model_dsl_overtime_request,base.group_user,1,1,1,0
+access_dsl_overtime_request_officer,dsl.overtime.request.officer,model_dsl_overtime_request,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_overtime_request_manager,dsl.overtime.request.manager,model_dsl_overtime_request,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Server Action for 1-Click Auto-Extraction of Extra Hours from Attendance -->
+    <record id="action_server_dsl_extract_ot_from_att" model="ir.actions.server">
+        <field name="name">Auto-Fetch Extra Hours from Attendance</field>
+        <field name="model_id" ref="model_dsl_overtime_request"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_auto_extract_from_attendance()</field>
+    </record>
+
+    <!-- 1. Overtime Request List View -->
+    <record id="view_dsl_overtime_request_list" model="ir.ui.view">
+        <field name="name">dsl.overtime.request.list</field>
+        <field name="model">dsl.overtime.request</field>
+        <field name="arch" type="xml">
+            <list string="Bangladesh 2x Basic Overtime Register"
+                  decoration-success="state in ('approved', 'paid')"
+                  decoration-warning="state == 'submitted'"
+                  decoration-danger="state == 'rejected'">
+                <header>
+                    <button name="%(action_server_dsl_extract_ot_from_att)d"
+                            string="⚡ Auto-Fetch from Attendance"
+                            type="action"
+                            class="btn-primary"
+                            display="always"/>
+                </header>
+                <field name="name" decoration-bf="1"/>
+                <field name="ot_date"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id"/>
+                <field name="ot_type"/>
+                <field name="approved_hours" widget="float_time" sum="Total OT Hours"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="basic_salary_snapshot" optional="show"/>
+                <field name="ot_hourly_rate"/>
+                <field name="total_ot_amount" sum="Total Payable OT (৳)" decoration-bf="1"/>
+                <field name="compliance_status" widget="badge"
+                       decoration-success="compliance_status == 'compliant'"
+                       decoration-warning="compliance_status == 'extended_compliance'"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'submitted'"
+                       decoration-success="state in ('approved', 'paid')"
+                       decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- 2. Overtime Pivot & Graph Views -->
+    <record id="view_dsl_overtime_request_pivot" model="ir.ui.view">
+        <field name="name">dsl.overtime.request.pivot</field>
+        <field name="model">dsl.overtime.request</field>
+        <field name="arch" type="xml">
+            <pivot string="Overtime Cost &amp; Hours Analysis">
+                <field name="branch_id" type="row"/>
+                <field name="employee_id" type="row"/>
+                <field name="ot_type" type="col"/>
+                <field name="approved_hours" type="measure"/>
+                <field name="total_ot_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_dsl_overtime_request_graph" model="ir.ui.view">
+        <field name="name">dsl.overtime.request.graph</field>
+        <field name="model">dsl.overtime.request</field>
+        <field name="arch" type="xml">
+            <graph string="Overtime Allowance by Branch" type="bar">
+                <field name="branch_id"/>
+                <field name="total_ot_amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- 3. Overtime Full-Width Form with Mandatory Bottom Chatter -->
+    <record id="view_dsl_overtime_request_form" model="ir.ui.view">
+        <field name="name">dsl.overtime.request.form</field>
+        <field name="model">dsl.overtime.request</field>
+        <field name="arch" type="xml">
+            <form string="Statutory Overtime Sheet (BD 2x Basic)">
+                <header>
+                    <button name="action_submit"
+                            string="Submit OT Sheet"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve"
+                            string="Approve for Payroll"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state not in ('draft', 'submitted')"/>
+                    <button name="action_reject"
+                            string="Reject"
+                            type="object"
+                            class="btn-secondary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state not in ('submitted',)"/>
+                    <button name="action_reset_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            invisible="state not in ('rejected',)"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved,paid"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="EXTENDED OT (&gt;2h)" bg_color="text-bg-warning"
+                            invisible="compliance_status != 'extended_compliance'"/>
+                    <div class="oe_title">
+                        <span class="badge text-bg-primary mb-1"><field name="ot_type" readonly="1"/></span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee, Duty Station &amp; Date">
+                            <field name="employee_id" readonly="state in ('approved', 'paid')"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                            <field name="ot_date" readonly="state in ('approved', 'paid')"/>
+                            <field name="ot_type" readonly="state in ('approved', 'paid')"/>
+                            <field name="policy_id" readonly="state in ('approved', 'paid')"/>
+                        </group>
+                        <group string="BD Labour Act Sec 108 Calculation ((Basic / 208) × 2.0)">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="attendance_log_id" invisible="not attendance_log_id"/>
+                            <field name="attendance_extra_hours" widget="float_time" invisible="not attendance_log_id"/>
+                            <field name="requested_hours" widget="float_time" readonly="state in ('approved', 'paid')"/>
+                            <field name="approved_hours" widget="float_time" readonly="state in ('paid',)"/>
+                            <field name="basic_salary_snapshot" readonly="state in ('approved', 'paid')"/>
+                            <field name="divisor_hours" readonly="1"/>
+                            <field name="hourly_basic_rate" readonly="1"/>
+                            <field name="ot_multiplier" readonly="1"/>
+                            <field name="ot_hourly_rate" readonly="1"/>
+                            <field name="total_ot_amount" decoration-bf="1" readonly="1"/>
+                            <field name="compliance_status" widget="badge"
+                                   decoration-success="compliance_status == 'compliant'"
+                                   decoration-warning="compliance_status == 'extended_compliance'"/>
+                            <field name="approved_by_id" invisible="not approved_by_id"/>
+                        </group>
+                    </group>
+                    <group string="Production / Shipment / Official OT Justification">
+                        <field name="reason" nolabel="1" placeholder="Specify line target, vessel loading, or urgent corporate deliverable..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_overtime_request" model="ir.actions.act_window">
+        <field name="name">Overtime Register (BD 2x Basic)</field>
+        <field name="res_model">dsl.overtime.request</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+    </record>
+
+    <!-- 4. Overtime Policy Views -->
+    <record id="view_dsl_overtime_policy_list" model="ir.ui.view">
+        <field name="name">dsl.overtime.policy.list</field>
+        <field name="model">dsl.overtime.policy</field>
+        <field name="arch" type="xml">
+            <list string="Bangladesh Overtime Policies">
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="monthly_hours_divisor"/>
+                <field name="weekday_multiplier"/>
+                <field name="holiday_multiplier"/>
+                <field name="min_ot_minutes"/>
+                <field name="statutory_daily_cap_hours"/>
+                <field name="statutory_weekly_cap_hours"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_overtime_policy_form" model="ir.ui.view">
+        <field name="name">dsl.overtime.policy.form</field>
+        <field name="model">dsl.overtime.policy</field>
+        <field name="arch" type="xml">
+            <form string="Bangladesh Overtime Policy">
+                <sheet>
+                    <div class="oe_title">
+                        <span class="badge text-bg-primary mb-1"><field name="code"/></span>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Statutory Formula Parameters (Sec 108)">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="monthly_hours_divisor"/>
+                            <field name="weekday_multiplier"/>
+                            <field name="holiday_multiplier"/>
+                            <field name="min_ot_minutes"/>
+                        </group>
+                        <group string="DIFE / Buyer Compliance Caps (Sec 100 &amp; 102)">
+                            <field name="statutory_daily_cap_hours" widget="float_time"/>
+                            <field name="statutory_weekly_cap_hours" widget="float_time"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Statutory Notes">
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_overtime_policy" model="ir.actions.act_window">
+        <field name="name">Overtime Policies (BD 2x)</field>
+        <field name="res_model">dsl.overtime.policy</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- 5. Add Overtime Eligibility & 2x Hourly Rate to Employee Attendance Tab -->
+    <record id="view_employee_form_inherit_dsl_overtime" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.overtime</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="DSL_HRMS_attendance.view_employee_form_inherit_dsl_attendance"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='dsl_emp_att_right_group']" position="inside">
+                <field name="dsl_currency_id" invisible="1"/>
+                <field name="ot_eligible"/>
+                <field name="ot_gross_reference" invisible="not ot_eligible"/>
+                <field name="ot_basic_reference" invisible="not ot_eligible"/>
+                <field name="ot_hourly_rate_display" invisible="not ot_eligible"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 6. Menus -->
+    <menuitem id="menu_dsl_overtime_request"
+              name="Overtime (BD 2x Basic)"
+              parent="DSL_HRMS_core.menu_dsl_hrms_attendance_root"
+              action="action_dsl_overtime_request"
+              sequence="60"/>
+
+    <menuitem id="menu_dsl_overtime_policy"
+              name="Overtime Policies"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_overtime_policy"
+              sequence="40"/>
+</odoo>
+
