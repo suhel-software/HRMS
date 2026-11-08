@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_gratuity_policy_user,dsl.gratuity.policy.user,model_dsl_gratuity_policy,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_gratuity_policy_manager,dsl.gratuity.policy.manager,model_dsl_gratuity_policy,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_gratuity_settlement_user,dsl.gratuity.settlement.user,model_dsl_gratuity_settlement,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_gratuity_settlement_officer,dsl.gratuity.settlement.officer,model_dsl_gratuity_settlement,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_gratuity_settlement_manager,dsl.gratuity.settlement.manager,model_dsl_gratuity_settlement,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

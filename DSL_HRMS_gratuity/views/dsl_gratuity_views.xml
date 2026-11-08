@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_dsl_gratuity_settlement_list" model="ir.ui.view">
+        <field name="name">dsl.gratuity.settlement.list</field>
+        <field name="model">dsl.gratuity.settlement</field>
+        <field name="arch" type="xml">
+            <list string="Employee Gratuity &amp; Service Benefit Settlements"
+                  decoration-info="state == 'verified'"
+                  decoration-primary="state == 'approved'"
+                  decoration-success="state == 'paid'">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="joining_date"/>
+                <field name="cutoff_date"/>
+                <field name="service_years"/>
+                <field name="completed_qualifying_years"/>
+                <field name="applicable_multiplier"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="last_drawn_basic"/>
+                <field name="gross_gratuity_amount" sum="Total Gratuity" decoration-bf="1"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'verified'"
+                       decoration-primary="state == 'approved'"
+                       decoration-success="state == 'paid'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_gratuity_settlement_form" model="ir.ui.view">
+        <field name="name">dsl.gratuity.settlement.form</field>
+        <field name="model">dsl.gratuity.settlement</field>
+        <field name="arch" type="xml">
+            <form string="Employee Gratuity &amp; Service Benefit Calculation">
+                <header>
+                    <button name="action_sync_employee_data"
+                            string="⚡ Auto-Fetch Joining Date &amp; Basic"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state == 'paid'"/>
+                    <button name="action_verify"
+                            string="Verify Calculation"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve"
+                            string="✓ Approve Gratuity"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state != 'verified'"/>
+                    <button name="action_mark_paid"
+                            string="💳 Mark Paid"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state != 'approved'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Bangladesh Labour Act Gratuity &amp; Service Benefit</span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Service Tenure">
+                            <field name="employee_id" readonly="state == 'paid'"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                            <field name="policy_id" readonly="state == 'paid'"/>
+                            <field name="settlement_purpose" readonly="state == 'paid'"/>
+                            <field name="joining_date" readonly="state == 'paid'"/>
+                            <field name="cutoff_date" readonly="state == 'paid'"/>
+                        </group>
+                        <group string="Statutory Gratuity &amp; NBR Tax Breakdown (৳)">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="last_drawn_basic" readonly="state == 'paid'" decoration-bf="1"/>
+                            <field name="service_years"/>
+                            <field name="completed_qualifying_years" decoration-bf="1"/>
+                            <field name="applicable_multiplier"/>
+                            <field name="gross_gratuity_amount" decoration-bf="1" decoration-success="1"/>
+                            <field name="tax_exempt_amount"/>
+                            <field name="taxable_gratuity_amount" decoration-danger="taxable_gratuity_amount &gt; 0"/>
+                            <field name="paid_date" invisible="not paid_date"/>
+                        </group>
+                    </group>
+                    <group string="Audit &amp; Settlement Notes">
+                        <field name="remarks" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_gratuity_settlement" model="ir.actions.act_window">
+        <field name="name">Gratuity &amp; Service Benefits</field>
+        <field name="res_model">dsl.gratuity.settlement</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_dsl_gratuity_policy_form" model="ir.ui.view">
+        <field name="name">dsl.gratuity.policy.form</field>
+        <field name="model">dsl.gratuity.policy</field>
+        <field name="arch" type="xml">
+            <form string="Gratuity Policy">
+                <sheet>
+                    <group>
+                        <group string="Policy &amp; Qualifying Tenure">
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="min_qualifying_years"/>
+                            <field name="round_over_six_months"/>
+                        </group>
+                        <group string="Statutory Multipliers &amp; NBR Cap">
+                            <field name="rate_under_10_yrs"/>
+                            <field name="rate_10_yrs_and_above"/>
+                            <field name="nbr_tax_exempt_cap"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <field name="notes"/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_gratuity_policy" model="ir.actions.act_window">
+        <field name="name">Gratuity Policies (BD)</field>
+        <field name="res_model">dsl.gratuity.policy</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_gratuity_settlement"
+              name="Gratuity &amp; Service Benefit"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_gratuity_settlement"
+              sequence="65"/>
+
+    <menuitem id="menu_dsl_gratuity_policy_config"
+              name="Gratuity Policies (BD)"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_gratuity_policy"
+              sequence="74"/>
+</odoo>
+

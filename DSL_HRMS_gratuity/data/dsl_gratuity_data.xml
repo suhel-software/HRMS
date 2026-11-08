@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_dsl_gratuity_settlement" model="ir.sequence">
+            <field name="name">DSL Gratuity Settlement</field>
+            <field name="code">dsl.gratuity.settlement</field>
+            <field name="prefix">GRAT-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="gratuity_policy_bd_labour_act" model="dsl.gratuity.policy">
+            <field name="name">Bangladesh Labour Act 2006 — Sec 2(10) Statutory Gratuity (30d / 45d Basic)</field>
+            <field name="code">BD-BLA-GRAT</field>
+            <field name="min_qualifying_years">1.0</field>
+            <field name="round_over_six_months" eval="True"/>
+            <field name="rate_under_10_yrs">1.0</field>
+            <field name="rate_10_yrs_and_above">1.5</field>
+            <field name="nbr_tax_exempt_cap">25000000.0</field>
+            <field name="notes">Bangladesh Labour Act 2006 (Amended) Sec 2(10): 30 days (1.0x) Basic Salary per completed year (or part > 6 months) up to 10 years, and 45 days (1.5x) Basic Salary per year for 10+ years of service. NBR Tax-Exempt up to ৳2.5 Crore.</field>
+        </record>
+    </data>
+</odoo>
+
