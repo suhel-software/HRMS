@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_onb_user,dsl.employee.onboarding.user,model_dsl_employee_onboarding,base.group_user,1,1,1,0
+access_dsl_onb_officer,dsl.employee.onboarding.officer,model_dsl_employee_onboarding,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_onb_task_user,dsl.onboarding.task.user,model_dsl_onboarding_task,base.group_user,1,1,1,1
+access_dsl_asset_user,dsl.employee.asset.assignment.user,model_dsl_employee_asset_assignment,base.group_user,1,1,1,0
+access_dsl_asset_officer,dsl.employee.asset.assignment.officer,model_dsl_employee_asset_assignment,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+
