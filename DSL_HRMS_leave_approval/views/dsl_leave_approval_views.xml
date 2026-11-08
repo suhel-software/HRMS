@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================================================================== -->
+    <!-- 1. EXTEND LEAVE APPLICATION FORM & LIST FOR MULTI-LEVEL APPROVAL   -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_leave_request_list_inherit_approval" model="ir.ui.view">
+        <field name="name">dsl.leave.request.list.approval</field>
+        <field name="model">dsl.leave.request</field>
+        <field name="inherit_id" ref="DSL_HRMS_leave.view_dsl_leave_request_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='handover_employee_id']" position="after">
+                <field name="current_approval_stage" optional="show"/>
+                <field name="next_approver_id" widget="many2one_avatar_user" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_dsl_leave_request_form_inherit_approval" model="ir.ui.view">
+        <field name="name">dsl.leave.request.form.approval</field>
+        <field name="model">dsl.leave.request</field>
+        <field name="inherit_id" ref="DSL_HRMS_leave.view_dsl_leave_request_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[@name='action_approve']" position="replace">
+                <field name="can_approve_current_step" invisible="1"/>
+                <button name="action_approve"
+                        string="✓ Approve Current Step"
+                        type="object"
+                        class="btn-success"
+                        invisible="state not in ('submitted', 'level1_approved', 'level2_approved') or not can_approve_current_step"/>
+                <button name="action_hr_executive_override"
+                        string="⚡ HR Executive Override"
+                        type="object"
+                        class="btn-warning"
+                        groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                        invisible="state not in ('submitted', 'level1_approved', 'level2_approved')"/>
+            </xpath>
+
+            <xpath expr="//header/field[@name='state']" position="attributes">
+                <attribute name="statusbar_visible">draft,submitted,level1_approved,approved</attribute>
+            </xpath>
+
+            <xpath expr="//group[@name='dsl_leave_emp_col']" position="inside">
+                <field name="approval_chain_id" invisible="not approval_chain_id"/>
+                <field name="current_approval_stage" invisible="not current_approval_stage" decoration-bf="1"/>
+                <field name="next_approver_id" invisible="not next_approver_id" widget="many2one_avatar_user"/>
+            </xpath>
+
+            <xpath expr="//notebook[@name='dsl_leave_notebook']" position="inside">
+                <page name="approval_chain_page" string="Multi-Level Approval Chain">
+                    <field name="approval_step_ids" readonly="1">
+                        <list decoration-warning="state == 'pending'"
+                              decoration-success="state == 'approved'"
+                              decoration-danger="state == 'rejected'"
+                              decoration-muted="state == 'skipped'">
+                            <field name="level"/>
+                            <field name="step_name" decoration-bf="1"/>
+                            <field name="approver_role"/>
+                            <field name="assigned_user_id" widget="many2one_avatar_user"/>
+                            <field name="state" widget="badge"
+                                   decoration-warning="state == 'pending'"
+                                   decoration-info="state == 'waiting'"
+                                   decoration-success="state == 'approved'"
+                                   decoration-danger="state == 'rejected'"
+                                   decoration-muted="state == 'skipped'"/>
+                            <field name="action_by_id"/>
+                            <field name="action_date"/>
+                            <field name="remarks"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Action: Pending Multi-Level Leave Approvals -->
+    <record id="action_dsl_leave_pending_approvals" model="ir.actions.act_window">
+        <field name="name">Pending Leave Approvals</field>
+        <field name="res_model">dsl.leave.request</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('state', 'in', ('submitted', 'level1_approved', 'level2_approved'))]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                All Caught Up! Zero Pending Leave Approvals
+            </p>
+            <p>
+                Leave applications awaiting Line Manager, Department Head, or HR validation appear here automatically.
+            </p>
+        </field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 2. APPROVAL CHAIN CONFIGURATION VIEWS                              -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_leave_approval_chain_list" model="ir.ui.view">
+        <field name="name">dsl.leave.approval.chain.list</field>
+        <field name="model">dsl.leave.approval.chain</field>
+        <field name="arch" type="xml">
+            <list string="Multi-Level Leave Approval Chains">
+                <field name="sequence" widget="handle"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="branch_id"/>
+                <field name="leave_type_ids" widget="many2many_tags"/>
+                <field name="min_days"/>
+                <field name="max_days"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_leave_approval_chain_form" model="ir.ui.view">
+        <field name="name">dsl.leave.approval.chain.form</field>
+        <field name="model">dsl.leave.approval.chain</field>
+        <field name="arch" type="xml">
+            <form string="Multi-Level Leave Approval Chain">
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Approval Workflow Policy</span>
+                        <h1><field name="name" placeholder="e.g. Extended Leave Approval Chain (&gt; 3 Days)"/></h1>
+                    </div>
+                    <group>
+                        <group string="Organization &amp; Policy Scope">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="leave_type_ids" widget="many2many_tags"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Duration Filter &amp; Priority">
+                            <field name="sequence"/>
+                            <field name="min_days"/>
+                            <field name="max_days"/>
+                        </group>
+                    </group>
+
+                    <separator string="Sequential Approval Tiers"/>
+                    <field name="step_ids">
+                        <list editable="bottom">
+                            <field name="level"/>
+                            <field name="name"/>
+                            <field name="approver_role"/>
+                            <field name="specific_user_id" invisible="approver_role != 'specific_user'"/>
+                            <field name="min_days_trigger"/>
+                            <field name="auto_skip_if_missing_or_same"/>
+                        </list>
+                    </field>
+                    <group string="Workflow Notes">
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_leave_approval_chain" model="ir.actions.act_window">
+        <field name="name">Leave Approval Chains</field>
+        <field name="res_model">dsl.leave.approval.chain</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 3. MENUS UNDER LEAVES + CONFIGURATION                              -->
+    <!-- ================================================================== -->
+    <menuitem id="menu_dsl_leave_pending_approvals"
+              name="Pending Approvals"
+              parent="DSL_HRMS_core.menu_dsl_hrms_leave_root"
+              action="action_dsl_leave_pending_approvals"
+              sequence="15"/>
+
+    <menuitem id="menu_dsl_leave_approval_chain_config"
+              name="Leave Approval Chains"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_leave_approval_chain"
+              sequence="55"/>
+</odoo>
+

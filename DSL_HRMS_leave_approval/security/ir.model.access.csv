@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_leave_approval_chain_user,dsl.leave.approval.chain.user,model_dsl_leave_approval_chain,base.group_user,1,0,0,0
+access_dsl_leave_approval_chain_officer,dsl.leave.approval.chain.officer,model_dsl_leave_approval_chain,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_leave_approval_chain_manager,dsl.leave.approval.chain.manager,model_dsl_leave_approval_chain,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_leave_approval_chain_step_user,dsl.leave.approval.chain.step.user,model_dsl_leave_approval_chain_step,base.group_user,1,0,0,0
+access_dsl_leave_approval_chain_step_officer,dsl.leave.approval.chain.step.officer,model_dsl_leave_approval_chain_step,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_leave_approval_chain_step_manager,dsl.leave.approval.chain.step.manager,model_dsl_leave_approval_chain_step,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_leave_req_app_step_user,dsl.leave.request.approval.step.user,model_dsl_leave_request_approval_step,base.group_user,1,1,1,0
+access_dsl_leave_req_app_step_officer,dsl.leave.request.approval.step.officer,model_dsl_leave_request_approval_step,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_leave_req_app_step_manager,dsl.leave.request.approval.step.manager,model_dsl_leave_request_approval_step,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default Group Multi-Level Leave Approval Chain -->
+        <record id="chain_bd_standard_multi_level" model="dsl.leave.approval.chain">
+            <field name="sequence">10</field>
+            <field name="name">Standard Enterprise Multi-Level Approval Chain (Manager → HOD → HR)</field>
+            <field name="min_days">0.0</field>
+            <field name="max_days">0.0</field>
+            <field name="notes">Level 1: Direct Line Manager / Supervisor. Level 2: Department Head (triggered automatically for leaves &gt; 2 days). Level 3: HR Officer Final Validation &amp; Quota Posting.</field>
+        </record>
+
+        <record id="chain_step_l1_line_manager" model="dsl.leave.approval.chain.step">
+            <field name="chain_id" ref="chain_bd_standard_multi_level"/>
+            <field name="level">1</field>
+            <field name="name">Line Manager / Supervisor Review</field>
+            <field name="approver_role">line_manager</field>
+            <field name="min_days_trigger">0.0</field>
+            <field name="auto_skip_if_missing_or_same" eval="True"/>
+        </record>
+
+        <record id="chain_step_l2_dept_head" model="dsl.leave.approval.chain.step">
+            <field name="chain_id" ref="chain_bd_standard_multi_level"/>
+            <field name="level">2</field>
+            <field name="name">Department Head (HOD) Endorsement</field>
+            <field name="approver_role">dept_head</field>
+            <field name="min_days_trigger">2.0</field>
+            <field name="auto_skip_if_missing_or_same" eval="True"/>
+        </record>
+
+        <record id="chain_step_l3_hr_final" model="dsl.leave.approval.chain.step">
+            <field name="chain_id" ref="chain_bd_standard_multi_level"/>
+            <field name="level">3</field>
+            <field name="name">HR Officer Final Validation &amp; Attendance Sync</field>
+            <field name="approver_role">hr_officer</field>
+            <field name="min_days_trigger">0.0</field>
+            <field name="auto_skip_if_missing_or_same" eval="False"/>
+        </record>
+    </data>
+</odoo>
+
