@@ -1,0 +1,543 @@
+/* DSL HRMS Executive Dashboard Styles */
+
+.dsl_dashboard_container {
+    padding: 24px 32px;
+    background-color: #f8fafc;
+    min-height: 100%;
+    overflow-y: auto;
+
+    .dsl_dashboard_loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 400px;
+    }
+
+    // 1. Welcome Banner
+    .dsl_welcome_banner {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.03);
+        padding: 22px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+
+        .dsl_welcome_left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+
+            .dsl_banner_avatar {
+                width: 54px;
+                height: 54px;
+                border-radius: 50%;
+                border: 2px solid #e0e7ff;
+                object-fit: cover;
+            }
+
+            .dsl_banner_meta {
+                h2 {
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: #0f172a;
+                    margin-bottom: 4px;
+                    letter-spacing: -0.3px;
+                }
+
+                .dsl_status_badge {
+                    font-size: 11.5px;
+                    font-weight: 600;
+                    padding: 2px 10px;
+                    border-radius: 20px;
+
+                    &.active {
+                        background: #dcfce7;
+                        color: #15803d;
+                    }
+                }
+            }
+        }
+
+        .dsl_welcome_actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+
+            .dsl_action_pill {
+                padding: 8px 18px;
+                border-radius: 9999px;
+                font-size: 13.5px;
+                font-weight: 600;
+                border: 1px solid #e2e8f0;
+                background: #ffffff;
+                color: #334155;
+                cursor: pointer;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    background: #f1f5f9;
+                    border-color: #cbd5e1;
+                    transform: translateY(-1px);
+                }
+
+                &.primary {
+                    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+                    color: #ffffff;
+                    border: none;
+                    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+
+                    &:hover {
+                        background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%);
+                        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+                    }
+                }
+
+                &.outline {
+                    border-color: #cbd5e1;
+                    color: #64748b;
+                }
+            }
+        }
+    }
+
+    // 2. KPI Summary Grid
+    .dsl_kpi_grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+
+        .dsl_kpi_card {
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            padding: 20px 22px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s ease;
+            cursor: pointer;
+
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+                border-color: #cbd5e1;
+            }
+
+            .dsl_kpi_top {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12px;
+
+                .dsl_kpi_title {
+                    font-size: 13.5px;
+                    font-weight: 600;
+                    color: #64748b;
+                }
+
+                .dsl_kpi_badge {
+                    font-size: 11px;
+                    font-weight: 700;
+                    padding: 2px 8px;
+                    border-radius: 12px;
+
+                    &.success { background: #dcfce7; color: #16a34a; }
+                    &.info { background: #e0f2fe; color: #0284c7; }
+                    &.primary { background: #ede9fe; color: #7c3aed; }
+                    &.secondary { background: #f1f5f9; color: #475569; }
+                }
+            }
+
+            .dsl_kpi_main {
+                display: flex;
+                align-items: baseline;
+                gap: 8px;
+                margin-bottom: 14px;
+
+                .dsl_kpi_value {
+                    font-size: 28px;
+                    font-weight: 800;
+                    color: #0f172a;
+                    letter-spacing: -0.5px;
+                }
+
+                .dsl_kpi_unit {
+                    font-size: 13px;
+                    color: #94a3b8;
+                    font-weight: 500;
+                }
+            }
+
+            .dsl_kpi_bar {
+                height: 6px;
+                background: #f1f5f9;
+                border-radius: 6px;
+                display: flex;
+                overflow: hidden;
+                margin-bottom: 12px;
+
+                .dsl_bar_segment {
+                    height: 100%;
+
+                    &.active { background: #3b82f6; }
+                    &.leave { background: #f59e0b; }
+                    &.inactive { background: #cbd5e1; }
+                    &.primary { background: #6366f1; }
+                    &.warning { background: #f97316; }
+                }
+            }
+
+            .dsl_attendance_gauge {
+                margin-bottom: 12px;
+
+                .dsl_gauge_track {
+                    height: 8px;
+                    background: #f1f5f9;
+                    border-radius: 8px;
+                    overflow: hidden;
+
+                    .dsl_gauge_fill {
+                        height: 100%;
+                        background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+                        border-radius: 8px;
+                    }
+                }
+            }
+
+            .dsl_kpi_sub {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                font-size: 12px;
+                color: #64748b;
+                font-weight: 500;
+
+                .dot {
+                    display: inline-block;
+                    width: 7px;
+                    height: 7px;
+                    border-radius: 50%;
+                    margin-right: 4px;
+
+                    &.active { background: #3b82f6; }
+                    &.leave { background: #f59e0b; }
+                    &.success { background: #10b981; }
+                    &.warning { background: #f59e0b; }
+                    &.danger { background: #ef4444; }
+                    &.primary { background: #6366f1; }
+                }
+            }
+        }
+    }
+
+    // 3. Grid & Panels
+    .dsl_content_grid {
+        display: grid;
+        grid-template-columns: 7fr 5fr;
+        gap: 24px;
+
+        @media (max-width: 1024px) {
+            grid-template-columns: 1fr;
+        }
+
+        .dsl_panel_card {
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            padding: 22px 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+            margin-bottom: 24px;
+
+            .dsl_panel_header {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                margin-bottom: 18px;
+
+                h4 {
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #0f172a;
+                    margin-bottom: 2px;
+                }
+
+                p {
+                    font-size: 12.5px;
+                    color: #64748b;
+                    margin-bottom: 0;
+                }
+            }
+
+            .dsl_chart_wrapper {
+                height: 260px;
+                position: relative;
+
+                &.sm {
+                    height: 200px;
+                }
+            }
+
+            // Employee Directory Table
+            .dsl_table_responsive {
+                overflow-x: auto;
+
+                .dsl_roster_table {
+                    width: 100%;
+                    border-collapse: separate;
+                    border-spacing: 0;
+
+                    thead th {
+                        font-size: 11.5px;
+                        font-weight: 700;
+                        color: #64748b;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        padding: 10px 12px;
+                        border-bottom: 1px solid #e2e8f0;
+                        background: #f8fafc;
+                    }
+
+                    tbody tr {
+                        transition: background-color 0.15s ease;
+
+                        &:hover {
+                            background-color: #f8fafc;
+                        }
+
+                        td {
+                            padding: 12px;
+                            font-size: 13px;
+                            border-bottom: 1px solid #f1f5f9;
+                            vertical-align: middle;
+
+                            .dsl_table_avatar {
+                                width: 34px;
+                                height: 34px;
+                                border-radius: 50%;
+                                object-fit: cover;
+                            }
+
+                            .dsl_status_pill {
+                                font-size: 11px;
+                                font-weight: 600;
+                                padding: 2px 8px;
+                                border-radius: 12px;
+
+                                &.active {
+                                    background: #dcfce7;
+                                    color: #16a34a;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Quick Tasks List
+            .dsl_tasks_list {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+
+                .dsl_task_item {
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                    padding: 14px 16px;
+                    border-radius: 12px;
+                    border: 1px solid #f1f5f9;
+                    background: #f8fafc;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background: #f1f5f9;
+                        border-color: #e2e8f0;
+                        transform: translateX(3px);
+                    }
+
+                    .dsl_task_icon {
+                        width: 38px;
+                        height: 38px;
+                        border-radius: 10px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 16px;
+                        flex-shrink: 0;
+
+                        &.blue { background: #dbeafe; color: #2563eb; }
+                        &.green { background: #dcfce7; color: #16a34a; }
+                        &.purple { background: #ede9fe; color: #7c3aed; }
+                    }
+
+                    .dsl_task_info {
+                        flex: 1;
+
+                        h5 {
+                            font-size: 13.5px;
+                            font-weight: 600;
+                            color: #0f172a;
+                            margin-bottom: 2px;
+                        }
+
+                        p {
+                            font-size: 12px;
+                            color: #64748b;
+                            margin-bottom: 0;
+                        }
+                    }
+                }
+            }
+
+            // Corporate HR Announcements Panel (HR Dashboard)
+            &.dsl_hr_notice_panel {
+                border-top: 2px solid #2563eb;
+            }
+
+            .dsl_hr_notice_list {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                max-height: 360px;
+                overflow-y: auto;
+                padding-right: 4px;
+            }
+
+            .dsl_hr_notice_item {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-left: 3px solid #2563eb;
+                border-radius: 11px;
+                padding: 11px 14px;
+                cursor: pointer;
+                transition: all 0.16s ease;
+
+                &:hover {
+                    transform: translateX(3px);
+                    border-color: #2563eb;
+                    background: #f1f5f9;
+                }
+
+                &.item_rose { border-left-color: #f43f5e; }
+                &.item_amber { border-left-color: #f59e0b; }
+                &.item_emerald { border-left-color: #10b981; }
+                &.item_purple { border-left-color: #8b5cf6; }
+
+                .hr_pin_pill {
+                    background: rgba(244, 63, 94, 0.14);
+                    color: #e11d48;
+                    border: 1px solid rgba(244, 63, 94, 0.3);
+                    font-size: 10px;
+                    font-weight: 800;
+                    padding: 1px 7px;
+                    border-radius: 999px;
+                }
+
+                .hr_cat_pill {
+                    font-size: 10.5px;
+                    font-weight: 700;
+                    padding: 2px 8px;
+                    border-radius: 999px;
+                    background: #eff6ff;
+                    color: #2563eb;
+
+                    &.pill_rose { background: #fff1f2; color: #e11d48; }
+                    &.pill_amber { background: #fffbeb; color: #d97706; }
+                    &.pill_emerald { background: #ecfdf5; color: #059669; }
+                    &.pill_purple { background: #f5f3ff; color: #7c3aed; }
+                }
+
+                .hr_scope_text, .hr_date_text {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #64748b;
+                }
+
+                .hr_notice_title {
+                    font-size: 13px;
+                    font-weight: 800;
+                    color: #0f172a;
+                    margin-bottom: 2px;
+                }
+
+                .hr_notice_summary {
+                    font-size: 11.5px;
+                    color: #475569;
+                    line-height: 1.4;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+            }
+        }
+    }
+}
+
+body.dsl_dark_mode {
+    .dsl_dashboard_container {
+        background-color: #0b1120 !important;
+        color: #e2e8f0 !important;
+
+        .dsl_welcome_banner,
+        .dsl_kpi_card,
+        .dsl_panel_card {
+            background: #111a2b !important;
+            border-color: #1f2d46 !important;
+            color: #e2e8f0 !important;
+        }
+
+        .dsl_welcome_banner {
+            .dsl_banner_meta h2 { color: #ffffff !important; }
+            .dsl_welcome_actions .dsl_action_pill:not(.primary) {
+                background: #182338 !important;
+                border-color: #263854 !important;
+                color: #cbd5e1 !important;
+            }
+        }
+
+        .dsl_kpi_card {
+            .dsl_kpi_top .dsl_kpi_title { color: #94a3b8 !important; }
+            .dsl_kpi_main .dsl_kpi_value { color: #ffffff !important; }
+            .dsl_kpi_sub { color: #94a3b8 !important; }
+            .dsl_kpi_bar, .dsl_attendance_gauge .dsl_gauge_track { background: #1e293b !important; }
+        }
+
+        .dsl_panel_card {
+            .dsl_panel_header h4 { color: #ffffff !important; }
+            .dsl_panel_header p { color: #94a3b8 !important; }
+
+            .dsl_roster_table {
+                thead th {
+                    background: #182338 !important;
+                    color: #cbd5e1 !important;
+                    border-bottom-color: #253551 !important;
+                }
+                tbody tr:hover { background: #162236 !important; }
+                tbody tr td {
+                    border-bottom-color: #1f2d46 !important;
+                    color: #cbd5e1 !important;
+                    .text-dark { color: #ffffff !important; }
+                }
+            }
+
+            .dsl_tasks_list .dsl_task_item,
+            .dsl_hr_notice_item {
+                background: #182338 !important;
+                border-color: #253551 !important;
+
+                h5, .hr_notice_title { color: #ffffff !important; }
+                p, .hr_notice_summary { color: #cbd5e1 !important; }
+                .hr_scope_text, .hr_date_text { color: #94a3b8 !important; }
+            }
+        }
+    }
+}
+

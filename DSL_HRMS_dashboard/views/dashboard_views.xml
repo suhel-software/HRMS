@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Client Action for Dashboard -->
+    <record id="action_dsl_hrms_dashboard" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">dsl_hrms_dashboard_main</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- Menu Item under DSL HRMS Core -->
+    <menuitem id="menu_dsl_hrms_dashboard_action"
+              name="Executive Dashboard"
+              parent="DSL_HRMS_core.menu_dsl_hrms_dashboard"
+              action="action_dsl_hrms_dashboard"
+              sequence="1"/>
+</odoo>
+

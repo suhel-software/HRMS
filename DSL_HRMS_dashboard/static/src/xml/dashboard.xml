@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="DSL_HRMS_dashboard.MainDashboard">
+        <div class="dsl_dashboard_container">
+            <!-- Loading State -->
+            <div t-if="state.loading" class="dsl_dashboard_loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading Dashboard...</span>
+                </div>
+                <p class="mt-2 text-muted">Loading HRMS Analytics...</p>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div t-if="!state.loading" class="dsl_dashboard_content">
+                
+                <!-- 1. Top Welcome Banner (Inspired by MavionTech) -->
+                <div class="dsl_welcome_banner">
+                    <div class="dsl_welcome_left">
+                        <img t-att-src="'/web/image?model=res.users&amp;field=avatar_128&amp;id=' + (state.data.user_id || 2)" 
+                             alt="Avatar" class="dsl_banner_avatar"/>
+                        <div class="dsl_banner_meta">
+                            <h2>Welcome back, <t t-esc="state.data.user_name || 'Admin'"/></h2>
+                            <p class="text-muted mb-0">
+                                <span><i class="fa fa-calendar-o me-1"/> Today: <t t-esc="state.data.today_date"/></span>
+                                <span class="ms-3 dsl_status_badge active">
+                                    <i class="fa fa-shield me-1" title="Role Template"/>
+                                    <t t-esc="state.data.nav_profile?.role_badge_label || 'Live Workspace'"/>
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="dsl_welcome_actions">
+                        <button class="dsl_action_pill primary" t-on-click="() => this.onOpenEssPortal()">
+                            <i class="fa fa-user-circle-o me-1" title="My Portal"/> My Portal (ESS)
+                        </button>
+                        <button t-if="state.data.nav_profile?.allow_leaves || state.data.nav_profile?.allow_performance"
+                                class="dsl_action_pill"
+                                t-on-click="() => this.onOpenMssPortal()">
+                            <i class="fa fa-users me-1 text-primary" title="Manager Hub"/> Manager Hub (MSS)
+                        </button>
+                        <button t-if="state.data.nav_profile?.allow_accounting"
+                                class="dsl_action_pill"
+                                t-on-click="() => this.onOpenAccDashboard()">
+                            <i class="fa fa-balance-scale me-1 text-success" title="Accounting"/> Accounting Desk
+                        </button>
+                        <button class="dsl_action_pill" t-on-click="() => this.onOpenAnnouncements()">
+                            <i class="fa fa-bullhorn me-1 text-primary" title="HR Announcements"/> HR Announcements
+                        </button>
+                        <button class="dsl_action_pill" t-on-click="() => this.onApplyLeave()">
+                            <i class="fa fa-calendar-plus-o me-1" title="Apply Leave"/> Apply Leave
+                        </button>
+                        <button t-if="state.data.nav_profile?.allow_employee_mgmt"
+                                class="dsl_action_pill"
+                                t-on-click="() => this.onOpenEmployees()">
+                            <i class="fa fa-id-card-o me-1" title="Employees"/> All Employees
+                        </button>
+                        <button t-if="state.data.nav_profile?.allow_settings"
+                                class="dsl_action_pill outline"
+                                t-on-click="() => this.onOpenSettings()">
+                            <i class="fa fa-cog me-1" title="Settings"/> Settings
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. KPI Summary Metric Cards (Inspired by DORA) -->
+                <div class="dsl_kpi_grid">
+                    <!-- Employees Card -->
+                    <div class="dsl_kpi_card" t-on-click="() => this.onOpenEmployees()">
+                        <div class="dsl_kpi_top">
+                            <span class="dsl_kpi_title">Total Employees</span>
+                            <span class="dsl_kpi_badge success">+12%</span>
+                        </div>
+                        <div class="dsl_kpi_main">
+                            <span class="dsl_kpi_value" t-esc="state.data.total_employees || 0"/>
+                        </div>
+                        <div class="dsl_kpi_bar">
+                            <div class="dsl_bar_segment active" style="width: 75%"/>
+                            <div class="dsl_bar_segment leave" style="width: 15%"/>
+                            <div class="dsl_bar_segment inactive" style="width: 10%"/>
+                        </div>
+                        <div class="dsl_kpi_sub">
+                            <span><span class="dot active"/> Active (<t t-esc="state.data.total_employees || 0"/>)</span>
+                            <span><span class="dot leave"/> On Leave (<t t-esc="state.data.on_leave_today || 0"/>)</span>
+                        </div>
+                    </div>
+
+                    <!-- Attendance Card -->
+                    <div class="dsl_kpi_card" t-on-click="() => this.onMyAttendance()">
+                        <div class="dsl_kpi_top">
+                            <span class="dsl_kpi_title">Today's Attendance</span>
+                            <span class="dsl_kpi_badge info">Real-time</span>
+                        </div>
+                        <div class="dsl_kpi_main">
+                            <span class="dsl_kpi_value" t-esc="state.data.present_today || 0"/>
+                            <span class="dsl_kpi_unit">Staff Present</span>
+                        </div>
+                        <div class="dsl_attendance_gauge">
+                            <div class="dsl_gauge_track">
+                                <div class="dsl_gauge_fill" style="width: 88%"/>
+                            </div>
+                        </div>
+                        <div class="dsl_kpi_sub">
+                            <span><span class="dot success"/> Present (<t t-esc="state.data.present_today || 0"/>)</span>
+                            <span><span class="dot warning"/> Late (<t t-esc="state.data.late_today || 0"/>)</span>
+                            <span><span class="dot danger"/> Absent (<t t-esc="state.data.absent_today || 0"/>)</span>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Payroll Card -->
+                    <div class="dsl_kpi_card">
+                        <div class="dsl_kpi_top">
+                            <span class="dsl_kpi_title">Monthly Payroll</span>
+                            <span class="dsl_kpi_badge primary">Current Month</span>
+                        </div>
+                        <div class="dsl_kpi_main">
+                            <span class="dsl_kpi_value" t-esc="state.data.total_payroll || '৳ 0'"/>
+                        </div>
+                        <div class="dsl_kpi_bar">
+                            <div class="dsl_bar_segment primary" style="width: 85%"/>
+                            <div class="dsl_bar_segment warning" style="width: 15%"/>
+                        </div>
+                        <div class="dsl_kpi_sub">
+                            <span><span class="dot primary"/> Disbursed (85%)</span>
+                            <span><span class="dot warning"/> Pending (15%)</span>
+                        </div>
+                    </div>
+
+                    <!-- Departments Card -->
+                    <div class="dsl_kpi_card" t-on-click="() => this.action.doAction('hr.hr_department_tree_action')">
+                        <div class="dsl_kpi_top">
+                            <span class="dsl_kpi_title">Departments &amp; Units</span>
+                            <span class="dsl_kpi_badge secondary">Active</span>
+                        </div>
+                        <div class="dsl_kpi_main">
+                            <span class="dsl_kpi_value" t-esc="state.data.departments_count || 1"/>
+                            <span class="dsl_kpi_unit">Organized Divisions</span>
+                        </div>
+                        <div class="dsl_kpi_sub mt-3">
+                            <span><i class="fa fa-building-o text-muted me-1"/> Central Head Office</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Charts & Operational Grid -->
+                <div class="dsl_content_grid">
+                    
+                    <!-- Left Column: Payroll Trend & Employee Table -->
+                    <div class="dsl_grid_col left">
+                        <!-- Payroll Trend Card -->
+                        <div class="dsl_panel_card">
+                            <div class="dsl_panel_header">
+                                <div>
+                                    <h4>Payroll &amp; Compensation Trend</h4>
+                                    <p class="text-muted">6-month salary and benefits distribution curve</p>
+                                </div>
+                                <span class="badge text-bg-light border">BDT (৳)</span>
+                            </div>
+                            <div class="dsl_chart_wrapper">
+                                <canvas t-ref="payrollChart"/>
+                            </div>
+                        </div>
+
+                        <!-- Employee Directory Preview -->
+                        <div class="dsl_panel_card">
+                            <div class="dsl_panel_header">
+                                <div>
+                                    <h4>Recent Workforce Roster</h4>
+                                    <p class="text-muted">Active staff and latest assignments</p>
+                                </div>
+                                <button class="btn btn-sm btn-link text-decoration-none" t-on-click="() => this.onOpenEmployees()">
+                                    View All Employees →
+                                </button>
+                            </div>
+                            <div class="dsl_table_responsive">
+                                <table class="dsl_roster_table">
+                                    <thead>
+                                        <tr>
+                                            <th>Employee</th>
+                                            <th>Role / Title</th>
+                                            <th>Department</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="state.data.recent_employees || []" t-as="emp" t-key="emp.id">
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <img t-att-src="'/web/image?model=hr.employee&amp;field=avatar_128&amp;id=' + emp.id"
+                                                             alt="Avatar" class="dsl_table_avatar"/>
+                                                        <span class="fw-semibold text-dark" t-esc="emp.name"/>
+                                                    </div>
+                                                </td>
+                                                <td class="text-muted" t-esc="emp.role"/>
+                                                <td>
+                                                    <span class="badge bg-light text-dark border" t-esc="emp.dept"/>
+                                                </td>
+                                                <td>
+                                                    <span class="dsl_status_pill active">Active</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <button class="btn btn-sm btn-light border py-1 px-2"
+                                                            t-on-click="() => this.onOpenEmployee(emp.id)">
+                                                        View Profile
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <tr t-if="!state.data.recent_employees || state.data.recent_employees.length == 0">
+                                            <td colspan="5" class="text-center py-4 text-muted">
+                                                <i class="fa fa-users fa-2x mb-2 text-muted d-block"/>
+                                                <span>No employee records found yet. Click </span>
+                                                <a href="#" t-on-click.prevent="() => this.onOpenEmployees()">here</a> to create one.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: HR Announcements, 7-Day Attendance & Quick Tasks -->
+                    <div class="dsl_grid_col right">
+                        <!-- Corporate HR Announcements & Official Notice Board -->
+                        <div class="dsl_panel_card dsl_hr_notice_panel">
+                            <div class="dsl_panel_header">
+                                <div>
+                                    <h4><i class="fa fa-bullhorn text-primary me-2" title="Notice Board"/>Corporate HR Announcements</h4>
+                                    <p class="text-muted">Official circulars broadcasted to ESS &amp; MSS portals</p>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-primary fw-semibold" t-on-click="() => this.onPostAnnouncement()">
+                                        <i class="fa fa-plus me-1" title="Post"/> Post Notice
+                                    </button>
+                                    <button class="btn btn-sm btn-light border fw-semibold" t-on-click="() => this.onOpenAnnouncements()">
+                                        All Notices
+                                    </button>
+                                </div>
+                            </div>
+                            <div t-if="state.data.announcements and state.data.announcements.length" class="dsl_hr_notice_list">
+                                <div t-foreach="state.data.announcements" t-as="ann" t-key="ann.id"
+                                     t-attf-class="dsl_hr_notice_item item_{{ ann.badge_color }}"
+                                     t-on-click="() => this.onOpenAnnouncementRecord(ann.id)">
+                                    <div class="d-flex justify-content-between align-items-center mb-1 gap-2">
+                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                            <span t-if="ann.is_pinned" class="hr_pin_pill">
+                                                <i class="fa fa-thumb-tack me-1" title="Pinned"/> PINNED
+                                            </span>
+                                            <span t-attf-class="hr_cat_pill pill_{{ ann.badge_color }}">
+                                                <i t-attf-class="fa {{ ann.icon }} me-1" title="Category"/>
+                                                <t t-esc="ann.category_label"/>
+                                            </span>
+                                            <span class="hr_scope_text" t-esc="ann.scope_label"/>
+                                        </div>
+                                        <span class="hr_date_text" t-esc="ann.publish_date"/>
+                                    </div>
+                                    <div class="hr_notice_title" t-esc="ann.title"/>
+                                    <div class="hr_notice_summary" t-esc="ann.summary"/>
+                                </div>
+                            </div>
+                            <div t-else="" class="text-muted small py-3 text-center">
+                                No active HR announcements published yet. Click <strong>Post Notice</strong> to broadcast one.
+                            </div>
+                        </div>
+
+                        <!-- 7-Day Attendance Card -->
+                        <div class="dsl_panel_card">
+                            <div class="dsl_panel_header">
+                                <div>
+                                    <h4>Attendance — Last 7 Days</h4>
+                                    <p class="text-muted">Daily punch-in turnout</p>
+                                </div>
+                            </div>
+                            <div class="dsl_chart_wrapper sm">
+                                <canvas t-ref="attendanceChart"/>
+                            </div>
+                        </div>
+
+                        <!-- Things To Do / Action Checklist -->
+                        <div class="dsl_panel_card">
+                            <div class="dsl_panel_header">
+                                <h4>Quick Operations</h4>
+                            </div>
+                            <div class="dsl_tasks_list">
+                                <div class="dsl_task_item" t-on-click="() => this.onApplyLeave()">
+                                    <div class="dsl_task_icon blue">
+                                        <i class="fa fa-calendar-check-o"/>
+                                    </div>
+                                    <div class="dsl_task_info">
+                                        <h5>Review Pending Leave Requests</h5>
+                                        <p>Check employee vacation and medical leave approvals</p>
+                                    </div>
+                                    <i class="fa fa-angle-right text-muted"/>
+                                </div>
+
+                                <div class="dsl_task_item" t-on-click="() => this.onMyAttendance()">
+                                    <div class="dsl_task_icon green">
+                                        <i class="fa fa-check-circle-o"/>
+                                    </div>
+                                    <div class="dsl_task_info">
+                                        <h5>Attendance Timesheets</h5>
+                                        <p>Inspect daily attendance and overtime calculations</p>
+                                    </div>
+                                    <i class="fa fa-angle-right text-muted"/>
+                                </div>
+
+                                <div t-if="state.data.nav_profile?.allow_settings"
+                                     class="dsl_task_item"
+                                     t-on-click="() => this.onOpenSettings()">
+                                    <div class="dsl_task_icon purple">
+                                        <i class="fa fa-sliders"/>
+                                    </div>
+                                    <div class="dsl_task_info">
+                                        <h5>System &amp; Company Rules</h5>
+                                        <p>Configure company policies, shifts and working hours</p>
+                                    </div>
+                                    <i class="fa fa-angle-right text-muted"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </t>
+
+</templates>
+
