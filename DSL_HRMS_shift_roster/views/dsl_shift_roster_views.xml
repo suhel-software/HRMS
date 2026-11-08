@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================================================================== -->
+    <!-- 1. SHIFT ROSTER CALENDAR, LIST, PIVOT & FULL-WIDTH BOTTOM CHATTER  -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_shift_roster_calendar" model="ir.ui.view">
+        <field name="name">dsl.shift.roster.calendar</field>
+        <field name="model">dsl.shift.roster</field>
+        <field name="arch" type="xml">
+            <calendar string="Shift Roster Calendar"
+                      date_start="roster_date"
+                      color="shift_id"
+                      mode="month"
+                      quick_create="0">
+                <field name="employee_id"/>
+                <field name="shift_id"/>
+                <field name="branch_id"/>
+                <field name="is_off_day"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_dsl_shift_roster_list" model="ir.ui.view">
+        <field name="name">dsl.shift.roster.list</field>
+        <field name="model">dsl.shift.roster</field>
+        <field name="arch" type="xml">
+            <list string="Shift Roster Schedule"
+                  decoration-muted="is_off_day == True"
+                  decoration-info="state == 'draft'">
+                <field name="roster_date" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id"/>
+                <field name="department_id" optional="show"/>
+                <field name="shift_id" widget="badge"/>
+                <field name="is_off_day" widget="boolean"/>
+                <field name="batch_id" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'published'"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'swapped'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_shift_roster_pivot" model="ir.ui.view">
+        <field name="name">dsl.shift.roster.pivot</field>
+        <field name="model">dsl.shift.roster</field>
+        <field name="arch" type="xml">
+            <pivot string="Shift Roster Matrix">
+                <field name="branch_id" type="row"/>
+                <field name="employee_id" type="row"/>
+                <field name="shift_id" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_dsl_shift_roster_form" model="ir.ui.view">
+        <field name="name">dsl.shift.roster.form</field>
+        <field name="model">dsl.shift.roster</field>
+        <field name="arch" type="xml">
+            <form string="Shift Roster Assignment">
+                <header>
+                    <button name="action_publish"
+                            string="Publish Shift"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state == 'published'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="WEEKLY OFF DAY" bg_color="text-bg-info"
+                            invisible="not is_off_day"/>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Location">
+                            <field name="employee_id"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id"/>
+                            <field name="department_id"/>
+                        </group>
+                        <group string="Date &amp; Shift">
+                            <field name="roster_date"/>
+                            <field name="shift_id"/>
+                            <field name="is_off_day"/>
+                            <field name="batch_id" readonly="1" invisible="not batch_id"/>
+                            <field name="notes"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dsl_shift_roster_search" model="ir.ui.view">
+        <field name="name">dsl.shift.roster.search</field>
+        <field name="model">dsl.shift.roster</field>
+        <field name="arch" type="xml">
+            <search string="Search Shift Roster">
+                <field name="employee_id"/>
+                <field name="shift_id"/>
+                <field name="branch_id"/>
+                <field name="department_id"/>
+                <filter name="duty_days" string="Active Duty Shifts" domain="[('is_off_day', '=', False)]"/>
+                <filter name="off_days" string="Weekly Off Days" domain="[('is_off_day', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="grp_branch" string="Branch" context="{'group_by': 'branch_id'}"/>
+                    <filter name="grp_shift" string="Shift" context="{'group_by': 'shift_id'}"/>
+                    <filter name="grp_emp" string="Employee" context="{'group_by': 'employee_id'}"/>
+                    <filter name="grp_date" string="Date" context="{'group_by': 'roster_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_dsl_shift_roster" model="ir.actions.act_window">
+        <field name="name">Shift Roster Calendar</field>
+        <field name="res_model">dsl.shift.roster</field>
+        <field name="view_mode">calendar,list,pivot,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 2. BULK ROSTER GENERATOR BATCH VIEWS                               -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_shift_roster_batch_list" model="ir.ui.view">
+        <field name="name">dsl.shift.roster.batch.list</field>
+        <field name="model">dsl.shift.roster.batch</field>
+        <field name="arch" type="xml">
+            <list string="Bulk Shift Roster Batches">
+                <field name="name" decoration-bf="1"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="branch_id"/>
+                <field name="department_id"/>
+                <field name="shift_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="generated_count"/>
+                <field name="state" widget="badge" decoration-success="state == 'generated'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_shift_roster_batch_form" model="ir.ui.view">
+        <field name="name">dsl.shift.roster.batch.form</field>
+        <field name="model">dsl.shift.roster.batch</field>
+        <field name="arch" type="xml">
+            <form string="Bulk Shift Roster Generator">
+                <header>
+                    <button name="action_generate_roster"
+                            string="Generate &amp; Publish Roster"
+                            type="object"
+                            class="btn-primary"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Gazipur Plant Unit-1 — Nov Week-1 Morning Shift"/></h1>
+                    </div>
+                    <group>
+                        <group string="Target Company, Branch &amp; Department">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="department_id"/>
+                            <field name="shift_id"/>
+                        </group>
+                        <group string="Date Range &amp; Weekly Holiday">
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="off_weekday"/>
+                            <field name="generated_count"/>
+                        </group>
+                    </group>
+                    <group string="Specific Employees (Optional — Leave Blank to Schedule Entire Branch/Dept)">
+                        <field name="employee_ids" nolabel="1" widget="many2many_tags"/>
+                    </group>
+                    <separator string="Generated Shift Slots" invisible="not roster_line_ids"/>
+                    <field name="roster_line_ids" readonly="1" invisible="not roster_line_ids">
+                        <list limit="20">
+                            <field name="roster_date"/>
+                            <field name="employee_id"/>
+                            <field name="shift_id"/>
+                            <field name="is_off_day"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_shift_roster_batch" model="ir.actions.act_window">
+        <field name="name">Bulk Roster Generator</field>
+        <field name="res_model">dsl.shift.roster.batch</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 3. SHIFT MASTER VIEWS (General, Morning, Evening, Night)           -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_hr_shift_list" model="ir.ui.view">
+        <field name="name">dsl.hr.shift.list</field>
+        <field name="model">dsl.hr.shift</field>
+        <field name="arch" type="xml">
+            <list string="Work Shifts">
+                <field name="sequence" widget="handle"/>
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="shift_type" widget="badge"/>
+                <field name="start_hour" widget="float_time"/>
+                <field name="end_hour" widget="float_time"/>
+                <field name="break_duration" widget="float_time"/>
+                <field name="scheduled_work_hours" widget="float_time"/>
+                <field name="is_night_shift" widget="boolean"/>
+                <field name="grace_in_minutes"/>
+                <field name="night_allowance_bdt"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hr_shift_form" model="ir.ui.view">
+        <field name="name">dsl.hr.shift.form</field>
+        <field name="model">dsl.hr.shift</field>
+        <field name="arch" type="xml">
+            <form string="Work Shift Definition">
+                <sheet>
+                    <widget name="web_ribbon" title="CROSS-MIDNIGHT NIGHT SHIFT" bg_color="text-bg-primary"
+                            invisible="not is_night_shift"/>
+                    <div class="oe_title">
+                        <span class="badge text-bg-primary mb-1"><field name="code" placeholder="e.g. SH-A"/></span>
+                        <h1><field name="name" placeholder="e.g. Morning Shift-A (06:00 AM – 02:00 PM)"/></h1>
+                    </div>
+                    <group>
+                        <group string="Shift Timings &amp; Duty Duration">
+                            <field name="shift_type"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="start_hour" widget="float_time"/>
+                            <field name="end_hour" widget="float_time"/>
+                            <field name="break_duration" widget="float_time"/>
+                            <field name="scheduled_work_hours" widget="float_time"/>
+                            <field name="is_night_shift"/>
+                        </group>
+                        <group string="Grace Rules &amp; Night Allowance">
+                            <field name="grace_in_minutes"/>
+                            <field name="grace_out_minutes"/>
+                            <field name="half_day_hours" widget="float_time"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="night_allowance_bdt"/>
+                            <field name="color" widget="color_picker"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hr_shift" model="ir.actions.act_window">
+        <field name="name">Work Shifts (A / B / C / General)</field>
+        <field name="res_model">dsl.hr.shift</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- 4. Inject Default Work Shift on Employee Attendance Tab -->
+    <record id="view_employee_form_inherit_dsl_shift" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.shift</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="DSL_HRMS_attendance.view_employee_form_inherit_dsl_attendance"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='attendance_policy_id']" position="after">
+                <field name="default_shift_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 5. Menus -->
+    <menuitem id="menu_dsl_shift_roster"
+              name="Shift Roster Calendar"
+              parent="DSL_HRMS_core.menu_dsl_hrms_attendance_root"
+              action="action_dsl_shift_roster"
+              sequence="50"/>
+
+    <menuitem id="menu_dsl_shift_roster_batch"
+              name="Bulk Roster Generator"
+              parent="DSL_HRMS_core.menu_dsl_hrms_attendance_root"
+              action="action_dsl_shift_roster_batch"
+              sequence="55"/>
+
+    <menuitem id="menu_dsl_hr_shift"
+              name="Shift Definitions"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_hr_shift"
+              sequence="38"/>
+</odoo>
+

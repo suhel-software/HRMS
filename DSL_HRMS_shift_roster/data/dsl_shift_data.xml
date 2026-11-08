@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- 1. General Corporate Shift -->
+        <record id="shift_dsl_general_day" model="dsl.hr.shift">
+            <field name="sequence">10</field>
+            <field name="name">General Corporate Shift (09:00 AM – 06:00 PM)</field>
+            <field name="code">GEN</field>
+            <field name="shift_type">general</field>
+            <field name="company_id" eval="False"/>
+            <field name="branch_id" eval="False"/>
+            <field name="start_hour">9.0</field>
+            <field name="end_hour">18.0</field>
+            <field name="break_duration">1.0</field>
+            <field name="grace_in_minutes">15</field>
+            <field name="grace_out_minutes">15</field>
+            <field name="color">4</field>
+        </record>
+
+        <!-- 2. Factory Morning Shift-A -->
+        <record id="shift_dsl_morning_a" model="dsl.hr.shift">
+            <field name="sequence">20</field>
+            <field name="name">Morning Shift-A (06:00 AM – 02:00 PM)</field>
+            <field name="code">SH-A</field>
+            <field name="shift_type">morning</field>
+            <field name="company_id" eval="False"/>
+            <field name="branch_id" eval="False"/>
+            <field name="start_hour">6.0</field>
+            <field name="end_hour">14.0</field>
+            <field name="break_duration">0.5</field>
+            <field name="grace_in_minutes">10</field>
+            <field name="grace_out_minutes">10</field>
+            <field name="color">10</field>
+        </record>
+
+        <!-- 3. Factory Evening Shift-B -->
+        <record id="shift_dsl_evening_b" model="dsl.hr.shift">
+            <field name="sequence">30</field>
+            <field name="name">Evening Shift-B (02:00 PM – 10:00 PM)</field>
+            <field name="code">SH-B</field>
+            <field name="shift_type">evening</field>
+            <field name="company_id" eval="False"/>
+            <field name="branch_id" eval="False"/>
+            <field name="start_hour">14.0</field>
+            <field name="end_hour">22.0</field>
+            <field name="break_duration">0.5</field>
+            <field name="grace_in_minutes">10</field>
+            <field name="grace_out_minutes">10</field>
+            <field name="color">3</field>
+        </record>
+
+        <!-- 4. Cross-Midnight Night Shift-C -->
+        <record id="shift_dsl_night_c" model="dsl.hr.shift">
+            <field name="sequence">40</field>
+            <field name="name">Night Shift-C (10:00 PM – 06:00 AM)</field>
+            <field name="code">SH-C</field>
+            <field name="shift_type">night</field>
+            <field name="company_id" eval="False"/>
+            <field name="branch_id" eval="False"/>
+            <field name="start_hour">22.0</field>
+            <field name="end_hour">6.0</field>
+            <field name="break_duration">0.5</field>
+            <field name="grace_in_minutes">10</field>
+            <field name="grace_out_minutes">10</field>
+            <field name="night_allowance_bdt">150.0</field>
+            <field name="color">9</field>
+        </record>
+    </data>
+</odoo>
+
