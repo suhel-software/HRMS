@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Garments Floor & Sewing Line Daily Sheet -->
+    <record id="view_dsl_factory_line_roster_list" model="ir.ui.view">
+        <field name="name">dsl.factory.line.roster.list</field>
+        <field name="model">dsl.factory.line.roster</field>
+        <field name="arch" type="xml">
+            <list string="Factory Floor &amp; Sewing Line Daily Roster">
+                <field name="name" decoration-bf="1"/>
+                <field name="production_date"/>
+                <field name="floor_line_id" decoration-bf="1"/>
+                <field name="style_buyer_ref"/>
+                <field name="operators_present"/>
+                <field name="helpers_present"/>
+                <field name="total_manpower" decoration-bf="1"/>
+                <field name="daily_target_pcs"/>
+                <field name="actual_output_pcs"/>
+                <field name="line_efficiency_pct" widget="progressbar"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_factory_line_roster_form" model="ir.ui.view">
+        <field name="name">dsl.factory.line.roster.form</field>
+        <field name="model">dsl.factory.line.roster</field>
+        <field name="arch" type="xml">
+            <form string="Factory Floor &amp; Sewing Line Daily Roster">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Floor Production Sheet"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Plant, Sewing Line &amp; Buyer Order">
+                            <field name="production_date"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="floor_line_id"/>
+                            <field name="line_supervisor_id"/>
+                            <field name="style_buyer_ref"/>
+                        </group>
+                        <group string="Line Manpower &amp; Efficiency (%)">
+                            <field name="operators_present"/>
+                            <field name="helpers_present"/>
+                            <field name="total_manpower" decoration-bf="1"/>
+                            <field name="daily_target_pcs"/>
+                            <field name="actual_output_pcs"/>
+                            <field name="line_efficiency_pct" widget="progressbar"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_factory_line_roster" model="ir.actions.act_window">
+        <field name="name">Garments Floor &amp; Line Roster</field>
+        <field name="res_model">dsl.factory.line.roster</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- 2. Labour Law / RSC / BSCI Compliance Audit Checklist -->
+    <record id="view_dsl_factory_compliance_audit_list" model="ir.ui.view">
+        <field name="name">dsl.factory.compliance.audit.list</field>
+        <field name="model">dsl.factory.compliance.audit</field>
+        <field name="arch" type="xml">
+            <list string="Factory Compliance Audits" decoration-success="state == 'certified_closed'">
+                <field name="name" decoration-bf="1"/>
+                <field name="audit_title" decoration-bf="1"/>
+                <field name="audit_standard" widget="badge"/>
+                <field name="branch_id"/>
+                <field name="audit_date"/>
+                <field name="compliance_score_pct" widget="progressbar"/>
+                <field name="state" widget="badge" decoration-success="state == 'certified_closed'" decoration-info="state == 'in_progress'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_factory_compliance_audit_form" model="ir.ui.view">
+        <field name="name">dsl.factory.compliance.audit.form</field>
+        <field name="model">dsl.factory.compliance.audit</field>
+        <field name="arch" type="xml">
+            <form string="Factory Social &amp; Safety Compliance Audit">
+                <header>
+                    <button name="action_start_audit" string="Start Inspection" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_close_compliant" string="Certify &amp; Close Audit" type="object" class="btn-success" invisible="state == 'certified_closed'" groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,certified_closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="audit_title" string="Compliance Audit Title"/>
+                        <h1><field name="audit_title" placeholder="e.g. Annual DIFE &amp; RSC Fire Safety Audit"/></h1>
+                        <div class="text-muted"><field name="name" readonly="1"/></div>
+                    </div>
+                    <group>
+                        <group string="Audit Scope &amp; Framework">
+                            <field name="audit_standard"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                        </group>
+                        <group string="Auditor &amp; Score">
+                            <field name="auditor_name"/>
+                            <field name="audit_date"/>
+                            <field name="compliance_score_pct" widget="progressbar"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="BD Labour Act / RSC / BSCI Checkpoints" name="checkpoints">
+                            <field name="line_ids">
+                                <list editable="bottom" decoration-success="status == 'compliant'" decoration-danger="status == 'critical_nc'">
+                                    <field name="section"/>
+                                    <field name="checkpoint"/>
+                                    <field name="status" widget="badge"/>
+                                    <field name="capa_note" placeholder="Corrective action plan &amp; target date..."/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_factory_compliance_audit" model="ir.actions.act_window">
+        <field name="name">Factory Compliance Audits</field>
+        <field name="res_model">dsl.factory.compliance.audit</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_factory_line_roster"
+              name="Garments Floor &amp; Line Roster"
+              parent="DSL_HRMS_core.menu_dsl_hrms_operations_root"
+              action="action_dsl_factory_line_roster"
+              sequence="40"/>
+
+    <menuitem id="menu_dsl_factory_compliance_audit"
+              name="Compliance Audits (DIFE/BSCI)"
+              parent="DSL_HRMS_core.menu_dsl_hrms_operations_root"
+              action="action_dsl_factory_compliance_audit"
+              sequence="45"/>
+</odoo>
+

@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_fac_roster_user,dsl.factory.line.roster.user,model_dsl_factory_line_roster,base.group_user,1,1,1,0
+access_dsl_fac_roster_officer,dsl.factory.line.roster.officer,model_dsl_factory_line_roster,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_fac_audit_user,dsl.factory.compliance.audit.user,model_dsl_factory_compliance_audit,base.group_user,1,1,1,0
+access_dsl_fac_audit_officer,dsl.factory.compliance.audit.officer,model_dsl_factory_compliance_audit,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_fac_audit_ln_user,dsl.factory.audit.line.user,model_dsl_factory_audit_line,base.group_user,1,1,1,1
+
