@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Corporate Divisions Views -->
+    <record id="view_dsl_hr_division_form" model="ir.ui.view">
+        <field name="name">dsl.hr.division.form</field>
+        <field name="model">dsl.hr.division</field>
+        <field name="arch" type="xml">
+            <form string="Corporate Division / Wing">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <field name="active" invisible="1"/>
+                    <div class="oe_title">
+                        <label for="name" string="Division / Wing Name"/>
+                        <h1><field name="name" placeholder="e.g. Apparel &amp; Textile Operations"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. DIV-OPS"/>
+                            <field name="head_id" widget="many2one_avatar_employee"/>
+                        </group>
+                        <group>
+                            <field name="company_id" options="{'no_create': True}"/>
+                            <field name="department_count"/>
+                            <field name="employee_count"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Departments under Division" name="departments">
+                            <field name="department_ids" readonly="1">
+                                <list>
+                                    <field name="code"/>
+                                    <field name="name"/>
+                                    <field name="department_type"/>
+                                    <field name="manager_id" widget="many2one_avatar_employee"/>
+                                    <field name="total_employee"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Mandate &amp; Notes" name="notes">
+                            <field name="description" placeholder="Describe division scope and strategic mandate..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dsl_hr_division_list" model="ir.ui.view">
+        <field name="name">dsl.hr.division.list</field>
+        <field name="model">dsl.hr.division</field>
+        <field name="arch" type="xml">
+            <list string="Divisions &amp; Wings">
+                <field name="sequence" widget="handle"/>
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="head_id" widget="many2one_avatar_employee"/>
+                <field name="company_id"/>
+                <field name="department_count" string="Departments"/>
+                <field name="employee_count" string="Employees"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_dsl_hr_division" model="ir.actions.act_window">
+        <field name="name">Divisions &amp; Business Wings</field>
+        <field name="res_model">dsl.hr.division</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- 2. Pay Grades & Salary Scale Bands Views -->
+    <record id="view_dsl_hr_grade_form" model="ir.ui.view">
+        <field name="name">dsl.hr.grade.form</field>
+        <field name="model">dsl.hr.grade</field>
+        <field name="arch" type="xml">
+            <form string="Pay Grade / Band">
+                <sheet>
+                    <field name="active" invisible="1"/>
+                    <field name="currency_id" invisible="1"/>
+                    <div class="oe_title">
+                        <label for="name" string="Grade Title"/>
+                        <h1><field name="name" placeholder="e.g. Manager / Senior Manager"/></h1>
+                    </div>
+                    <group>
+                        <group string="Grade Classification">
+                            <field name="code" placeholder="e.g. G-03"/>
+                            <field name="sequence"/>
+                            <field name="company_id" options="{'no_create': True}"/>
+                        </group>
+                        <group string="Monthly Gross Band">
+                            <field name="min_salary" widget="monetary"/>
+                            <field name="max_salary" widget="monetary"/>
+                            <field name="job_count"/>
+                            <field name="employee_count"/>
+                        </group>
+                    </group>
+                    <group string="Bangladesh Payroll Breakdown Ratios (%)">
+                        <group>
+                            <field name="basic_pct"/>
+                            <field name="house_rent_pct"/>
+                        </group>
+                        <group>
+                            <field name="medical_pct"/>
+                            <field name="conveyance_pct"/>
+                        </group>
+                    </group>
+                    <group string="Entitlements &amp; Benefits">
+                        <field name="benefit_notes" nolabel="1" placeholder="Specify leave, medical, transport or bonus entitlements..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dsl_hr_grade_list" model="ir.ui.view">
+        <field name="name">dsl.hr.grade.list</field>
+        <field name="model">dsl.hr.grade</field>
+        <field name="arch" type="xml">
+            <list string="Pay Grades &amp; Salary Bands">
+                <field name="sequence" widget="handle"/>
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="min_salary" widget="monetary"/>
+                <field name="max_salary" widget="monetary"/>
+                <field name="basic_pct" optional="show"/>
+                <field name="job_count" string="Designations"/>
+                <field name="employee_count" string="Staff"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_dsl_hr_grade" model="ir.actions.act_window">
+        <field name="name">Pay Grades &amp; Salary Bands</field>
+        <field name="res_model">dsl.hr.grade</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- 3. Cost Centers Views -->
+    <record id="view_dsl_cost_center_list" model="ir.ui.view">
+        <field name="name">dsl.cost.center.list</field>
+        <field name="model">dsl.cost.center</field>
+        <field name="arch" type="xml">
+            <list string="HR Cost Centers" editable="bottom">
+                <field name="code" decoration-bf="1"/>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="department_id"/>
+                <field name="manager_id" widget="many2one_avatar_employee"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="annual_budget" widget="monetary"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_dsl_cost_center" model="ir.actions.act_window">
+        <field name="name">HR &amp; Payroll Cost Centers</field>
+        <field name="res_model">dsl.cost.center</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- 4. Interactive Visual Organogram Client Action -->
+    <record id="action_dsl_org_chart_studio" model="ir.actions.client">
+        <field name="name">Interactive Organogram</field>
+        <field name="tag">dsl_hrms_org_chart_studio</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- 5. Menus under Workforce & Configuration -->
+    <menuitem id="menu_dsl_org_chart_studio"
+              name="Org Chart &amp; Hierarchy"
+              parent="DSL_HRMS_core.menu_dsl_hrms_workforce"
+              action="action_dsl_org_chart_studio"
+              sequence="18"/>
+
+    <menuitem id="menu_dsl_org_masters_root"
+              name="Organization Masters"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              sequence="25"/>
+
+    <menuitem id="menu_dsl_hr_division"
+              name="Divisions &amp; Wings"
+              parent="menu_dsl_org_masters_root"
+              action="action_dsl_hr_division"
+              sequence="10"/>
+
+    <menuitem id="menu_dsl_hr_grade"
+              name="Pay Grades &amp; Bands"
+              parent="menu_dsl_org_masters_root"
+              action="action_dsl_hr_grade"
+              sequence="20"/>
+
+    <menuitem id="menu_dsl_cost_center"
+              name="Cost Centers"
+              parent="menu_dsl_org_masters_root"
+              action="action_dsl_cost_center"
+              sequence="30"/>
+</odoo>
+

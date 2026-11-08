@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_hr_division_user,dsl.hr.division.user,model_dsl_hr_division,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_hr_division_officer,dsl.hr.division.officer,model_dsl_hr_division,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_hr_division_manager,dsl.hr.division.manager,model_dsl_hr_division,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_hr_grade_user,dsl.hr.grade.user,model_dsl_hr_grade,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_hr_grade_officer,dsl.hr.grade.officer,model_dsl_hr_grade,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_hr_grade_manager,dsl.hr.grade.manager,model_dsl_hr_grade,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_cost_center_user,dsl.cost.center.user,model_dsl_cost_center,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_cost_center_officer,dsl.cost.center.officer,model_dsl_cost_center,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_cost_center_manager,dsl.cost.center.manager,model_dsl_cost_center,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

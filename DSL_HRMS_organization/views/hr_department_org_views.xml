@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Inherit Department Form View -->
+    <record id="view_department_form_inherit_dsl_org" model="ir.ui.view">
+        <field name="name">hr.department.form.dsl.org</field>
+        <field name="model">hr.department</field>
+        <field name="inherit_id" ref="hr.view_department_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='manager_id']" position="before">
+                <field name="code" placeholder="e.g. DEPT-IT / SEC-SEW-01"/>
+                <field name="department_type"/>
+                <field name="division_id" options="{'no_create_edit': True}"/>
+            </xpath>
+            <xpath expr="//field[@name='color']" position="after">
+                <field name="cost_center_id" options="{'no_create_edit': True}"/>
+                <field name="manpower_budget"/>
+                <field name="vacancy_count"/>
+                <field name="currency_id" invisible="1"/>
+                <field name="budget_amount" widget="monetary"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 2. Inherit Department List View -->
+    <record id="view_department_tree_inherit_dsl_org" model="ir.ui.view">
+        <field name="name">hr.department.list.dsl.org</field>
+        <field name="model">hr.department</field>
+        <field name="inherit_id" ref="hr.view_department_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="before">
+                <field name="code" decoration-bf="1" optional="show"/>
+            </xpath>
+            <xpath expr="//field[@name='parent_id']" position="before">
+                <field name="department_type" widget="badge" optional="show"
+                       decoration-primary="department_type == 'division'"
+                       decoration-info="department_type == 'department'"
+                       decoration-success="department_type in ('section', 'unit')"
+                       decoration-warning="department_type == 'line'"/>
+                <field name="division_id" optional="show"/>
+                <field name="manpower_budget" string="Sanctioned" optional="show"/>
+                <field name="vacancy_count" string="Vacancies" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

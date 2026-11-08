@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Standard Enterprise Job Grades & Pay Bands (BD Corporate Standard) -->
+        <record id="dsl_grade_g01" model="dsl.hr.grade">
+            <field name="sequence">10</field>
+            <field name="code">G-01</field>
+            <field name="name">C-Suite / Executive Director</field>
+            <field name="min_salary">200000</field>
+            <field name="max_salary">500000</field>
+            <field name="benefit_notes">Company Chauffeur Car, Executive Medical Family Plan, Festival Bonus, PF &amp; Gratuity</field>
+        </record>
+
+        <record id="dsl_grade_g02" model="dsl.hr.grade">
+            <field name="sequence">20</field>
+            <field name="code">G-02</field>
+            <field name="name">General Manager / Head of Function</field>
+            <field name="min_salary">120000</field>
+            <field name="max_salary">220000</field>
+            <field name="benefit_notes">Transport Allowance, Family Medical Insurance, PF &amp; Gratuity</field>
+        </record>
+
+        <record id="dsl_grade_g03" model="dsl.hr.grade">
+            <field name="sequence">30</field>
+            <field name="code">G-03</field>
+            <field name="name">Manager / Senior Manager</field>
+            <field name="min_salary">70000</field>
+            <field name="max_salary">130000</field>
+            <field name="benefit_notes">Mobile &amp; Fuel Allowance, Medical Coverage, PF &amp; Gratuity</field>
+        </record>
+
+        <record id="dsl_grade_g04" model="dsl.hr.grade">
+            <field name="sequence">40</field>
+            <field name="code">G-04</field>
+            <field name="name">Assistant / Deputy Manager</field>
+            <field name="min_salary">45000</field>
+            <field name="max_salary">75000</field>
+            <field name="benefit_notes">Mobile Allowance, Medical Coverage, PF &amp; Festival Bonus</field>
+        </record>
+
+        <record id="dsl_grade_g05" model="dsl.hr.grade">
+            <field name="sequence">50</field>
+            <field name="code">G-05</field>
+            <field name="name">Senior Officer / Senior Engineer</field>
+            <field name="min_salary">32000</field>
+            <field name="max_salary">52000</field>
+            <field name="benefit_notes">Attendance Bonus, Lunch Subsidy, PF &amp; Festival Bonus</field>
+        </record>
+
+        <record id="dsl_grade_g06" model="dsl.hr.grade">
+            <field name="sequence">60</field>
+            <field name="code">G-06</field>
+            <field name="name">Officer / Executive / Associate</field>
+            <field name="min_salary">20000</field>
+            <field name="max_salary">35000</field>
+            <field name="benefit_notes">Lunch Subsidy, Festival Bonus &amp; Overtime (if applicable)</field>
+        </record>
+
+        <record id="dsl_grade_g07" model="dsl.hr.grade">
+            <field name="sequence">70</field>
+            <field name="code">G-07</field>
+            <field name="name">Support Staff / Skilled Operator</field>
+            <field name="min_salary">12500</field>
+            <field name="max_salary">22000</field>
+            <field name="benefit_notes">Double Basic Overtime (BD Labour Act), Attendance Bonus &amp; Festival Bonus</field>
+        </record>
+    </data>
+</odoo>
+

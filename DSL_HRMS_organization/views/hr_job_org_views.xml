@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Inherit Job Position (Designation) Form View -->
+    <record id="view_hr_job_form_inherit_dsl_org" model="ir.ui.view">
+        <field name="name">hr.job.form.dsl.org</field>
+        <field name="model">hr.job</field>
+        <field name="inherit_id" ref="hr.view_hr_job_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="before">
+                <group>
+                    <group string="Designation &amp; Organizational Placement">
+                        <field name="job_code" placeholder="e.g. DESIG-SWE-SR"/>
+                        <field name="division_id" options="{'no_create_edit': True}"/>
+                        <field name="department_id"/>
+                        <field name="company_id" options="{'no_create': True}"/>
+                    </group>
+                    <group string="Grade, Cadre &amp; Pay Scale">
+                        <field name="grade_id"/>
+                        <field name="grade_level"/>
+                        <field name="employee_category"/>
+                        <field name="is_ot_eligible"/>
+                        <field name="currency_id" invisible="1"/>
+                        <field name="min_salary" widget="monetary"/>
+                        <field name="max_salary" widget="monetary"/>
+                    </group>
+                </group>
+            </xpath>
+            <!-- Make Job Summary page visible for HR Description -->
+            <xpath expr="//page[@name='job_description_page']" position="attributes">
+                <attribute name="invisible">0</attribute>
+                <attribute name="string">Role Summary &amp; KPIs</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 2. Inherit Job Position (Designation) List View -->
+    <record id="view_hr_job_tree_inherit_dsl_org" model="ir.ui.view">
+        <field name="name">hr.job.list.dsl.org</field>
+        <field name="model">hr.job</field>
+        <field name="inherit_id" ref="hr.view_hr_job_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="before">
+                <field name="job_code" decoration-bf="1"/>
+            </xpath>
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="department_id"/>
+                <field name="grade_id" optional="show"/>
+                <field name="grade_level" widget="badge" optional="show"
+                       decoration-primary="grade_level in ('director', 'general_manager')"
+                       decoration-info="grade_level in ('senior_manager', 'manager', 'assistant_manager')"
+                       decoration-success="grade_level in ('senior_officer', 'officer')"/>
+                <field name="employee_category" optional="show"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="min_salary" widget="monetary" optional="show"/>
+                <field name="max_salary" widget="monetary" optional="show"/>
+                <field name="no_of_employee" string="Active Staff" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 3. Inherit Employee Form for Division, Pay Grade, Cost Center & Dotted Manager -->
+    <record id="view_employee_form_inherit_dsl_org" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.org</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='department_id']" position="before">
+                <field name="division_id" options="{'no_create_edit': True}"/>
+            </xpath>
+            <xpath expr="//field[@name='job_id']" position="after">
+                <field name="grade_id" options="{'no_create_edit': True}"/>
+                <field name="cost_center_id" options="{'no_create_edit': True}"/>
+            </xpath>
+            <xpath expr="//field[@name='coach_id']" position="after">
+                <field name="dotted_manager_id" widget="many2one_avatar_employee"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 4. Designations Action & Menu -->
+    <record id="action_dsl_designations" model="ir.actions.act_window">
+        <field name="name">Designations &amp; Job Positions</field>
+        <field name="res_model">hr.job</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Corporate Designation &amp; Assign Pay Grade
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_dsl_designation_action"
+              name="Designations"
+              parent="DSL_HRMS_core.menu_dsl_hrms_workforce"
+              action="action_dsl_designations"
+              sequence="25"/>
+</odoo>
+

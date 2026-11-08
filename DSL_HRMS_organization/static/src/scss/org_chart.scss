@@ -1,0 +1,487 @@
+/* DSL HRMS Interactive Organogram Studio (Zero @import, Odoo 18 Native SCSS) */
+
+.dsl_org_studio_container {
+    padding: 24px 32px 48px;
+    background-color: #f8fafc;
+    min-height: calc(100vh - 54px);
+
+    .dsl_org_loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 360px;
+    }
+}
+
+.dsl_org_stats_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+
+    .dsl_org_stat_card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 16px 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+
+        &:hover {
+            border-color: #93c5fd;
+            transform: translateY(-2px);
+        }
+
+        .lbl {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .val {
+            display: block;
+            font-size: 24px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-top: 4px;
+        }
+    }
+}
+
+.dsl_org_main_panel {
+    background: #ffffff;
+    border-radius: 18px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    overflow: hidden;
+
+    .dsl_org_panel_header {
+        padding: 22px 28px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+
+        h2 {
+            font-size: 21px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+        }
+
+        .dsl_org_toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+    }
+}
+
+.dsl_org_company_select {
+    padding: 7px 14px;
+    border-radius: 9px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.dsl_org_tabs {
+    display: inline-flex;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+
+    button {
+        border: none;
+        background: transparent;
+        padding: 6px 13px;
+        border-radius: 7px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #64748b;
+        cursor: pointer;
+
+        &.active {
+            background: #ffffff;
+            color: #2563eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+    }
+}
+
+.dsl_org_btn {
+    border-radius: 9px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &.outline {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        color: #334155;
+        &:hover { background: #f8fafc; }
+    }
+
+    &.primary {
+        background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+        border: none;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        &:hover { transform: translateY(-1px); }
+    }
+}
+
+// Organogram Tree Canvas
+.dsl_org_canvas {
+    padding: 36px 28px 56px;
+    overflow-x: auto;
+    box-sizing: border-box;
+    background: radial-gradient(#e2e8f0 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-color: #fcfdff;
+}
+
+.dsl_org_ul {
+    padding-top: 26px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    margin: 0;
+    padding-left: 0;
+    width: max-content;
+    margin-left: auto;
+    margin-right: auto;
+
+    &.root_org_ul {
+        padding-top: 0;
+        width: 100%;
+        min-width: min-content;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 32px 8px;
+        box-sizing: border-box;
+    }
+
+    &:not(.root_org_ul)::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        border-left: 2px solid #cbd5e1;
+        width: 0;
+        height: 26px;
+    }
+}
+
+.dsl_org_li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding: 26px 12px 0 12px;
+
+    .root_org_ul > & {
+        padding-top: 0;
+        &::before, &::after { display: none; }
+    }
+
+    &::before,
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 50%;
+        border-top: 2px solid #cbd5e1;
+        width: 50%;
+        height: 26px;
+    }
+
+    &::after {
+        right: auto;
+        left: 50%;
+        border-left: 2px solid #cbd5e1;
+    }
+
+    &:only-child::after,
+    &:only-child::before { display: none; }
+    &:only-child { padding-top: 0; }
+
+    &:first-child::before,
+    &:last-child::after { border: 0 none; }
+
+    &:last-child::before {
+        border-right: 2px solid #cbd5e1;
+        border-radius: 0 8px 0 0;
+    }
+
+    &:first-child::after {
+        border-radius: 8px 0 0 0;
+    }
+}
+
+.dsl_org_card {
+    width: 265px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px 16px;
+    text-align: left;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &.dept_card {
+        border-top: 4px solid #4f46e5;
+    }
+
+    &.emp_card {
+        border-top: 4px solid #0ea5e9;
+    }
+
+    &:hover {
+        transform: translateY(-3px);
+        border-color: #3b82f6;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.12);
+    }
+
+    .dsl_org_card_top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+
+        .dsl_org_unit_pill {
+            font-size: 10.5px;
+            font-weight: 700;
+            background: #eef2ff;
+            color: #4338ca;
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+
+        .dsl_org_code {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+        }
+    }
+
+    .dsl_org_title {
+        font-size: 15.5px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 3px;
+    }
+
+    .dsl_org_company_sub {
+        font-size: 11.5px;
+        color: #64748b;
+        margin-bottom: 12px;
+    }
+
+    .dsl_org_manager_row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 10px;
+
+        .dsl_org_avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .dsl_org_avatar_placeholder {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+        }
+
+        .dsl_org_mgr_meta {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+
+            .mgr_name {
+                font-size: 12.5px;
+                font-weight: 600;
+                color: #1e293b;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .mgr_role {
+                font-size: 11px;
+                color: #64748b;
+            }
+        }
+    }
+
+    .dsl_org_hc_footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        color: #475569;
+
+        .vac_tag {
+            font-size: 11px;
+            font-weight: 700;
+            color: #059669;
+            background: #ecfdf5;
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+    }
+
+    .dsl_emp_header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+
+        .dsl_emp_avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e0f2fe;
+        }
+
+        .dsl_emp_name {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .dsl_emp_job {
+            font-size: 12px;
+            color: #2563eb;
+            font-weight: 600;
+        }
+    }
+
+    .dsl_emp_tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 6px;
+
+        .dept_tag {
+            font-size: 11px;
+            background: #f1f5f9;
+            color: #334155;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .grade_tag {
+            font-size: 11px;
+            background: #eef2ff;
+            color: #4338ca;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+    }
+
+    .dsl_emp_comp {
+        font-size: 11px;
+        color: #64748b;
+    }
+}
+
+// Dark Mode Support for Organogram Studio
+body.dsl_dark_mode {
+    .dsl_org_studio_container {
+        background-color: #0b1120;
+    }
+
+    .dsl_org_stats_grid .dsl_org_stat_card,
+    .dsl_org_main_panel {
+        background: #151f32;
+        border-color: #24324b;
+
+        .val, h2 {
+            color: #f8fafc;
+        }
+    }
+
+    .dsl_org_main_panel .dsl_org_panel_header {
+        border-bottom-color: #24324b;
+    }
+
+    .dsl_org_company_select,
+    .dsl_org_btn.outline,
+    .dsl_org_tabs {
+        background: #1e293b;
+        border-color: #334155;
+        color: #e2e8f0;
+    }
+
+    .dsl_org_tabs button.active {
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    .dsl_org_canvas {
+        background-color: #0f172a;
+        background-image: radial-gradient(#1e293b 1px, transparent 1px);
+    }
+
+    .dsl_org_ul:not(.root_org_ul)::before,
+    .dsl_org_li::before,
+    .dsl_org_li::after {
+        border-color: #334155;
+    }
+
+    .dsl_org_card {
+        background: #151f32;
+        border-color: #24324b;
+
+        .dsl_org_title,
+        .dsl_emp_header .dsl_emp_name {
+            color: #f8fafc;
+        }
+
+        .dsl_org_manager_row {
+            background: #1e293b;
+
+            .dsl_org_mgr_meta .mgr_name {
+                color: #e2e8f0;
+            }
+        }
+
+        .dsl_org_hc_footer {
+            color: #94a3b8;
+        }
+    }
+}
+
+

@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Recursive Department Organogram Node -->
+    <t t-name="DSL_HRMS_organization.DeptTreeNode">
+        <li class="dsl_org_li">
+            <div class="dsl_org_card dept_card" t-on-click="() => this.openDepartment(node.id)">
+                <div class="dsl_org_card_top">
+                    <span class="dsl_org_unit_pill" t-esc="node.unit_type"/>
+                    <span class="dsl_org_code" t-esc="node.code"/>
+                </div>
+                <div class="dsl_org_title" t-esc="node.name"/>
+                <div class="dsl_org_company_sub">
+                    <i class="fa fa-building-o me-1"/> <t t-esc="node.company_name"/>
+                    <t t-if="node.branch_name"> · <t t-esc="node.branch_name"/></t>
+                </div>
+
+                <!-- Department Head -->
+                <div class="dsl_org_manager_row">
+                    <img t-if="node.manager_id"
+                         t-att-src="'/web/image?model=hr.employee&amp;field=avatar_128&amp;id=' + node.manager_id"
+                         class="dsl_org_avatar"
+                         alt="Head"/>
+                    <div t-else="" class="dsl_org_avatar_placeholder">
+                        <i class="fa fa-user"/>
+                    </div>
+                    <div class="dsl_org_mgr_meta">
+                        <span class="mgr_name" t-esc="node.manager_name"/>
+                        <span class="mgr_role" t-esc="node.manager_job || 'Department Head'"/>
+                    </div>
+                </div>
+
+                <!-- Headcount vs Sanctioned Bar -->
+                <div class="dsl_org_hc_footer">
+                    <span><strong t-esc="node.employee_count"/> / <t t-esc="node.manpower_budget"/> Staff</span>
+                    <span t-if="node.vacancy_count &gt; 0" class="vac_tag">
+                        <t t-esc="node.vacancy_count"/> Open
+                    </span>
+                </div>
+            </div>
+
+            <ul t-if="node.children and node.children.length" class="dsl_org_ul">
+                <t t-foreach="node.children" t-as="child" t-key="child.id">
+                    <t t-call="DSL_HRMS_organization.DeptTreeNode">
+                        <t t-set="node" t-value="child"/>
+                    </t>
+                </t>
+            </ul>
+        </li>
+    </t>
+
+    <!-- Recursive Employee Reporting Organogram Node -->
+    <t t-name="DSL_HRMS_organization.EmpTreeNode">
+        <li class="dsl_org_li">
+            <div class="dsl_org_card emp_card" t-on-click="() => this.openEmployee(node.id)">
+                <div class="dsl_emp_header">
+                    <img t-att-src="'/web/image?model=hr.employee&amp;field=avatar_128&amp;id=' + node.id"
+                         class="dsl_emp_avatar"
+                         alt="Employee"/>
+                    <div class="dsl_emp_info">
+                        <div class="dsl_emp_name" t-esc="node.name"/>
+                        <div class="dsl_emp_job" t-esc="node.job_title"/>
+                    </div>
+                </div>
+                <div class="dsl_emp_tags">
+                    <span class="dept_tag"><i class="fa fa-sitemap me-1"/> <t t-esc="node.department_name"/></span>
+                    <span t-if="node.grade_name" class="grade_tag" t-esc="node.grade_name"/>
+                </div>
+                <div t-if="node.company_name" class="dsl_emp_comp">
+                    <t t-esc="node.company_name"/>
+                    <t t-if="node.branch_name"> · <t t-esc="node.branch_name"/></t>
+                </div>
+            </div>
+
+            <ul t-if="node.children and node.children.length" class="dsl_org_ul">
+                <t t-foreach="node.children" t-as="child" t-key="child.id">
+                    <t t-call="DSL_HRMS_organization.EmpTreeNode">
+                        <t t-set="node" t-value="child"/>
+                    </t>
+                </t>
+            </ul>
+        </li>
+    </t>
+
+    <!-- Main Interactive Organogram Studio -->
+    <t t-name="DSL_HRMS_organization.OrgChartStudio">
+        <div class="dsl_org_studio_container">
+            <div t-if="state.loading" class="dsl_org_loading">
+                <div class="spinner-border text-primary" role="status"/>
+                <span class="mt-2 text-muted">Building Interactive Organogram...</span>
+            </div>
+
+            <div t-else="">
+                <!-- Stats Strip -->
+                <div class="dsl_org_stats_grid">
+                    <div class="dsl_org_stat_card" t-on-click="() => this.openAllDepartments()">
+                        <span class="lbl">Departments &amp; Sections</span>
+                        <span class="val" t-esc="state.stats.total_departments || 0"/>
+                    </div>
+                    <div class="dsl_org_stat_card" t-on-click="() => this.openDesignations()">
+                        <span class="lbl">Designations</span>
+                        <span class="val" t-esc="state.stats.total_designations || 0"/>
+                    </div>
+                    <div class="dsl_org_stat_card" t-on-click="() => this.openGrades()">
+                        <span class="lbl">Pay Grades</span>
+                        <span class="val" t-esc="state.stats.total_grades || 0"/>
+                    </div>
+                    <div class="dsl_org_stat_card">
+                        <span class="lbl">Sanctioned Vacancies</span>
+                        <span class="val text-primary" t-esc="state.stats.open_vacancies || 0"/>
+                    </div>
+                </div>
+
+                <!-- Main Organogram Card -->
+                <div class="dsl_org_main_panel">
+                    <div class="dsl_org_panel_header">
+                        <div>
+                            <h2>Organization &amp; Reporting Hierarchy</h2>
+                            <span class="text-muted small">Visual Departmental Organogram &amp; Reporting Chain</span>
+                        </div>
+
+                        <div class="dsl_org_toolbar">
+                            <!-- Company Filter -->
+                            <select class="dsl_org_company_select" t-on-change="(ev) => this.onCompanyChange(ev)">
+                                <option value="">All Group Companies</option>
+                                <t t-foreach="state.companies" t-as="comp" t-key="comp.id">
+                                    <option t-att-value="comp.id" t-att-selected="state.selectedCompanyId == comp.id">
+                                        <t t-esc="comp.name"/>
+                                    </option>
+                                </t>
+                            </select>
+
+                            <!-- Mode Switcher -->
+                            <div class="dsl_org_tabs">
+                                <button t-att-class="{'active': state.chartType === 'dept'}"
+                                        t-on-click="() => this.setChartType('dept')">
+                                    <i class="fa fa-sitemap me-1"/> Departments
+                                </button>
+                                <button t-att-class="{'active': state.chartType === 'people'}"
+                                        t-on-click="() => this.setChartType('people')">
+                                    <i class="fa fa-users me-1"/> Reporting Tree
+                                </button>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <button class="dsl_org_btn outline" t-on-click="() => this.openGrades()">
+                                <i class="fa fa-sliders me-1"/> Pay Grades
+                            </button>
+                            <button class="dsl_org_btn primary" t-on-click="() => this.createNewDepartment()">
+                                + New Department
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tree Canvas -->
+                    <div class="dsl_org_canvas">
+                        <t t-if="state.chartType === 'dept'">
+                            <ul class="dsl_org_ul root_org_ul" t-if="state.deptRoots.length">
+                                <t t-foreach="state.deptRoots" t-as="rootDept" t-key="rootDept.id">
+                                    <t t-call="DSL_HRMS_organization.DeptTreeNode">
+                                        <t t-set="node" t-value="rootDept"/>
+                                    </t>
+                                </t>
+                            </ul>
+                            <div t-else="" class="text-center py-5 text-muted">
+                                No departments found for this filter. Click <strong>+ New Department</strong> to create one.
+                            </div>
+                        </t>
+
+                        <t t-else="">
+                            <ul class="dsl_org_ul root_org_ul" t-if="state.empRoots.length">
+                                <t t-foreach="state.empRoots" t-as="rootEmp" t-key="rootEmp.id">
+                                    <t t-call="DSL_HRMS_organization.EmpTreeNode">
+                                        <t t-set="node" t-value="rootEmp"/>
+                                    </t>
+                                </t>
+                            </ul>
+                            <div t-else="" class="text-center py-5 text-muted">
+                                No employees assigned yet.
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>
+
