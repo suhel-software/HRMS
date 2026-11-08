@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_mss_rec_user,dsl.mss.recommendation.user,model_dsl_mss_recommendation,base.group_user,1,1,1,0
+access_dsl_mss_rec_officer,dsl.mss.recommendation.officer,model_dsl_mss_recommendation,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_mss_rec_manager,dsl.mss.recommendation.manager,model_dsl_mss_recommendation,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

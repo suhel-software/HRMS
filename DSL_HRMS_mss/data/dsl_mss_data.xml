@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_dsl_mss_recommendation" model="ir.sequence">
+            <field name="name">Manager Career Recommendation</field>
+            <field name="code">dsl.mss.recommendation</field>
+            <field name="prefix">REC-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>
+

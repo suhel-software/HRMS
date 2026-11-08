@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. OWL 2 Live Manager Hub Client Action -->
+    <record id="action_dsl_mss_portal" model="ir.actions.client">
+        <field name="name">Manager Team Hub (MSS)</field>
+        <field name="tag">dsl_hrms_mss_portal</field>
+    </record>
+
+    <!-- 2. Career Recommendations List & Full-Width Form -->
+    <record id="view_dsl_mss_recommendation_list" model="ir.ui.view">
+        <field name="name">dsl.mss.recommendation.list</field>
+        <field name="model">dsl.mss.recommendation</field>
+        <field name="arch" type="xml">
+            <list string="Career &amp; Increment Recommendations" decoration-success="state == 'approved'" decoration-info="state in ('submitted', 'hr_reviewed')">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="proposal_type" widget="badge"/>
+                <field name="effective_date"/>
+                <field name="current_job_id"/>
+                <field name="proposed_job_id" optional="show"/>
+                <field name="current_gross"/>
+                <field name="proposed_gross" decoration-bf="1"/>
+                <field name="increment_pct"/>
+                <field name="kpi_rating" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'submitted'"
+                       decoration-warning="state == 'hr_reviewed'"
+                       decoration-success="state == 'approved'"
+                       decoration-danger="state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_mss_recommendation_form" model="ir.ui.view">
+        <field name="name">dsl.mss.recommendation.form</field>
+        <field name="model">dsl.mss.recommendation</field>
+        <field name="arch" type="xml">
+            <form string="Manager Career &amp; Increment Recommendation">
+                <header>
+                    <button name="action_submit" string="Submit to HR" type="object"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_hr_review" string="Mark HR Reviewed" type="object"
+                            class="btn-secondary" invisible="state != 'submitted'"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <button name="action_approve_and_apply" string="Approve &amp; Apply Changes" type="object"
+                            class="btn-success" invisible="state not in ('submitted', 'hr_reviewed')"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"/>
+                    <button name="action_reject" string="Decline" type="object"
+                            invisible="state in ('approved', 'rejected')"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,hr_reviewed,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Career Recommendation Ref."/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Recommendation Type">
+                            <field name="employee_id" readonly="state != 'draft'"/>
+                            <field name="recommending_manager_id" readonly="state != 'draft'"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
+                            <field name="branch_id" readonly="state != 'draft'"/>
+                            <field name="department_id"/>
+                            <field name="proposal_type" readonly="state != 'draft'"/>
+                            <field name="effective_date" readonly="state != 'draft'"/>
+                            <field name="kpi_rating" readonly="state != 'draft'"/>
+                        </group>
+                        <group string="Current vs. Proposed Elevation">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="current_job_id" readonly="1"/>
+                            <field name="proposed_job_id" readonly="state == 'approved'"/>
+                            <field name="proposed_branch_id" invisible="proposal_type != 'branch_transfer'" readonly="state == 'approved'"/>
+                            <field name="current_gross" readonly="1"/>
+                            <field name="proposed_gross" readonly="state == 'approved'"/>
+                            <field name="increment_pct"/>
+                        </group>
+                    </group>
+                    <group string="Supervisor Justification &amp; HR Board Notes">
+                        <field name="justification" placeholder="Summarize KPI delivery, leadership impact, or business case..."/>
+                        <field name="hr_decision_notes" placeholder="HR compensation review &amp; board resolution notes..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_mss_recommendation" model="ir.actions.act_window">
+        <field name="name">Career &amp; Increment Proposals</field>
+        <field name="res_model">dsl.mss.recommendation</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_mss_portal"
+              name="Manager Hub (MSS)"
+              parent="DSL_HRMS_core.menu_dsl_hrms_self_service_root"
+              action="action_dsl_mss_portal"
+              sequence="20"/>
+
+    <menuitem id="menu_dsl_mss_recommendation"
+              name="Career &amp; Increment Proposals"
+              parent="DSL_HRMS_core.menu_dsl_hrms_self_service_root"
+              action="action_dsl_mss_recommendation"
+              sequence="25"/>
+</odoo>
+

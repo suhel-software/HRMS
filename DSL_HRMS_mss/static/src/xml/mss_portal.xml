@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="DSL_HRMS_mss.MssPortal">
+        <div class="o_dsl_mss_portal">
+            <div t-if="state.loading" class="text-center py-5 text-muted">
+                <i class="fa fa-circle-o-notch fa-spin fa-2x mb-2" title="Loading"/>
+                <div>Loading Live Team Hub...</div>
+            </div>
+            <t t-else="">
+                <!-- Hero Banner -->
+                <div class="dsl_mss_hero">
+                    <div>
+                        <div class="small opacity-75 text-uppercase fw-semibold">Manager Self-Service (MSS)</div>
+                        <h3 class="mb-1 fw-bold text-white">
+                            <t t-esc="state.data.manager_name"/> — Team Command Hub
+                        </h3>
+                        <div class="small opacity-75">
+                            <i class="fa fa-building-o me-1" title="Company"/>
+                            <t t-esc="state.data.company_name"/> • <t t-esc="state.data.today_str"/>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-light fw-semibold" t-on-click="openNewRecommendation">
+                            <i class="fa fa-line-chart me-1" title="Career Proposal"/> Propose Increment / Promotion
+                        </button>
+                        <button class="btn btn-outline-light fw-semibold" t-on-click="openAnnouncements">
+                            <i class="fa fa-bullhorn me-1" title="HR Announcements"/> HR Announcements (<t t-esc="state.data.kpis.announcements_count or 0"/>)
+                        </button>
+                        <button class="btn btn-outline-light" t-on-click="loadMssData">
+                            <i class="fa fa-refresh me-1" title="Refresh"/> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Strip -->
+                <div class="dsl_mss_kpi_grid">
+                    <div class="dsl_mss_kpi_card">
+                        <div class="kpi_lbl">Team Strength</div>
+                        <div class="kpi_val"><t t-esc="state.data.kpis.team_count"/></div>
+                    </div>
+                    <div class="dsl_mss_kpi_card">
+                        <div class="kpi_lbl">Present Today</div>
+                        <div class="kpi_val text-success"><t t-esc="state.data.kpis.present_today"/></div>
+                    </div>
+                    <div class="dsl_mss_kpi_card">
+                        <div class="kpi_lbl">Late Arrivals</div>
+                        <div class="kpi_val text-warning"><t t-esc="state.data.kpis.late_today"/></div>
+                    </div>
+                    <div class="dsl_mss_kpi_card">
+                        <div class="kpi_lbl">On Approved Leave</div>
+                        <div class="kpi_val text-info"><t t-esc="state.data.kpis.on_leave_today"/></div>
+                    </div>
+                    <div class="dsl_mss_kpi_card" role="button" t-on-click="openPendingLeaves">
+                        <div class="kpi_lbl">Pending Leaves</div>
+                        <div class="kpi_val text-primary"><t t-esc="state.data.kpis.pending_leaves_count"/></div>
+                    </div>
+                    <div class="dsl_mss_kpi_card" role="button" t-on-click="openPendingOvertime">
+                        <div class="kpi_lbl">Pending OT / Recon</div>
+                        <div class="kpi_val">
+                            <t t-esc="state.data.kpis.pending_ot_count + state.data.kpis.pending_reg_count"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Corporate & Management HR Announcements Board (MSS) -->
+                <div class="dsl_mss_section_card dsl_mss_notice_board">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <h5 class="mb-0">
+                            <i class="fa fa-bullhorn text-primary me-2" title="Announcements"/>
+                            📢 HR &amp; Management Announcements (Official Notice Board)
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary" t-on-click="openNewAnnouncement">
+                                <i class="fa fa-plus me-1" title="Post Notice"/> Post Notice
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" t-on-click="openAnnouncements">
+                                <i class="fa fa-external-link me-1" title="All Notices"/> View All Circulars
+                            </button>
+                        </div>
+                    </div>
+                    <div t-if="!state.data.announcements or !state.data.announcements.length" class="text-muted small py-2">
+                        No active HR or management announcements published right now.
+                    </div>
+                    <div t-else="" class="dsl_mss_notice_grid">
+                        <div t-foreach="state.data.announcements" t-as="ann" t-key="ann.id"
+                             t-attf-class="dsl_mss_notice_card notice_{{ ann.badge_color }}"
+                             t-on-click="() => this.openAnnouncementRecord(ann.id)">
+                            <div class="d-flex justify-content-between align-items-center mb-1 gap-2">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span t-if="ann.is_pinned" class="mss_pin_badge">
+                                        <i class="fa fa-thumb-tack me-1" title="Pinned"/> PINNED
+                                    </span>
+                                    <span t-attf-class="mss_cat_badge cat_{{ ann.badge_color }}">
+                                        <i t-attf-class="fa {{ ann.icon }} me-1" title="Category"/>
+                                        <t t-esc="ann.category_label"/>
+                                    </span>
+                                    <span class="mss_scope_lbl" t-esc="ann.scope_label"/>
+                                </div>
+                                <span class="mss_notice_date"><t t-esc="ann.publish_date"/></span>
+                            </div>
+                            <div class="mss_notice_title" t-esc="ann.title"/>
+                            <div class="mss_notice_summary" t-esc="ann.summary"/>
+                            <div class="mss_notice_footer">
+                                <span><t t-esc="ann.name"/> · <t t-esc="ann.author"/></span>
+                                <span class="mss_read_more">Read Circular <i class="fa fa-arrow-right ms-1" title="Open"/></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Leave Approvals Queue -->
+                <div class="dsl_mss_section_card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0">
+                            <i class="fa fa-check-square-o text-primary me-2" title="Approvals"/>
+                            Pending Team Leave Requests (1-Click Approval)
+                        </h5>
+                        <button class="btn btn-sm btn-outline-primary" t-on-click="openPendingRegularization">
+                            <i class="fa fa-clock-o me-1" title="Regularization"/> Missed Punch Queue (<t t-esc="state.data.kpis.pending_reg_count"/>)
+                        </button>
+                    </div>
+                    <div t-if="!state.data.pending_leaves.length" class="text-muted small py-2">
+                        All caught up! Zero pending leave applications awaiting your approval.
+                    </div>
+                    <div t-else="" class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ref</th>
+                                    <th>Team Member</th>
+                                    <th>Leave Type</th>
+                                    <th>Period</th>
+                                    <th>Days</th>
+                                    <th>Stage</th>
+                                    <th class="text-end">Quick Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="state.data.pending_leaves" t-as="lv" t-key="lv.id">
+                                    <td class="fw-semibold"><t t-esc="lv.name"/></td>
+                                    <td><t t-esc="lv.employee"/></td>
+                                    <td><t t-esc="lv.leave_type"/></td>
+                                    <td><t t-esc="lv.dates"/></td>
+                                    <td><t t-esc="lv.days"/></td>
+                                    <td><span class="badge text-bg-info"><t t-esc="lv.stage"/></span></td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-success" t-on-click="() => this.onQuickApproveLeave(lv.id)">
+                                            <i class="fa fa-check me-1" title="Approve"/> Approve
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Live Team Attendance Roster -->
+                <div class="dsl_mss_section_card">
+                    <h5>
+                        <i class="fa fa-users text-indigo me-2" title="Team Roster"/>
+                        Today's Live Team Attendance Roster
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Emp ID</th>
+                                    <th>Employee Name</th>
+                                    <th>Designation</th>
+                                    <th>Department / Branch</th>
+                                    <th>Check-In</th>
+                                    <th>Check-Out</th>
+                                    <th>Today's Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="state.data.team_roster" t-as="emp" t-key="emp.id">
+                                    <td class="text-muted fw-semibold"><t t-esc="emp.code"/></td>
+                                    <td class="fw-semibold"><t t-esc="emp.name"/></td>
+                                    <td><t t-esc="emp.job"/></td>
+                                    <td class="small text-muted"><t t-esc="emp.department"/> • <t t-esc="emp.branch"/></td>
+                                    <td><t t-esc="emp.check_in"/></td>
+                                    <td><t t-esc="emp.check_out"/></td>
+                                    <td>
+                                        <span t-attf-class="badge text-bg-{{emp.status_badge}}">
+                                            <t t-esc="emp.status_label"/>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>
