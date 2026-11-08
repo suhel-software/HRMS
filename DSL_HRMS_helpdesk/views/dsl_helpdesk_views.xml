@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_dsl_hr_ticket_list" model="ir.ui.view">
+        <field name="name">dsl.hr.ticket.list</field>
+        <field name="model">dsl.hr.ticket</field>
+        <field name="arch" type="xml">
+            <list string="HR Helpdesk &amp; Grievance Tickets"
+                  decoration-danger="ticket_nature == 'grievance' and state not in ('resolved', 'closed')"
+                  decoration-info="state == 'in_progress'"
+                  decoration-success="state in ('resolved', 'closed')">
+                <field name="name" decoration-bf="1"/>
+                <field name="priority" widget="priority"/>
+                <field name="subject" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="branch_id" optional="show"/>
+                <field name="category_id"/>
+                <field name="ticket_nature" widget="badge"
+                       decoration-danger="ticket_nature == 'grievance'"
+                       decoration-info="ticket_nature == 'helpdesk'"/>
+                <field name="assigned_to_id" widget="many2one_avatar_user"/>
+                <field name="sla_deadline"/>
+                <field name="sla_status" widget="badge"
+                       decoration-success="sla_status in ('on_track', 'met')"
+                       decoration-danger="sla_status == 'breached'"/>
+                <field name="state" widget="badge"
+                       decoration-warning="state == 'new'"
+                       decoration-info="state == 'in_progress'"
+                       decoration-success="state in ('resolved', 'closed')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hr_ticket_form" model="ir.ui.view">
+        <field name="name">dsl.hr.ticket.form</field>
+        <field name="model">dsl.hr.ticket</field>
+        <field name="arch" type="xml">
+            <form string="HR Helpdesk &amp; Confidential Grievance Ticket">
+                <header>
+                    <button name="action_start_progress"
+                            string="Take Ownership / Start"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state != 'new'"/>
+                    <button name="action_wait_employee"
+                            string="Request Employee Info"
+                            type="object"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state != 'in_progress'"/>
+                    <button name="action_resolve"
+                            string="✓ Mark Resolved"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state in ('resolved', 'closed')"/>
+                    <button name="action_close"
+                            string="Close Ticket"
+                            type="object"
+                            invisible="state != 'resolved'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label"><field name="name" readonly="1"/></span>
+                        <h1><field name="subject" placeholder="e.g. Request for NBR Tax Deduction Certificate / Biometric Punch Missing"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Classification">
+                            <field name="employee_id"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="department_id"/>
+                            <field name="category_id"/>
+                            <field name="ticket_nature"/>
+                            <field name="priority" widget="priority"/>
+                        </group>
+                        <group string="Assignment &amp; SLA Tracking">
+                            <field name="assigned_to_id" widget="many2one_avatar_user"/>
+                            <field name="sla_hours"/>
+                            <field name="sla_deadline"/>
+                            <field name="sla_status" widget="badge"
+                                   decoration-success="sla_status in ('on_track', 'met')"
+                                   decoration-danger="sla_status == 'breached'"/>
+                            <field name="resolved_at" invisible="not resolved_at"/>
+                            <field name="satisfaction_rating" invisible="state not in ('resolved', 'closed')"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page name="issue_desc_page" string="Issue / Grievance Statement">
+                            <field name="description" nolabel="1" placeholder="Describe your query or confidential workplace grievance in detail..."/>
+                        </page>
+                        <page name="resolution_page" string="HR Resolution &amp; Action Taken">
+                            <field name="resolution_summary" nolabel="1" placeholder="Record investigation findings or HR resolution notes..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hr_ticket" model="ir.actions.act_window">
+        <field name="name">HR Helpdesk &amp; Grievance</field>
+        <field name="res_model">dsl.hr.ticket</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_hr_ticket"
+              name="HR Helpdesk &amp; Grievance"
+              parent="DSL_HRMS_core.menu_dsl_hrms_self_service_root"
+              action="action_dsl_hr_ticket"
+              sequence="40"/>
+</odoo>
+

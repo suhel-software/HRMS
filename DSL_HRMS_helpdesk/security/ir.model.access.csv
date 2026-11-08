@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_hr_ticket_cat_user,dsl.hr.ticket.category.user,model_dsl_hr_ticket_category,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_hr_ticket_cat_manager,dsl.hr.ticket.category.manager,model_dsl_hr_ticket_category,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_hr_ticket_user,dsl.hr.ticket.user,model_dsl_hr_ticket,DSL_HRMS_core.group_dsl_hrms_user,1,1,1,0
+access_dsl_hr_ticket_officer,dsl.hr.ticket.officer,model_dsl_hr_ticket,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_hr_ticket_manager,dsl.hr.ticket.manager,model_dsl_hr_ticket,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

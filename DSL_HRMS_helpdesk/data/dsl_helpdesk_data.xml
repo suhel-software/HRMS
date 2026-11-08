@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_dsl_hr_ticket" model="ir.sequence">
+            <field name="name">DSL HR Helpdesk Ticket</field>
+            <field name="code">dsl.hr.ticket</field>
+            <field name="prefix">TKT-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="hr_tkt_cat_payroll" model="dsl.hr.ticket.category">
+            <field name="sequence">10</field>
+            <field name="name">Payroll, Payslip &amp; Tax (TDS) Query</field>
+            <field name="code">PAY-TAX</field>
+            <field name="default_nature">helpdesk</field>
+            <field name="sla_hours">24</field>
+        </record>
+        <record id="hr_tkt_cat_att_leave" model="dsl.hr.ticket.category">
+            <field name="sequence">20</field>
+            <field name="name">Attendance, Biometric &amp; Leave Balance Support</field>
+            <field name="code">ATT-LV</field>
+            <field name="default_nature">helpdesk</field>
+            <field name="sla_hours">24</field>
+        </record>
+        <record id="hr_tkt_cat_pf_loan" model="dsl.hr.ticket.category">
+            <field name="sequence">30</field>
+            <field name="name">Provident Fund, Loan &amp; Medical Insurance</field>
+            <field name="code">PF-BEN</field>
+            <field name="default_nature">helpdesk</field>
+            <field name="sla_hours">48</field>
+        </record>
+        <record id="hr_tkt_cat_admin_id" model="dsl.hr.ticket.category">
+            <field name="sequence">40</field>
+            <field name="name">ID Card, Access Card, SIM &amp; Admin Facility</field>
+            <field name="code">ADMIN-FAC</field>
+            <field name="default_nature">helpdesk</field>
+            <field name="sla_hours">48</field>
+        </record>
+        <record id="hr_tkt_cat_grievance" model="dsl.hr.ticket.category">
+            <field name="sequence">50</field>
+            <field name="name">Confidential Workplace Grievance / Harassment (BD Labour Act)</field>
+            <field name="code">CONF-GRV</field>
+            <field name="default_nature">grievance</field>
+            <field name="sla_hours">72</field>
+        </record>
+    </data>
+</odoo>
+
