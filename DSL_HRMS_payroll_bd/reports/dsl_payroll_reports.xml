@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Printable Executive Digital Payslip (Zero Odoo Branding) -->
+    <record id="action_report_dsl_payslip" model="ir.actions.report">
+        <field name="name">Digital Payslip (BDT)</field>
+        <field name="model">dsl.payslip</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">DSL_HRMS_payroll_bd.report_dsl_payslip_document</field>
+        <field name="report_file">DSL_HRMS_payroll_bd.report_dsl_payslip_document</field>
+        <field name="print_report_name">'Payslip_%s_%s' % (object.employee_id.employee_code or object.employee_id.name, object.payroll_month_label)</field>
+        <field name="binding_model_id" ref="model_dsl_payslip"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_dsl_payslip_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <div class="page" style="font-family: 'Segoe UI', Arial, sans-serif; padding: 28px; color: #0f172a;">
+                    <div style="border-bottom: 3px solid #2563eb; padding-bottom: 14px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2 style="margin: 0; color: #1e3a8a; font-weight: 800;" t-esc="o.company_id.name"/>
+                            <div style="font-size: 13px; color: #475569;" t-if="o.branch_id">
+                                Branch / Duty Station: <strong t-esc="o.branch_id.name"/>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 18px; font-weight: 800; color: #2563eb;">MONTHLY PAYSLIP</div>
+                            <div style="font-size: 13px; color: #334155;">
+                                Period: <strong t-esc="o.payroll_month_label"/> | Ref: <strong t-esc="o.name"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="table table-sm table-bordered" style="font-size: 13px; margin-bottom: 18px;">
+                        <tr>
+                            <th style="background:#f8fafc; width:18%;">Employee Name</th>
+                            <td style="width:32%;"><strong t-esc="o.employee_id.name"/></td>
+                            <th style="background:#f8fafc; width:18%;">Employee ID</th>
+                            <td style="width:32%;" t-esc="o.employee_id.employee_code or '—'"/>
+                        </tr>
+                        <tr>
+                            <th style="background:#f8fafc;">Designation</th>
+                            <td t-esc="o.job_id.name or '—'"/>
+                            <th style="background:#f8fafc;">Department</th>
+                            <td t-esc="o.department_id.name or '—'"/>
+                        </tr>
+                        <tr>
+                            <th style="background:#f8fafc;">Attendance / Leave</th>
+                            <td>Present: <t t-esc="o.present_days"/>d | Leave: <t t-esc="o.paid_leave_days"/>d | OT: <t t-esc="o.ot_hours"/>h</td>
+                            <th style="background:#f8fafc;">Payment Mode</th>
+                            <td>
+                                <strong t-esc="(o.payment_method or 'bank').upper()"/>
+                                <span t-if="o.bank_account_no"> · <t t-esc="o.bank_name"/> (<t t-esc="o.bank_account_no"/>)</span>
+                                <span t-if="o.mfs_account_no"> · <t t-esc="o.mfs_provider"/> (<t t-esc="o.mfs_account_no"/>)</span>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table class="table table-sm table-bordered" style="font-size: 13px;">
+                        <thead style="background: #eff6ff; color: #1e3a8a;">
+                            <tr>
+                                <th>Code</th>
+                                <th>Salary Component Description</th>
+                                <th>Type</th>
+                                <th style="text-align: right;">Amount (৳)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="o.salary_line_ids" t-as="ln">
+                                <td><strong t-esc="ln.code"/></td>
+                                <td t-esc="ln.name"/>
+                                <td t-esc="dict(ln._fields['category'].selection).get(ln.category)"/>
+                                <td style="text-align: right;">
+                                    <t t-esc="'{:,.2f}'.format(ln.amount)"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr style="background: #f8fafc; font-weight: 700;">
+                                <td colspan="3">Total Gross &amp; Additions</td>
+                                <td style="text-align: right;">৳ <t t-esc="'{:,.2f}'.format(o.gross_payable)"/></td>
+                            </tr>
+                            <tr style="background: #fef2f2; font-weight: 700; color: #b91c1c;">
+                                <td colspan="3">Total Employee Deductions (incl. NBR TDS &amp; Revenue Stamp)</td>
+                                <td style="text-align: right;">- ৳ <t t-esc="'{:,.2f}'.format(o.total_deductions)"/></td>
+                            </tr>
+                            <tr style="background: #ecfdf5; font-size: 15px; font-weight: 800; color: #047857;">
+                                <td colspan="3">NET SALARY PAYABLE (BDT)</td>
+                                <td style="text-align: right;">৳ <t t-esc="'{:,.2f}'.format(o.net_payable)"/></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div t-if="o.employer_benefit_line_ids" style="margin-top: 16px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #1e40af; margin-bottom: 6px;">
+                            EMPLOYER CONTRIBUTIONS &amp; NON-CASH BENEFITS (NOT DEDUCTED FROM EMPLOYEE SALARY)
+                        </div>
+                        <table class="table table-sm table-bordered" style="font-size: 12px;">
+                            <tbody>
+                                <tr t-foreach="o.employer_benefit_line_ids" t-as="eb">
+                                    <td style="width: 18%;"><strong t-esc="eb.code"/></td>
+                                    <td t-esc="eb.name"/>
+                                    <td style="width: 24%;" t-esc="dict(eb._fields['category'].selection).get(eb.category)"/>
+                                    <td style="width: 18%; text-align: right;">৳ <t t-esc="'{:,.2f}'.format(eb.amount)"/></td>
+                                </tr>
+                                <tr style="background: #eff6ff; font-weight: 800; color: #1e3a8a;">
+                                    <td colspan="3">TOTAL COST TO COMPANY (MONTHLY CTC)</td>
+                                    <td style="text-align: right;">৳ <t t-esc="'{:,.2f}'.format(o.total_ctc_cost)"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 32px; font-size: 11.5px; color: #64748b; display: flex; justify-content: space-between;">
+                        <span>System-generated confidential payslip — DSL Enterprise HRMS</span>
+                        <span>Authorized HR &amp; Accounts Signatory</span>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- 2. Printable Official Bank BEFTN & MFS Advice Sheet -->
+    <record id="action_report_dsl_bank_advice" model="ir.actions.report">
+        <field name="name">Bank BEFTN &amp; MFS Salary Advice Sheet</field>
+        <field name="model">dsl.payslip.run</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">DSL_HRMS_payroll_bd.report_dsl_bank_advice_document</field>
+        <field name="report_file">DSL_HRMS_payroll_bd.report_dsl_bank_advice_document</field>
+        <field name="print_report_name">'Bank_Salary_Advice_%s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_dsl_payslip_run"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_dsl_bank_advice_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="b">
+                <div class="page" style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #0f172a;">
+                    <h3 style="margin-bottom: 4px; color: #1e3a8a; font-weight: 800;" t-esc="b.company_id.name"/>
+                    <div style="font-size: 13px; color: #475569; margin-bottom: 16px;">
+                        <strong>BANK BEFTN &amp; MFS SALARY DISBURSEMENT ADVICE</strong> · Batch: <span t-esc="b.name"/> (<span t-esc="b.batch_title"/>)
+                    </div>
+                    <table class="table table-sm table-bordered" style="font-size: 12px;">
+                        <thead style="background: #f1f5f9;">
+                            <tr>
+                                <th>SL</th>
+                                <th>Emp ID</th>
+                                <th>Employee Name</th>
+                                <th>Mode</th>
+                                <th>Bank / MFS</th>
+                                <th>Routing No.</th>
+                                <th>Account / Wallet No.</th>
+                                <th style="text-align: right;">Net Payable (৳)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-set="sl_idx" t-value="0"/>
+                            <tr t-foreach="b.payslip_ids" t-as="s">
+                                <t t-set="sl_idx" t-value="sl_idx + 1"/>
+                                <td t-esc="sl_idx"/>
+                                <td t-esc="s.employee_id.employee_code or '—'"/>
+                                <td t-esc="s.employee_id.name"/>
+                                <td t-esc="(s.payment_method or 'bank').upper()"/>
+                                <td t-esc="s.bank_name or s.mfs_provider or 'Cash'"/>
+                                <td t-esc="s.bank_routing_no or '—'"/>
+                                <td t-esc="s.bank_account_no or s.mfs_account_no or '—'"/>
+                                <td style="text-align: right; font-weight: 700;">
+                                    <t t-esc="'{:,.2f}'.format(s.net_payable)"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr style="background: #ecfdf5; font-weight: 800;">
+                                <td colspan="7">TOTAL DISBURSEMENT (<t t-esc="b.payslip_count"/> Employees)</td>
+                                <td style="text-align: right;">৳ <t t-esc="'{:,.2f}'.format(b.total_net_payable)"/></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- 3. Printable Official Salary Certificate, Bank Forwarding & Statement (with QR & Up-To Month) -->
+    <record id="action_report_dsl_salary_document" model="ir.actions.report">
+        <field name="name">Official Salary Certificate / Statement (PDF)</field>
+        <field name="model">dsl.hrms.salary.document</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">DSL_HRMS_payroll_bd.report_dsl_salary_document_template</field>
+        <field name="report_file">DSL_HRMS_payroll_bd.report_dsl_salary_document_template</field>
+        <field name="print_report_name">'%s_%s' % (object.document_type_id.code or 'SALARY_DOC', object.employee_id.employee_code or object.employee_id.name)</field>
+        <field name="binding_model_id" ref="model_dsl_hrms_salary_document"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_dsl_salary_document_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <div class="page" style="font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #0f172a;">
+                    <t t-out="doc.rendered_body_html"/>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- 4. Printable Official Payroll Accounting Journal & Payment Voucher (GL) -->
+    <record id="action_report_dsl_payroll_voucher" model="ir.actions.report">
+        <field name="name">Payroll Accounting Journal / Payment Voucher (GL)</field>
+        <field name="model">dsl.hrms.payroll.voucher</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">DSL_HRMS_payroll_bd.report_dsl_payroll_voucher_template</field>
+        <field name="report_file">DSL_HRMS_payroll_bd.report_dsl_payroll_voucher_template</field>
+        <field name="print_report_name">'Payroll_Voucher_%s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_dsl_hrms_payroll_voucher"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_dsl_payroll_voucher_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="v">
+                <div class="page" style="font-family: 'Segoe UI', Arial, sans-serif; padding: 26px; color: #0f172a;">
+                    <div style="border-bottom: 3px solid #1e3a8a; padding-bottom: 12px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2 style="margin: 0; color: #1e3a8a; font-weight: 800;" t-esc="v.company_id.name"/>
+                            <div style="font-size: 12.5px; color: #475569;">
+                                COA Entity: <strong t-esc="v.accounting_company_id.name or v.company_id.name"/>
+                                <span t-if="v.branch_id"> · Branch: <strong t-esc="v.branch_id.name"/></span>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 16px; font-weight: 800; color: #2563eb;" t-esc="dict(v._fields['voucher_type'].selection).get(v.voucher_type)"/>
+                            <div style="font-size: 12.5px;">Voucher No: <strong t-esc="v.name"/> | Date: <strong t-esc="v.accounting_date"/></div>
+                            <div style="font-size: 12.5px;">Payroll Period: <strong t-esc="v.payroll_month_label"/></div>
+                        </div>
+                    </div>
+
+                    <table class="table table-sm table-bordered" style="font-size: 12.5px;">
+                        <thead style="background: #eff6ff; color: #1e3a8a;">
+                            <tr>
+                                <th style="width: 12%;">COA Code</th>
+                                <th style="width: 34%;">General Ledger Account Title</th>
+                                <th style="width: 24%;">Line Description</th>
+                                <th style="width: 15%; text-align: right;">Debit (Dr ৳)</th>
+                                <th style="width: 15%; text-align: right;">Credit (Cr ৳)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="v.line_ids" t-as="ln">
+                                <td><strong t-esc="ln.gl_account_code"/></td>
+                                <td t-esc="ln.gl_account_name"/>
+                                <td t-esc="ln.narration or '—'"/>
+                                <td style="text-align: right;"><t t-esc="'{:,.2f}'.format(ln.debit)"/></td>
+                                <td style="text-align: right;"><t t-esc="'{:,.2f}'.format(ln.credit)"/></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr style="background: #ecfdf5; font-weight: 800; font-size: 13.5px;">
+                                <td colspan="3">TOTAL DOUBLE-ENTRY LEDGER BALANCE (BDT)</td>
+                                <td style="text-align: right;">৳ <t t-esc="'{:,.2f}'.format(v.total_debit)"/></td>
+                                <td style="text-align: right;">৳ <t t-esc="'{:,.2f}'.format(v.total_credit)"/></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div t-if="v.narration" style="margin-top: 12px; font-size: 12.5px; color: #334155;">
+                        <strong>Narration:</strong> <span t-esc="v.narration"/>
+                    </div>
+
+                    <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 12px; border-top: 1px dashed #cbd5e1; padding-top: 14px;">
+                        <span>Prepared By: <strong t-esc="v.prepared_by_id.name or 'HR &amp; Payroll Officer'"/></span>
+                        <span>Checked By: <strong>Manager — Finance &amp; Accounts</strong></span>
+                        <span>Approved By: <strong t-esc="v.approved_by_id.name or 'Chief Financial Officer (CFO)'"/></span>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>
+

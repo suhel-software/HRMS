@@ -1,0 +1,943 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================================================================== -->
+    <!-- 1. INDIVIDUAL MONTHLY PAYSLIP VIEWS                                -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_payslip_list" model="ir.ui.view">
+        <field name="name">dsl.payslip.list</field>
+        <field name="model">dsl.payslip</field>
+        <field name="arch" type="xml">
+            <list string="Monthly Employee Payslips"
+                  decoration-info="state == 'computed'"
+                  decoration-primary="state == 'approved'"
+                  decoration-success="state == 'paid'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="name" decoration-bf="1"/>
+                <field name="payroll_month_label"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="accounting_company_id" optional="hide"/>
+                <field name="department_id" optional="show"/>
+                <field name="payment_method" widget="badge"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="contract_gross" sum="Total Contract Gross"/>
+                <field name="total_additions" sum="Total Additions" optional="show"/>
+                <field name="tds_deducted" sum="Total TDS" optional="show"/>
+                <field name="total_deductions" sum="Total Deductions"/>
+                <field name="net_payable" sum="Total Net Payable" decoration-bf="1"/>
+                <field name="employer_contribution_total" sum="Total Employer Contrib." optional="show"/>
+                <field name="total_ctc_cost" sum="Total CTC" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'computed'"
+                       decoration-primary="state == 'approved'"
+                       decoration-success="state == 'paid'"
+                       decoration-muted="state in ('draft', 'cancelled')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_payslip_pivot" model="ir.ui.view">
+        <field name="name">dsl.payslip.pivot</field>
+        <field name="model">dsl.payslip</field>
+        <field name="arch" type="xml">
+            <pivot string="Payroll Cost Analysis">
+                <field name="company_id" type="row"/>
+                <field name="branch_id" type="row"/>
+                <field name="payroll_month_label" type="col"/>
+                <field name="gross_payable" type="measure"/>
+                <field name="tds_deducted" type="measure"/>
+                <field name="net_payable" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_dsl_payslip_form" model="ir.ui.view">
+        <field name="name">dsl.payslip.form</field>
+        <field name="model">dsl.payslip</field>
+        <field name="arch" type="xml">
+            <form string="Monthly Employee Payslip">
+                <header>
+                    <button name="action_compute_sheet"
+                            string="⚡ Compute Payslip"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state in ('paid', 'cancelled')"/>
+                    <button name="action_approve"
+                            string="✓ Approve"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state != 'computed'"/>
+                    <button name="action_mark_paid"
+                            string="💳 Mark Disbursed / Paid"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state not in ('computed', 'approved')"/>
+                    <button name="action_print_payslip"
+                            string="🖨️ Print Digital Payslip"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state == 'draft'"/>
+                    <button name="action_cancel"
+                            string="Cancel"
+                            type="object"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state in ('paid', 'cancelled')"/>
+                    <button name="action_reset_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state != 'cancelled'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,computed,approved,paid"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Digital Payslip Voucher</span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group name="dsl_payslip_top_group">
+                        <group string="Employee &amp; COA Scope">
+                            <field name="employee_id" readonly="state in ('approved', 'paid')"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="accounting_company_id"/>
+                            <field name="department_id"/>
+                            <field name="compensation_id" readonly="state in ('approved', 'paid')"/>
+                            <field name="structure_id"/>
+                        </group>
+                        <group string="Salary Period &amp; Net Summary (৳)">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="date_from" readonly="state in ('approved', 'paid')"/>
+                            <field name="date_to" readonly="state in ('approved', 'paid')"/>
+                            <field name="payroll_month_label" decoration-bf="1"/>
+                            <field name="batch_id" readonly="1"/>
+                            <field name="gross_payable"/>
+                            <field name="tds_deducted"/>
+                            <field name="total_deductions"/>
+                            <field name="net_payable" decoration-bf="1" decoration-success="1"/>
+                            <field name="employer_contribution_total" invisible="employer_contribution_total == 0"/>
+                            <field name="perquisite_benefit_total" invisible="perquisite_benefit_total == 0"/>
+                            <field name="total_ctc_cost" decoration-bf="1"/>
+                            <field name="paid_date" invisible="not paid_date"/>
+                        </group>
+                    </group>
+
+                    <notebook name="dsl_payslip_notebook">
+                        <page name="breakdown_lines_page" string="1. Salary Earnings &amp; Deductions">
+                            <field name="salary_line_ids" readonly="1">
+                                <list decoration-success="category in ('earning', 'variable_earning')"
+                                      decoration-danger="category == 'deduction'">
+                                    <field name="sequence" column_invisible="1"/>
+                                    <field name="code" decoration-bf="1"/>
+                                    <field name="name"/>
+                                    <field name="category" widget="badge"
+                                           decoration-success="category == 'earning'"
+                                           decoration-info="category == 'variable_earning'"
+                                           decoration-danger="category == 'deduction'"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="amount" decoration-bf="1"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page name="employer_ctc_page" string="2. Employer Contributions &amp; Perquisites (CTC)">
+                            <div class="alert alert-info mb-3" role="status">
+                                <strong>Informational / Company Cost Only:</strong> Items below (Employer PF, Gratuity Provision, Employer Insurance, Non-Cash Perquisites) are <strong>not deducted</strong> from the employee's Net Salary Payable.
+                            </div>
+                            <field name="employer_benefit_line_ids" readonly="1">
+                                <list decoration-primary="category == 'employer_contribution'"
+                                      decoration-warning="category == 'employer_benefit'">
+                                    <field name="sequence" column_invisible="1"/>
+                                    <field name="code" decoration-bf="1"/>
+                                    <field name="name"/>
+                                    <field name="category" widget="badge"
+                                           decoration-primary="category == 'employer_contribution'"
+                                           decoration-warning="category == 'employer_benefit'"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="amount" decoration-bf="1"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page name="attendance_ot_page" string="3. Attendance, Leave &amp; Overtime Snapshot">
+                            <group>
+                                <group string="Attendance &amp; Leave Metrics">
+                                    <field name="calendar_days"/>
+                                    <field name="present_days"/>
+                                    <field name="paid_leave_days"/>
+                                    <field name="unpaid_lwp_days"/>
+                                    <field name="absent_days"/>
+                                    <field name="late_count"/>
+                                    <field name="late_deduction_days"/>
+                                </group>
+                                <group string="Overtime, Night Shift &amp; Manual Adjustments">
+                                    <field name="ot_hours"/>
+                                    <field name="ot_amount"/>
+                                    <field name="night_shift_days"/>
+                                    <field name="night_shift_amount"/>
+                                    <field name="arrear_addition" readonly="state in ('approved', 'paid')"/>
+                                    <field name="other_deduction" readonly="state in ('approved', 'paid')"/>
+                                    <field name="manual_tds_override" readonly="state in ('approved', 'paid')"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page name="disbursement_page" string="4. Bank (BEFTN) / MFS Disbursement">
+                            <group>
+                                <group string="Disbursement Channel">
+                                    <field name="payment_method" readonly="state == 'paid'"/>
+                                    <field name="bank_name" readonly="state == 'paid'"/>
+                                    <field name="bank_routing_no" readonly="state == 'paid'"/>
+                                    <field name="bank_account_no" readonly="state == 'paid'"/>
+                                </group>
+                                <group string="Mobile Financial Service (bKash / Nagad)">
+                                    <field name="mfs_provider" readonly="state == 'paid'"/>
+                                    <field name="mfs_account_no" readonly="state == 'paid'"/>
+                                </group>
+                            </group>
+                            <group string="Remarks">
+                                <field name="notes" nolabel="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dsl_payslip_search" model="ir.ui.view">
+        <field name="name">dsl.payslip.search</field>
+        <field name="model">dsl.payslip</field>
+        <field name="arch" type="xml">
+            <search string="Search Payslips">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="payroll_month_label"/>
+                <field name="branch_id"/>
+                <field name="batch_id"/>
+                <filter name="flt_paid" string="Paid / Disbursed" domain="[('state', '=', 'paid')]"/>
+                <filter name="flt_bank" string="Bank BEFTN" domain="[('payment_method', '=', 'bank')]"/>
+                <filter name="flt_mfs" string="MFS (bKash/Nagad)" domain="[('payment_method', '=', 'mfs')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="grp_month" string="Salary Month" context="{'group_by': 'payroll_month_label'}"/>
+                    <filter name="grp_branch" string="Branch / Plant" context="{'group_by': 'branch_id'}"/>
+                    <filter name="grp_coa" string="COA Entity" context="{'group_by': 'accounting_company_id'}"/>
+                    <filter name="grp_pay_mode" string="Payment Mode" context="{'group_by': 'payment_method'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_dsl_payslip" model="ir.actions.act_window">
+        <field name="name">Monthly Payslips</field>
+        <field name="res_model">dsl.payslip</field>
+        <field name="view_mode">list,pivot,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Generate Monthly Employee Payslips
+            </p>
+            <p>
+                Automated Bangladesh payroll with Basic, HRA, Medical, Conveyance, 2x Overtime, NBR Income Tax (TDS), and ৳10 Revenue Stamp.
+            </p>
+        </field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 2. MONTHLY PAYROLL BATCH & BANK ADVICE VIEWS                       -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_payslip_run_list" model="ir.ui.view">
+        <field name="name">dsl.payslip.run.list</field>
+        <field name="model">dsl.payslip.run</field>
+        <field name="arch" type="xml">
+            <list string="Monthly Payroll Batches &amp; Bank Advice Sheets"
+                  decoration-info="state == 'computed'"
+                  decoration-primary="state == 'approved'"
+                  decoration-success="state == 'paid'">
+                <field name="name" decoration-bf="1"/>
+                <field name="batch_title" decoration-bf="1"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="branch_id"/>
+                <field name="accounting_company_id" optional="show"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="payslip_count"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="total_gross" sum="Total Gross"/>
+                <field name="total_tds" sum="Total TDS"/>
+                <field name="total_net_payable" sum="Total Net Payable" decoration-bf="1"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'computed'"
+                       decoration-primary="state == 'approved'"
+                       decoration-success="state == 'paid'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_payslip_run_form" model="ir.ui.view">
+        <field name="name">dsl.payslip.run.form</field>
+        <field name="model">dsl.payslip.run</field>
+        <field name="arch" type="xml">
+            <form string="Monthly Payroll Batch &amp; Bank Advice">
+                <header>
+                    <button name="action_generate_batch_payslips"
+                            string="⚡ Generate &amp; Compute Batch"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state in ('paid', 'cancelled')"/>
+                    <button name="action_approve_batch"
+                            string="✓ Approve Batch"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state != 'computed'"/>
+                    <button name="action_export_bank_advice_csv"
+                            string="📥 Export BEFTN &amp; MFS Advice (Excel CSV)"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="payslip_count == 0"/>
+                    <button name="action_generate_accounting_vouchers"
+                            string="🧾 Generate Accounting Vouchers (GL)"
+                            type="object"
+                            class="btn-secondary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="payslip_count == 0"/>
+                    <button name="action_mark_paid"
+                            string="💳 Mark Batch Disbursed / Paid"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state not in ('computed', 'approved')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,computed,approved,paid"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label"><field name="name" readonly="1"/></span>
+                        <h1><field name="batch_title" placeholder="e.g. November 2026 Corporate Salary Sheet"/></h1>
+                    </div>
+                    <group>
+                        <group string="Company, Branch &amp; COA Scope">
+                            <field name="company_id" groups="base.group_multi_company" readonly="state == 'paid'"/>
+                            <field name="branch_id" readonly="state == 'paid'"/>
+                            <field name="accounting_company_id"/>
+                            <field name="department_id" readonly="state == 'paid'"/>
+                            <field name="date_from" readonly="state == 'paid'"/>
+                            <field name="date_to" readonly="state == 'paid'"/>
+                        </group>
+                        <group string="Financial Disbursement Summary (৳)">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="payslip_count"/>
+                            <field name="total_gross"/>
+                            <field name="total_tds"/>
+                            <field name="total_deductions"/>
+                            <field name="total_net_payable" decoration-bf="1"/>
+                            <field name="total_employer_contributions"/>
+                            <field name="total_ctc_cost" decoration-bf="1"/>
+                            <field name="disbursement_bank_note"/>
+                            <field name="bank_advice_csv_filename" invisible="1"/>
+                            <field name="bank_advice_csv_file" filename="bank_advice_csv_filename" invisible="not bank_advice_csv_file"/>
+                        </group>
+                    </group>
+
+                    <separator string="Generated Employee Payslips"/>
+                    <field name="payslip_ids" readonly="1">
+                        <list decoration-success="state == 'paid'">
+                            <field name="name"/>
+                            <field name="employee_id" widget="many2one_avatar_employee"/>
+                            <field name="branch_id" optional="show"/>
+                            <field name="payment_method" widget="badge"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="gross_payable" sum="Gross"/>
+                            <field name="tds_deducted" sum="TDS"/>
+                            <field name="total_deductions" sum="Deductions"/>
+                            <field name="net_payable" sum="Net Payable" decoration-bf="1"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+
+                    <separator string="Payroll Accounting Journal &amp; Payment Vouchers (GL)"/>
+                    <field name="voucher_ids" readonly="1">
+                        <list decoration-success="state == 'posted'">
+                            <field name="name" decoration-bf="1"/>
+                            <field name="voucher_type" widget="badge"/>
+                            <field name="accounting_date"/>
+                            <field name="accounting_company_id"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="total_debit" sum="Total Debit"/>
+                            <field name="total_credit" sum="Total Credit"/>
+                            <field name="is_balanced"/>
+                            <field name="state" widget="badge" decoration-success="state == 'posted'"/>
+                        </list>
+                    </field>
+
+                    <group string="Payroll Audit Notes">
+                        <field name="notes" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_payslip_run" model="ir.actions.act_window">
+        <field name="name">Payroll Batches &amp; Bank Advice</field>
+        <field name="res_model">dsl.payslip.run</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 2B. SALARY DOCUMENT CENTER (100 DOCUMENT TYPES + DYNAMIC LETTERS)  -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_hrms_salary_document_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.salary.document.list</field>
+        <field name="model">dsl.hrms.salary.document</field>
+        <field name="arch" type="xml">
+            <list string="Salary Documents, Certificates &amp; Statements"
+                  decoration-info="state == 'pending_approval'"
+                  decoration-success="state == 'issued'"
+                  decoration-muted="state in ('expired', 'cancelled')">
+                <field name="name" decoration-bf="1"/>
+                <field name="document_type_id" decoration-bf="1"/>
+                <field name="category" widget="badge"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="employee_code" optional="show"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="salary_upto_month" decoration-bf="1"/>
+                <field name="issue_date"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="gross_salary" sum="Total Gross"/>
+                <field name="net_salary" sum="Total Net" decoration-bf="1"/>
+                <field name="qr_verification_code" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'pending_approval'"
+                       decoration-primary="state == 'approved'"
+                       decoration-success="state == 'issued'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_salary_document_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.salary.document.form</field>
+        <field name="model">dsl.hrms.salary.document</field>
+        <field name="arch" type="xml">
+            <form string="Salary Certificate / Payroll Statement">
+                <header>
+                    <button name="action_fetch_employee_payroll_data"
+                            string="🔄 Fetch Employee &amp; Payroll Data"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state == 'issued'"/>
+                    <button name="action_submit_for_approval"
+                            string="Submit for HR/Accounts Approval"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve_and_issue"
+                            string="✓ Approve &amp; Issue Official Document"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state in ('issued', 'cancelled')"/>
+                    <button name="action_print_salary_document"
+                            string="🖨️ Print / Download PDF Certificate"
+                            type="object"
+                            class="btn-primary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending_approval,approved,issued"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Salary Document Serial Number</span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Document Type &amp; Employee Scope">
+                            <field name="document_type_id" readonly="state == 'issued'"/>
+                            <field name="category"/>
+                            <field name="template_id" readonly="state == 'issued'"/>
+                            <field name="employee_id" readonly="state == 'issued'"/>
+                            <field name="employee_code"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state == 'issued'"/>
+                            <field name="branch_id" readonly="state == 'issued'"/>
+                            <field name="department_id"/>
+                            <field name="designation_id"/>
+                            <field name="joining_date"/>
+                        </group>
+                        <group string="Certification Period, Addressee &amp; QR Verification">
+                            <field name="issue_date"/>
+                            <field name="effective_date"/>
+                            <field name="expiry_date"/>
+                            <field name="payslip_id"/>
+                            <field name="salary_upto_month" decoration-bf="1"/>
+                            <field name="addressed_to"/>
+                            <field name="purpose"/>
+                            <field name="signatory_name"/>
+                            <field name="signatory_designation"/>
+                            <field name="qr_verification_code"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page name="live_preview_tab" string="1. Live Certificate / Statement Preview">
+                            <field name="rendered_body_html" nolabel="1" readonly="1"/>
+                        </page>
+
+                        <page name="salary_figures_tab"
+                              string="2. Certified Compensation &amp; Payroll Figures (৳)"
+                              groups="DSL_HRMS_core.group_dsl_hrms_officer">
+                            <group>
+                                <group string="Monthly Earnings &amp; Deductions (BDT)">
+                                    <field name="currency_id" invisible="1"/>
+                                    <field name="gross_salary" decoration-bf="1"/>
+                                    <field name="basic_salary"/>
+                                    <field name="house_rent"/>
+                                    <field name="medical_allowance"/>
+                                    <field name="conveyance_allowance"/>
+                                    <field name="other_allowances"/>
+                                    <field name="overtime_amount"/>
+                                    <field name="total_deductions"/>
+                                    <field name="monthly_tds"/>
+                                    <field name="pf_employee_contribution"/>
+                                    <field name="loan_installment_deduction"/>
+                                    <field name="net_salary" decoration-bf="1"/>
+                                </group>
+                                <group string="Annual, Tax, PF, Bonus &amp; Revision Figures (BDT)">
+                                    <field name="festival_bonus_amount"/>
+                                    <field name="previous_gross_salary"/>
+                                    <field name="increment_amount"/>
+                                    <field name="increment_percentage"/>
+                                    <field name="annual_gross_salary"/>
+                                    <field name="annual_tax_deducted"/>
+                                    <field name="pf_total_balance"/>
+                                    <field name="gratuity_accrued"/>
+                                    <field name="advance_or_settlement_amount"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page name="confidential_bank_tax_tab"
+                              string="3. Confidential Bank &amp; Tax Information"
+                              groups="DSL_HRMS_core.group_dsl_hrms_officer">
+                            <group>
+                                <group string="Salary Bank Account Details">
+                                    <field name="bank_name"/>
+                                    <field name="bank_branch"/>
+                                    <field name="bank_account_number"/>
+                                    <field name="routing_number"/>
+                                </group>
+                                <group string="NBR Income Tax &amp; Signatory">
+                                    <field name="tin_number"/>
+                                    <field name="tax_circle_zone"/>
+                                    <field name="requested_by_id"/>
+                                    <field name="approved_by_id"/>
+                                    <field name="digital_signature" widget="image" class="oe_avatar"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page name="approval_trail_tab" string="4. HR &amp; Accounts Approval Trail">
+                            <field name="approval_line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence"/>
+                                    <field name="stage_name" decoration-bf="1"/>
+                                    <field name="approver_user_id"/>
+                                    <field name="approved_at"/>
+                                    <field name="remarks"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'approved'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_salary_document" model="ir.actions.act_window">
+        <field name="name">Salary Document Center (Certificates &amp; Statements)</field>
+        <field name="res_model">dsl.hrms.salary.document</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Employee / HR Salary Document Requests -->
+    <record id="view_dsl_hrms_salary_document_request_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.salary.document.request.list</field>
+        <field name="model">dsl.hrms.salary.document.request</field>
+        <field name="arch" type="xml">
+            <list string="Employee Salary Document Requests (ESS &amp; HR)"
+                  decoration-info="state == 'submitted'"
+                  decoration-success="state == 'issued'">
+                <field name="name" decoration-bf="1"/>
+                <field name="request_date"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="employee_code" optional="show"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="document_type_id" decoration-bf="1"/>
+                <field name="category" widget="badge"/>
+                <field name="salary_upto_month" decoration-bf="1"/>
+                <field name="addressed_to"/>
+                <field name="purpose"/>
+                <field name="generated_document_id"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'submitted'"
+                       decoration-success="state == 'issued'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_salary_document_request_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.salary.document.request.form</field>
+        <field name="model">dsl.hrms.salary.document.request</field>
+        <field name="arch" type="xml">
+            <form string="Salary Document Request">
+                <header>
+                    <button name="action_submit_request"
+                            string="Submit Request"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve_and_generate"
+                            string="⚡ Approve &amp; Generate Salary Document"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state in ('issued', 'rejected')"/>
+                    <button name="action_open_generated_document"
+                            string="📄 Open Issued Certificate / Statement"
+                            type="object"
+                            class="btn-primary"
+                            invisible="not generated_document_id"/>
+                    <button name="action_reject_request"
+                            string="Reject"
+                            type="object"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state in ('issued', 'rejected')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved,issued"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Salary Document Request</span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Requested Certificate">
+                            <field name="employee_id" readonly="state == 'issued'"/>
+                            <field name="employee_code"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state == 'issued'"/>
+                            <field name="branch_id" readonly="state == 'issued'"/>
+                            <field name="department_id"/>
+                            <field name="document_type_id" readonly="state == 'issued'"/>
+                            <field name="category"/>
+                        </group>
+                        <group string="Period, Addressee &amp; Issuance">
+                            <field name="request_date"/>
+                            <field name="salary_upto_month" decoration-bf="1"/>
+                            <field name="addressed_to"/>
+                            <field name="purpose"/>
+                            <field name="requested_by_id"/>
+                            <field name="approved_by_id"/>
+                            <field name="generated_document_id"/>
+                        </group>
+                    </group>
+                    <group string="Additional Instructions / Remarks">
+                        <field name="remarks" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_salary_document_request" model="ir.actions.act_window">
+        <field name="name">Salary Document Requests (ESS &amp; HR)</field>
+        <field name="res_model">dsl.hrms.salary.document.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- 100 Salary Document Types Master -->
+    <record id="view_dsl_hrms_salary_document_type_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.salary.document.type.list</field>
+        <field name="model">dsl.hrms.salary.document.type</field>
+        <field name="arch" type="xml">
+            <list string="100 Salary &amp; Payroll Document Types (BD)" editable="bottom"
+                  decoration-bf="is_priority_core">
+                <field name="sequence" widget="handle"/>
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="name_bn"/>
+                <field name="category" widget="badge"/>
+                <field name="is_priority_core"/>
+                <field name="ess_requestable"/>
+                <field name="approval_required"/>
+                <field name="validity_days"/>
+                <field name="default_template_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_salary_document_type" model="ir.actions.act_window">
+        <field name="name">Salary Document Types (100 BD Categories)</field>
+        <field name="res_model">dsl.hrms.salary.document.type</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Dynamic Letter & Certificate Templates -->
+    <record id="view_dsl_hrms_salary_document_template_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.salary.document.template.list</field>
+        <field name="model">dsl.hrms.salary.document.template</field>
+        <field name="arch" type="xml">
+            <list string="Dynamic Salary Letter &amp; Certificate Templates" decoration-bf="is_priority_core">
+                <field name="sequence" widget="handle"/>
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="document_type_id"/>
+                <field name="category" widget="badge"/>
+                <field name="header_title"/>
+                <field name="is_priority_core"/>
+                <field name="include_salary_breakdown_table"/>
+                <field name="include_bank_account_block"/>
+                <field name="include_qr_verification"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_salary_document_template_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.salary.document.template.form</field>
+        <field name="model">dsl.hrms.salary.document.template</field>
+        <field name="arch" type="xml">
+            <form string="Dynamic Salary Document Template">
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label"><field name="code"/></span>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Template Classification">
+                            <field name="document_type_id"/>
+                            <field name="category"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="header_title"/>
+                            <field name="salutation_text"/>
+                        </group>
+                        <group string="Included Blocks &amp; Controls">
+                            <field name="is_priority_core"/>
+                            <field name="include_salary_breakdown_table"/>
+                            <field name="include_bank_account_block"/>
+                            <field name="include_tax_pf_summary"/>
+                            <field name="include_qr_verification"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Dynamic Paragraphs (Placeholders: {employee_name}, {employee_code}, {designation}, {department}, {company_name}, {salary_upto_month}, {gross_salary}, {net_salary})">
+                        <field name="opening_paragraph"/>
+                        <field name="closing_paragraph"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_salary_document_template" model="ir.actions.act_window">
+        <field name="name">Salary Document Templates</field>
+        <field name="res_model">dsl.hrms.salary.document.template</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 2C. PAYROLL ACCOUNTING, JOURNAL VOUCHER & GL LEDGER VIEWS          -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_hrms_payroll_voucher_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.payroll.voucher.list</field>
+        <field name="model">dsl.hrms.payroll.voucher</field>
+        <field name="arch" type="xml">
+            <list string="Payroll Accounting Vouchers &amp; General Ledger Entries"
+                  decoration-info="state == 'verified'"
+                  decoration-success="state == 'posted'">
+                <field name="name" decoration-bf="1"/>
+                <field name="voucher_type" widget="badge"/>
+                <field name="payroll_month_label" decoration-bf="1"/>
+                <field name="accounting_date"/>
+                <field name="batch_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="accounting_company_id"/>
+                <field name="branch_id" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="total_debit" sum="Total Debit" decoration-bf="1"/>
+                <field name="total_credit" sum="Total Credit" decoration-bf="1"/>
+                <field name="is_balanced"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'verified'"
+                       decoration-success="state == 'posted'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_payroll_voucher_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.payroll.voucher.form</field>
+        <field name="model">dsl.hrms.payroll.voucher</field>
+        <field name="arch" type="xml">
+            <form string="Payroll Accounting Journal / Payment Voucher (GL)">
+                <header>
+                    <button name="action_verify_voucher"
+                            string="Verify Double-Entry Balance"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_post_gl_voucher"
+                            string="✓ Post to General Ledger"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state == 'posted'"/>
+                    <button name="action_print_voucher"
+                            string="🖨️ Print Accounting Voucher"
+                            type="object"
+                            class="btn-secondary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,verified,posted"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Payroll General Ledger Voucher</span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Voucher &amp; COA Entity Context">
+                            <field name="voucher_type" readonly="state == 'posted'"/>
+                            <field name="batch_id" readonly="state == 'posted'"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state == 'posted'"/>
+                            <field name="accounting_company_id" readonly="state == 'posted'"/>
+                            <field name="branch_id" readonly="state == 'posted'"/>
+                        </group>
+                        <group string="Double-Entry Ledger Balance (৳)">
+                            <field name="accounting_date" readonly="state == 'posted'"/>
+                            <field name="payroll_month_label" readonly="state == 'posted'"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="total_debit" decoration-bf="1"/>
+                            <field name="total_credit" decoration-bf="1"/>
+                            <field name="is_balanced"/>
+                            <field name="prepared_by_id"/>
+                            <field name="approved_by_id"/>
+                        </group>
+                    </group>
+
+                    <separator string="General Ledger Journal Lines (Dr / Cr)"/>
+                    <field name="line_ids" readonly="state == 'posted'">
+                        <list editable="bottom"
+                              decoration-info="account_type in ('expense', 'employer_provision')"
+                              decoration-success="account_type in ('liability', 'bank_asset')">
+                            <field name="sequence" widget="handle"/>
+                            <field name="gl_account_code" decoration-bf="1"/>
+                            <field name="gl_account_name" decoration-bf="1"/>
+                            <field name="account_type" widget="badge"/>
+                            <field name="department_id" optional="show"/>
+                            <field name="narration"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="debit" sum="Total Debit" decoration-bf="1"/>
+                            <field name="credit" sum="Total Credit" decoration-bf="1"/>
+                        </list>
+                    </field>
+
+                    <group string="Accounting Narration &amp; Audit Notes">
+                        <field name="narration" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_payroll_voucher" model="ir.actions.act_window">
+        <field name="name">Payroll Accounting Vouchers &amp; GL Ledger</field>
+        <field name="res_model">dsl.hrms.payroll.voucher</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 3. EXTEND EMPLOYEE PROFILE "PAYROLL" TAB WITH PAYSLIPS             -->
+    <!-- ================================================================== -->
+    <record id="view_employee_form_inherit_dsl_payslips" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.payslips</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="DSL_HRMS_salary_structure.view_employee_form_inherit_dsl_salary"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_dsl_payslips"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-money"
+                        groups="hr.group_hr_user">
+                    <field name="dsl_payslip_count" widget="statinfo" string="Payslips"/>
+                </button>
+            </xpath>
+            <xpath expr="//page[@name='dsl_payroll_tab']" position="inside">
+                <separator string="Monthly Digital Payslips"/>
+                <field name="dsl_payslip_ids" readonly="1">
+                    <list limit="12" decoration-success="state == 'paid'">
+                        <field name="name"/>
+                        <field name="payroll_month_label"/>
+                        <field name="currency_id" column_invisible="1"/>
+                        <field name="gross_payable"/>
+                        <field name="tds_deducted"/>
+                        <field name="total_deductions"/>
+                        <field name="net_payable" decoration-bf="1"/>
+                        <field name="payment_method" widget="badge"/>
+                        <field name="state" widget="badge"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 4. MENUS UNDER PAYROLL                                             -->
+    <!-- ================================================================== -->
+    <menuitem id="menu_dsl_payslip_run"
+              name="Payroll Batches &amp; Bank Advice"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_payslip_run"
+              sequence="10"/>
+
+    <menuitem id="menu_dsl_payslip"
+              name="Monthly Payslips"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_payslip"
+              sequence="20"/>
+
+    <menuitem id="menu_dsl_hrms_salary_document"
+              name="Salary Document Center (100 Types)"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_hrms_salary_document"
+              sequence="22"/>
+
+    <menuitem id="menu_dsl_hrms_salary_document_request"
+              name="Salary Document Requests (ESS)"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_hrms_salary_document_request"
+              sequence="24"/>
+
+    <menuitem id="menu_dsl_hrms_payroll_voucher"
+              name="Payroll Accounting &amp; GL Vouchers"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_hrms_payroll_voucher"
+              sequence="26"/>
+
+    <menuitem id="menu_dsl_hrms_salary_document_type"
+              name="Salary Document Types (100 BD)"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_hrms_salary_document_type"
+              sequence="85"/>
+
+    <menuitem id="menu_dsl_hrms_salary_document_template"
+              name="Salary Document Templates"
+              parent="DSL_HRMS_core.menu_dsl_hrms_payroll_root"
+              action="action_dsl_hrms_salary_document_template"
+              sequence="86"/>
+</odoo>
+

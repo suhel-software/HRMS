@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_dsl_payslip_run" model="ir.sequence">
+            <field name="name">DSL Monthly Payroll Batch</field>
+            <field name="code">dsl.payslip.run</field>
+            <field name="prefix">PAYRUN-%(year)s-%(month)s-</field>
+            <field name="padding">2</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_dsl_payslip" model="ir.sequence">
+            <field name="name">DSL Employee Payslip</field>
+            <field name="code">dsl.payslip</field>
+            <field name="prefix">SLIP-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_dsl_salary_doc_request" model="ir.sequence">
+            <field name="name">DSL Salary Document Request</field>
+            <field name="code">dsl.hrms.salary.document.request</field>
+            <field name="prefix">SDR-%(year)s-%(month)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+
+    <data noupdate="0">
+        <!-- Auto-Seed All 100 Bangladesh Salary Document Types + 12 Priority Templates -->
+        <function model="dsl.hrms.salary.document.type" name="_ensure_100_bd_salary_document_types"/>
+    </data>
+</odoo>

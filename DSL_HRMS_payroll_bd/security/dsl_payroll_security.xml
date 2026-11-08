@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="dsl_rule_payslip_run_isolation" model="ir.rule">
+            <field name="name">DSL Payroll Batch: Multi-Company &amp; Branch Isolation</field>
+            <field name="model_id" ref="model_dsl_payslip_run"/>
+            <field name="domain_force">(['&amp;', '|', ('company_id', '=', False), ('company_id', 'in', company_ids), '|', ('branch_id', '=', False), ('branch_id', 'in', dsl_branch_ids)] if dsl_is_mother_user else [('company_id', 'in', company_ids), ('branch_id', 'in', dsl_branch_ids)]) if dsl_strict_branch else ['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="dsl_rule_payslip_isolation" model="ir.rule">
+            <field name="name">DSL Payslip: Multi-Company &amp; Branch Isolation</field>
+            <field name="model_id" ref="model_dsl_payslip"/>
+            <field name="domain_force">(['&amp;', '|', ('company_id', '=', False), ('company_id', 'in', company_ids), '|', ('branch_id', '=', False), ('branch_id', 'in', dsl_branch_ids)] if dsl_is_mother_user else [('company_id', 'in', company_ids), ('branch_id', 'in', dsl_branch_ids)]) if dsl_strict_branch else ['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="dsl_rule_salary_doc_req_isolation" model="ir.rule">
+            <field name="name">DSL Salary Document Request: Multi-Company Isolation</field>
+            <field name="model_id" ref="model_dsl_hrms_salary_document_request"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="dsl_rule_salary_doc_isolation" model="ir.rule">
+            <field name="name">DSL Generated Salary Document: Multi-Company Isolation</field>
+            <field name="model_id" ref="model_dsl_hrms_salary_document"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="dsl_rule_payroll_voucher_isolation" model="ir.rule">
+            <field name="name">DSL Payroll Accounting Voucher: Multi-Company Isolation</field>
+            <field name="model_id" ref="model_dsl_hrms_payroll_voucher"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+    </data>
+</odoo>
