@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_hr_veh_user,dsl.hr.vehicle.user,model_dsl_hr_vehicle,base.group_user,1,0,0,0
+access_dsl_hr_veh_officer,dsl.hr.vehicle.officer,model_dsl_hr_vehicle,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_veh_req_user,dsl.vehicle.requisition.user,model_dsl_vehicle_requisition,base.group_user,1,1,1,0
+access_dsl_veh_req_officer,dsl.vehicle.requisition.officer,model_dsl_vehicle_requisition,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+access_dsl_fuel_log_user,dsl.vehicle.fuel.log.user,model_dsl_vehicle_fuel_log,base.group_user,1,1,1,0
+access_dsl_fuel_log_officer,dsl.vehicle.fuel.log.officer,model_dsl_vehicle_fuel_log,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,1
+

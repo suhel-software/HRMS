@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_dsl_vehicle_requisition_list" model="ir.ui.view">
+        <field name="name">dsl.vehicle.requisition.list</field>
+        <field name="model">dsl.vehicle.requisition</field>
+        <field name="arch" type="xml">
+            <list string="Vehicle Requisitions" decoration-success="state == 'completed'" decoration-info="state == 'allocated'">
+                <field name="name" decoration-bf="1"/>
+                <field name="trip_date"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="pickup_location"/>
+                <field name="destination" decoration-bf="1"/>
+                <field name="vehicle_id"/>
+                <field name="distance_km" optional="show"/>
+                <field name="state" widget="badge" decoration-info="state == 'allocated'" decoration-success="state == 'completed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_vehicle_requisition_form" model="ir.ui.view">
+        <field name="name">dsl.vehicle.requisition.form</field>
+        <field name="model">dsl.vehicle.requisition</field>
+        <field name="arch" type="xml">
+            <form string="Official Vehicle Requisition">
+                <header>
+                    <button name="action_submit" string="Request Vehicle" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_allocate" string="Allocate Pool Vehicle" type="object" class="btn-primary" invisible="state != 'requested'" groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <button name="action_complete" string="Mark Trip Completed" type="object" class="btn-success" invisible="state != 'allocated'" groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,requested,allocated,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Vehicle Requisition Ref."/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Route">
+                            <field name="employee_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="department_id"/>
+                            <field name="trip_date"/>
+                            <field name="pickup_location"/>
+                            <field name="destination"/>
+                            <field name="passengers"/>
+                        </group>
+                        <group string="Pool Vehicle Allocation">
+                            <field name="vehicle_id"/>
+                            <field name="distance_km"/>
+                            <field name="purpose"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_vehicle_requisition" model="ir.actions.act_window">
+        <field name="name">Vehicle Requisitions</field>
+        <field name="res_model">dsl.vehicle.requisition</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Fuel Logs -->
+    <record id="view_dsl_vehicle_fuel_log_list" model="ir.ui.view">
+        <field name="name">dsl.vehicle.fuel.log.list</field>
+        <field name="model">dsl.vehicle.fuel.log</field>
+        <field name="arch" type="xml">
+            <list string="Vehicle Fuel Logs">
+                <field name="name" decoration-bf="1"/>
+                <field name="refuel_date"/>
+                <field name="vehicle_id"/>
+                <field name="fuel_type" widget="badge"/>
+                <field name="quantity"/>
+                <field name="unit_price"/>
+                <field name="total_cost" sum="Total Fuel Spend" decoration-bf="1"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_vehicle_fuel_log_form" model="ir.ui.view">
+        <field name="name">dsl.vehicle.fuel.log.form</field>
+        <field name="model">dsl.vehicle.fuel.log</field>
+        <field name="arch" type="xml">
+            <form string="Vehicle Fuel Voucher">
+                <sheet>
+                    <group>
+                        <group string="Vehicle &amp; Fuel">
+                            <field name="name" readonly="1"/>
+                            <field name="vehicle_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="refuel_date"/>
+                            <field name="fuel_type"/>
+                        </group>
+                        <group string="Quantity &amp; Bill">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="quantity"/>
+                            <field name="unit_price"/>
+                            <field name="total_cost" decoration-bf="1"/>
+                            <field name="odometer_reading"/>
+                            <field name="station_name"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_vehicle_fuel_log" model="ir.actions.act_window">
+        <field name="name">Vehicle Fuel Logs</field>
+        <field name="res_model">dsl.vehicle.fuel.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_dsl_hr_vehicle_form" model="ir.ui.view">
+        <field name="name">dsl.hr.vehicle.form</field>
+        <field name="model">dsl.hr.vehicle</field>
+        <field name="arch" type="xml">
+            <form string="Pool Vehicle">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="vehicle_model"/>
+                            <field name="vehicle_type"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="driver_employee_id"/>
+                            <field name="driver_mobile"/>
+                            <field name="odometer_km"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hr_vehicle" model="ir.actions.act_window">
+        <field name="name">Corporate Vehicle Pool</field>
+        <field name="res_model">dsl.hr.vehicle</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_vehicle_requisition"
+              name="Vehicle Requisitions"
+              parent="DSL_HRMS_core.menu_dsl_hrms_operations_root"
+              action="action_dsl_vehicle_requisition"
+              sequence="20"/>
+
+    <menuitem id="menu_dsl_vehicle_fuel_log"
+              name="Vehicle Fuel Logs"
+              parent="DSL_HRMS_core.menu_dsl_hrms_operations_root"
+              action="action_dsl_vehicle_fuel_log"
+              sequence="25"/>
+
+    <menuitem id="menu_dsl_hr_vehicle"
+              name="Corporate Vehicle Pool"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_hr_vehicle"
+              sequence="82"/>
+</odoo>
+
