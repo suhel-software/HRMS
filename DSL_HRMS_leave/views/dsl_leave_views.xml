@@ -1,0 +1,588 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================================================================== -->
+    <!-- 1. EMPLOYEE LEAVE APPLICATION VIEWS                                -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_leave_request_list" model="ir.ui.view">
+        <field name="name">dsl.leave.request.list</field>
+        <field name="model">dsl.leave.request</field>
+        <field name="arch" type="xml">
+            <list string="Leave Applications"
+                  decoration-warning="state == 'submitted'"
+                  decoration-success="state == 'approved'"
+                  decoration-danger="state == 'rejected'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="department_id" optional="show"/>
+                <field name="leave_type_id" widget="badge"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="is_half_day" optional="hide"/>
+                <field name="holiday_excluded_days" optional="show"/>
+                <field name="number_of_days" sum="Total Leave Days" decoration-bf="1"/>
+                <field name="handover_employee_id" optional="show"/>
+                <field name="attendance_synced" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state not in ('draft', 'approved', 'rejected', 'cancelled')"
+                       decoration-success="state == 'approved'"
+                       decoration-danger="state == 'rejected'"
+                       decoration-muted="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_leave_request_kanban" model="ir.ui.view">
+        <field name="name">dsl.leave.request.kanban</field>
+        <field name="model">dsl.leave.request</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_mobile">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="leave_type_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="number_of_days"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="o_kanban_record_title"><field name="employee_id"/></strong>
+                            <field name="leave_type_id" widget="badge"/>
+                        </div>
+                        <div class="text-muted small mb-2">
+                            <field name="name"/> · <field name="date_from"/> → <field name="date_to"/>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <span class="fw-bold text-primary"><field name="number_of_days"/> Day(s)</span>
+                            <field name="state" widget="label_selection"
+                                   options="{'classes': {'draft': 'info', 'submitted': 'warning', 'approved': 'success', 'rejected': 'danger'}}"/>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_dsl_leave_request_calendar" model="ir.ui.view">
+        <field name="name">dsl.leave.request.calendar</field>
+        <field name="model">dsl.leave.request</field>
+        <field name="arch" type="xml">
+            <calendar string="Team Leave Calendar"
+                      date_start="date_from"
+                      date_stop="date_to"
+                      color="leave_type_id"
+                      mode="month">
+                <field name="employee_id" filters="1"/>
+                <field name="leave_type_id" filters="1"/>
+                <field name="number_of_days"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_dsl_leave_request_pivot" model="ir.ui.view">
+        <field name="name">dsl.leave.request.pivot</field>
+        <field name="model">dsl.leave.request</field>
+        <field name="arch" type="xml">
+            <pivot string="Leave Analytics">
+                <field name="department_id" type="row"/>
+                <field name="employee_id" type="row"/>
+                <field name="leave_type_id" type="col"/>
+                <field name="number_of_days" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_dsl_leave_request_graph" model="ir.ui.view">
+        <field name="name">dsl.leave.request.graph</field>
+        <field name="model">dsl.leave.request</field>
+        <field name="arch" type="xml">
+            <graph string="Leave Utilization Chart" type="bar">
+                <field name="leave_type_id"/>
+                <field name="number_of_days" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_dsl_leave_request_form" model="ir.ui.view">
+        <field name="name">dsl.leave.request.form</field>
+        <field name="model">dsl.leave.request</field>
+        <field name="arch" type="xml">
+            <form string="Employee Leave Application">
+                <header>
+                    <button name="action_submit"
+                            string="Submit Leave Application"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve"
+                            string="Approve Leave"
+                            type="object"
+                            class="btn-success"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state not in ('submitted',)"/>
+                    <button name="action_reject"
+                            string="Reject"
+                            type="object"
+                            class="btn-secondary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state in ('draft', 'approved', 'rejected', 'cancelled')"/>
+                    <button name="action_cancel"
+                            string="Cancel Leave"
+                            type="object"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state not in ('submitted', 'approved')"/>
+                    <button name="action_reset_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            invisible="state not in ('rejected', 'cancelled')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Leave Application Reference</span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group name="dsl_leave_main_group">
+                        <group string="Employee &amp; Policy Selection" name="dsl_leave_emp_col">
+                            <field name="employee_id" readonly="state != 'draft'"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                            <field name="leave_type_id" readonly="state != 'draft'"/>
+                            <field name="leave_category" invisible="1"/>
+                        </group>
+                        <group string="Leave Dates &amp; Live Balance" name="dsl_leave_dates_col">
+                            <field name="is_half_day" readonly="state != 'draft'"/>
+                            <field name="half_day_period" invisible="not is_half_day" readonly="state != 'draft'"/>
+                            <field name="date_from" readonly="state != 'draft'"/>
+                            <field name="date_to" readonly="state != 'draft' or is_half_day"/>
+                            <field name="holiday_excluded_days" invisible="is_half_day"/>
+                            <field name="number_of_days" decoration-bf="1"/>
+                            <field name="available_balance"/>
+                            <field name="balance_after_request"
+                                   decoration-danger="balance_after_request &lt; 0"
+                                   decoration-success="balance_after_request &gt;= 0"/>
+                            <field name="allocation_id" readonly="1" optional="show"/>
+                        </group>
+                    </group>
+
+                    <notebook name="dsl_leave_notebook">
+                        <page name="leave_details_page" string="Reason, Handover &amp; Documents">
+                            <group>
+                                <group string="Handover &amp; Emergency Contact">
+                                    <field name="handover_employee_id" readonly="state == 'approved'"/>
+                                    <field name="emergency_contact_during_leave" readonly="state == 'approved'"/>
+                                    <field name="supporting_document_name" invisible="1"/>
+                                    <field name="supporting_document"
+                                           filename="supporting_document_name"
+                                           readonly="state == 'approved'"/>
+                                </group>
+                                <group string="Audit &amp; HR Controls">
+                                    <field name="allow_hr_balance_override" groups="DSL_HRMS_core.group_dsl_hrms_manager"/>
+                                    <field name="attendance_synced"/>
+                                    <field name="approved_by_id" invisible="not approved_by_id"/>
+                                    <field name="approved_date" invisible="not approved_date"/>
+                                    <field name="rejection_reason" invisible="state not in ('rejected', 'cancelled')"/>
+                                </group>
+                            </group>
+                            <group string="Detailed Justification / Leave Address">
+                                <field name="reason" nolabel="1" readonly="state != 'draft'"
+                                       placeholder="State clear reason for leave (and medical details if applying for Sick/Maternity leave)..."/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dsl_leave_request_search" model="ir.ui.view">
+        <field name="name">dsl.leave.request.search</field>
+        <field name="model">dsl.leave.request</field>
+        <field name="arch" type="xml">
+            <search string="Search Leave Applications">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="leave_type_id"/>
+                <field name="branch_id"/>
+                <field name="department_id"/>
+                <filter name="flt_pending" string="Pending Approval"
+                        domain="[('state', 'not in', ('draft', 'approved', 'rejected', 'cancelled'))]"/>
+                <filter name="flt_approved" string="Approved" domain="[('state', '=', 'approved')]"/>
+                <filter name="flt_this_year" string="Current Year"
+                        domain="[('date_from', '&gt;=', context_today().strftime('%Y-01-01'))]"/>
+                <group expand="0" string="Group By">
+                    <filter name="grp_emp" string="Employee" context="{'group_by': 'employee_id'}"/>
+                    <filter name="grp_type" string="Leave Type" context="{'group_by': 'leave_type_id'}"/>
+                    <filter name="grp_branch" string="Branch / Plant" context="{'group_by': 'branch_id'}"/>
+                    <filter name="grp_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_dsl_leave_request" model="ir.actions.act_window">
+        <field name="name">Leave Applications</field>
+        <field name="res_model">dsl.leave.request</field>
+        <field name="view_mode">list,kanban,calendar,pivot,graph,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Leave Application
+            </p>
+            <p>
+                Submit Casual, Sick, Earned, Maternity, or Paternity leave with automatic holiday exclusion, balance validation, and attendance sync.
+            </p>
+        </field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 2. ANNUAL LEAVE QUOTA & BALANCE LEDGER VIEWS                       -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_leave_allocation_list" model="ir.ui.view">
+        <field name="name">dsl.leave.allocation.list</field>
+        <field name="model">dsl.leave.allocation</field>
+        <field name="arch" type="xml">
+            <list string="Employee Leave Balances &amp; Yearly Quotas"
+                  decoration-danger="remaining_days &lt;= 0"
+                  decoration-success="remaining_days &gt; 0">
+                <field name="leave_year" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="department_id" optional="show"/>
+                <field name="leave_type_id" widget="badge"/>
+                <field name="opening_carry_forward"/>
+                <field name="allocated_days"/>
+                <field name="total_entitled_days" decoration-bf="1"/>
+                <field name="taken_days"/>
+                <field name="pending_days"/>
+                <field name="remaining_days" decoration-bf="1"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-muted="state == 'closed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_leave_allocation_pivot" model="ir.ui.view">
+        <field name="name">dsl.leave.allocation.pivot</field>
+        <field name="model">dsl.leave.allocation</field>
+        <field name="arch" type="xml">
+            <pivot string="Leave Quota Summary">
+                <field name="employee_id" type="row"/>
+                <field name="leave_type_id" type="col"/>
+                <field name="total_entitled_days" type="measure"/>
+                <field name="taken_days" type="measure"/>
+                <field name="remaining_days" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_dsl_leave_allocation_form" model="ir.ui.view">
+        <field name="name">dsl.leave.allocation.form</field>
+        <field name="model">dsl.leave.allocation</field>
+        <field name="arch" type="xml">
+            <form string="Yearly Leave Quota Ledger">
+                <header>
+                    <button name="action_activate_quota"
+                            string="Activate Quota"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="state == 'active'"/>
+                    <button name="action_close_year"
+                            string="Close Year"
+                            type="object"
+                            groups="DSL_HRMS_core.group_dsl_hrms_manager"
+                            invisible="state == 'closed'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Leave Year">
+                            <field name="employee_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="department_id"/>
+                            <field name="leave_type_id"/>
+                            <field name="leave_year"/>
+                        </group>
+                        <group string="Entitlement &amp; Utilization">
+                            <field name="opening_carry_forward"/>
+                            <field name="allocated_days"/>
+                            <field name="total_entitled_days" decoration-bf="1"/>
+                            <field name="taken_days"/>
+                            <field name="pending_days"/>
+                            <field name="remaining_days" decoration-bf="1"/>
+                        </group>
+                    </group>
+                    <separator string="Linked Leave Applications"/>
+                    <field name="leave_request_ids" readonly="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="number_of_days"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                    <group string="HR Allocation Remarks">
+                        <field name="notes" nolabel="1" placeholder="Optional HR remarks on quota adjustment or carry-forward..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_leave_allocation" model="ir.actions.act_window">
+        <field name="name">Leave Balances &amp; Yearly Quotas</field>
+        <field name="res_model">dsl.leave.allocation</field>
+        <field name="view_mode">list,pivot,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 3. BULK YEARLY QUOTA & CARRY-FORWARD GENERATOR                     -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_leave_allocation_batch_list" model="ir.ui.view">
+        <field name="name">dsl.leave.allocation.batch.list</field>
+        <field name="model">dsl.leave.allocation.batch</field>
+        <field name="arch" type="xml">
+            <list string="Bulk Yearly Leave Allocation Batches">
+                <field name="name" decoration-bf="1"/>
+                <field name="leave_year"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="branch_id"/>
+                <field name="department_id"/>
+                <field name="generated_count"/>
+                <field name="state" widget="badge" decoration-success="state == 'generated'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_leave_allocation_batch_form" model="ir.ui.view">
+        <field name="name">dsl.leave.allocation.batch.form</field>
+        <field name="model">dsl.leave.allocation.batch</field>
+        <field name="arch" type="xml">
+            <form string="Bulk Yearly Leave Allocation Generator">
+                <header>
+                    <button name="action_generate_allocations"
+                            string="⚡ Generate Yearly Quotas &amp; Carry-Forward"
+                            type="object"
+                            class="btn-primary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,generated"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Scope &amp; Target Year">
+                            <field name="leave_year"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="department_id"/>
+                        </group>
+                        <group string="Carry-Forward &amp; Summary">
+                            <field name="auto_carry_forward"/>
+                            <field name="generated_count"/>
+                        </group>
+                    </group>
+                    <group string="Select Statutory / Corporate Leave Policies">
+                        <field name="leave_type_ids" widget="many2many_tags" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_leave_allocation_batch" model="ir.actions.act_window">
+        <field name="name">Bulk Yearly Quota Generator</field>
+        <field name="res_model">dsl.leave.allocation.batch</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 4. STATUTORY & CORPORATE LEAVE POLICY VIEWS                        -->
+    <!-- ================================================================== -->
+    <record id="view_dsl_leave_type_list" model="ir.ui.view">
+        <field name="name">dsl.leave.type.list</field>
+        <field name="model">dsl.leave.type</field>
+        <field name="arch" type="xml">
+            <list string="Leave Policies &amp; Statutory Rules">
+                <field name="sequence" widget="handle"/>
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="name_bn"/>
+                <field name="leave_category"/>
+                <field name="default_annual_days"/>
+                <field name="is_paid"/>
+                <field name="allow_half_day"/>
+                <field name="allow_carry_forward"/>
+                <field name="allow_encashment"/>
+                <field name="gender_restriction"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_leave_type_form" model="ir.ui.view">
+        <field name="name">dsl.leave.type.form</field>
+        <field name="model">dsl.leave.type</field>
+        <field name="arch" type="xml">
+            <form string="Leave Policy &amp; Statutory Configuration">
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Leave Policy Title</span>
+                        <h1><field name="name" placeholder="e.g. Casual Leave (CL)"/></h1>
+                    </div>
+                    <group>
+                        <group string="Identity &amp; Statutory Reference">
+                            <field name="code"/>
+                            <field name="name_bn"/>
+                            <field name="leave_category"/>
+                            <field name="statutory_section"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Entitlement &amp; Calculation Rules">
+                            <field name="is_paid"/>
+                            <field name="requires_allocation"/>
+                            <field name="default_annual_days" invisible="not requires_allocation"/>
+                            <field name="allow_half_day"/>
+                            <field name="allow_sandwich_rule"/>
+                            <field name="max_consecutive_days"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Carry-Forward &amp; Encashment (BD Sec 117)">
+                            <field name="allow_carry_forward"/>
+                            <field name="max_carry_forward_days" invisible="not allow_carry_forward"/>
+                            <field name="allow_encashment"/>
+                        </group>
+                        <group string="Eligibility &amp; Medical Verification">
+                            <field name="gender_restriction"/>
+                            <field name="probation_eligible"/>
+                            <field name="requires_medical_doc"/>
+                            <field name="medical_doc_after_days" invisible="not requires_medical_doc"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                    </group>
+                    <group string="HR Policy Guidelines">
+                        <field name="policy_notes" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_leave_type" model="ir.actions.act_window">
+        <field name="name">Leave Policies &amp; Statutory Types</field>
+        <field name="res_model">dsl.leave.type</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 5. EXECUTIVE EMPLOYEE PROFILE: APPEND LEAVE IN TAB 13              -->
+    <!-- ================================================================== -->
+    <record id="view_employee_form_inherit_dsl_leave" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.leave.tab</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="DSL_HRMS_employee.view_employee_form_inherit_dsl_dossier"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_dsl_leaves"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-plane"
+                        groups="hr.group_hr_user">
+                    <field name="dsl_leave_count" widget="statinfo" string="Leaves"/>
+                </button>
+            </xpath>
+            <xpath expr="//page[@name='dsl_attendance_tab']" position="inside">
+                <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
+                    <span class="fw-bold text-muted">Bangladesh Statutory Leave Quotas &amp; Leave History</span>
+                    <button name="action_quick_apply_leave"
+                            string="+ Apply Leave"
+                            type="object"
+                            class="btn btn-primary btn-sm"/>
+                </div>
+                <separator string="Yearly Leave Quota Balances"/>
+                <field name="dsl_leave_allocation_ids" readonly="1">
+                    <list decoration-danger="remaining_days &lt;= 0"
+                          decoration-success="remaining_days &gt; 0">
+                        <field name="leave_year"/>
+                        <field name="leave_type_id" widget="badge"/>
+                        <field name="opening_carry_forward"/>
+                        <field name="allocated_days"/>
+                        <field name="total_entitled_days" decoration-bf="1"/>
+                        <field name="taken_days"/>
+                        <field name="pending_days"/>
+                        <field name="remaining_days" decoration-bf="1"/>
+                        <field name="state" widget="badge"/>
+                    </list>
+                </field>
+                <separator string="Leave Application History"/>
+                <field name="dsl_leave_request_ids" readonly="1">
+                    <list limit="12"
+                          decoration-warning="state == 'submitted'"
+                          decoration-success="state == 'approved'"
+                          decoration-danger="state == 'rejected'">
+                        <field name="name"/>
+                        <field name="leave_type_id" widget="badge"/>
+                        <field name="date_from"/>
+                        <field name="date_to"/>
+                        <field name="number_of_days"/>
+                        <field name="handover_employee_id"/>
+                        <field name="state" widget="badge"
+                               decoration-info="state == 'draft'"
+                               decoration-warning="state not in ('draft', 'approved', 'rejected', 'cancelled')"
+                               decoration-success="state == 'approved'"
+                               decoration-danger="state == 'rejected'"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ================================================================== -->
+    <!-- 6. MENUS UNDER LEAVES + CONFIGURATION                              -->
+    <!-- ================================================================== -->
+    <menuitem id="menu_dsl_leave_request"
+              name="Leave Applications"
+              parent="DSL_HRMS_core.menu_dsl_hrms_leave_root"
+              action="action_dsl_leave_request"
+              sequence="10"/>
+
+    <menuitem id="menu_dsl_leave_allocation"
+              name="Leave Balances &amp; Quotas"
+              parent="DSL_HRMS_core.menu_dsl_hrms_leave_root"
+              action="action_dsl_leave_allocation"
+              sequence="20"/>
+
+    <menuitem id="menu_dsl_leave_allocation_batch"
+              name="Bulk Yearly Quota Generator"
+              parent="DSL_HRMS_core.menu_dsl_hrms_leave_root"
+              action="action_dsl_leave_allocation_batch"
+              sequence="25"/>
+
+    <menuitem id="menu_dsl_leave_type_config"
+              name="Leave Policies &amp; Types"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              action="action_dsl_leave_type"
+              sequence="45"/>
+</odoo>
+

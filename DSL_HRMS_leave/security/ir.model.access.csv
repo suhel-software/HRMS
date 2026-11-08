@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_leave_type_user,dsl.leave.type.user,model_dsl_leave_type,base.group_user,1,0,0,0
+access_dsl_leave_type_officer,dsl.leave.type.officer,model_dsl_leave_type,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_leave_type_manager,dsl.leave.type.manager,model_dsl_leave_type,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_leave_allocation_user,dsl.leave.allocation.user,model_dsl_leave_allocation,base.group_user,1,0,0,0
+access_dsl_leave_allocation_officer,dsl.leave.allocation.officer,model_dsl_leave_allocation,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_leave_allocation_manager,dsl.leave.allocation.manager,model_dsl_leave_allocation,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_leave_allocation_batch_officer,dsl.leave.allocation.batch.officer,model_dsl_leave_allocation_batch,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_leave_allocation_batch_manager,dsl.leave.allocation.batch.manager,model_dsl_leave_allocation_batch,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_leave_request_user,dsl.leave.request.user,model_dsl_leave_request,base.group_user,1,1,1,0
+access_dsl_leave_request_officer,dsl.leave.request.officer,model_dsl_leave_request,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_leave_request_manager,dsl.leave.request.manager,model_dsl_leave_request,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

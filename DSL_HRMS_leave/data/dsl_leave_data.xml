@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Sequence for Leave Applications -->
+        <record id="seq_dsl_leave_request" model="ir.sequence">
+            <field name="name">DSL Leave Application Sequence</field>
+            <field name="code">dsl.leave.request</field>
+            <field name="prefix">LV-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- 1. Casual Leave (BD Labour Act 2006 - Section 115: 10 Days, No Carry Forward) -->
+        <record id="leave_type_bd_casual" model="dsl.leave.type">
+            <field name="sequence">10</field>
+            <field name="name">Casual Leave (CL)</field>
+            <field name="name_bn">নৈমিত্তিক ছুটি</field>
+            <field name="code">CL</field>
+            <field name="leave_category">casual</field>
+            <field name="statutory_section">Bangladesh Labour Act 2006 — Section 115 (10 Days / Year)</field>
+            <field name="is_paid" eval="True"/>
+            <field name="requires_allocation" eval="True"/>
+            <field name="default_annual_days">10.0</field>
+            <field name="allow_half_day" eval="True"/>
+            <field name="allow_sandwich_rule" eval="False"/>
+            <field name="allow_carry_forward" eval="False"/>
+            <field name="allow_encashment" eval="False"/>
+            <field name="max_consecutive_days">3.0</field>
+            <field name="color">4</field>
+            <field name="policy_notes">10 days per calendar year with full wages under Sec 115. Unavailed Casual Leave lapses at year-end. Maximum 3 consecutive days per stretch unless specially approved.</field>
+        </record>
+
+        <!-- 2. Sick / Medical Leave (BD Labour Act 2006 - Section 116: 14 Days, Medical Doc > 3d) -->
+        <record id="leave_type_bd_sick" model="dsl.leave.type">
+            <field name="sequence">20</field>
+            <field name="name">Sick / Medical Leave (SL)</field>
+            <field name="name_bn">অসুস্থতাজনিত ছুটি</field>
+            <field name="code">SL</field>
+            <field name="leave_category">sick</field>
+            <field name="statutory_section">Bangladesh Labour Act 2006 — Section 116 (14 Days / Year)</field>
+            <field name="is_paid" eval="True"/>
+            <field name="requires_allocation" eval="True"/>
+            <field name="default_annual_days">14.0</field>
+            <field name="allow_half_day" eval="True"/>
+            <field name="allow_sandwich_rule" eval="False"/>
+            <field name="allow_carry_forward" eval="False"/>
+            <field name="requires_medical_doc" eval="True"/>
+            <field name="medical_doc_after_days">3.0</field>
+            <field name="color">2</field>
+            <field name="policy_notes">14 days per calendar year with full wages under Sec 116. Registered medical practitioner certificate required when exceeding 3 consecutive days.</field>
+        </record>
+
+        <!-- 3. Earned / Annual Leave (BD Labour Act 2006 - Section 117: 18 Days, Carry-Forward up to 40/60d) -->
+        <record id="leave_type_bd_earned" model="dsl.leave.type">
+            <field name="sequence">30</field>
+            <field name="name">Earned / Annual Leave (EL)</field>
+            <field name="name_bn">অর্জিত / বার্ষিক ছুটি</field>
+            <field name="code">EL</field>
+            <field name="leave_category">earned</field>
+            <field name="statutory_section">Bangladesh Labour Act 2006 — Section 117 (1 Day per 18 Worked Days)</field>
+            <field name="is_paid" eval="True"/>
+            <field name="requires_allocation" eval="True"/>
+            <field name="default_annual_days">18.0</field>
+            <field name="allow_half_day" eval="False"/>
+            <field name="allow_sandwich_rule" eval="False"/>
+            <field name="allow_carry_forward" eval="True"/>
+            <field name="max_carry_forward_days">40.0</field>
+            <field name="allow_encashment" eval="True"/>
+            <field name="probation_eligible" eval="False"/>
+            <field name="color">10</field>
+            <field name="policy_notes">Earned Leave with full wages under Sec 117. Unused balance carries forward up to 40 days (60 days for factory floor workers) and qualifies for encashment.</field>
+        </record>
+
+        <!-- 4. Maternity Leave (BD Labour Act 2006 - Section 46: 112 Days / 16 Weeks) -->
+        <record id="leave_type_bd_maternity" model="dsl.leave.type">
+            <field name="sequence">40</field>
+            <field name="name">Maternity Leave (ML - 16 Weeks)</field>
+            <field name="name_bn">মাতৃত্বকালীন ছুটি (১১২ দিন)</field>
+            <field name="code">ML</field>
+            <field name="leave_category">maternity</field>
+            <field name="statutory_section">Bangladesh Labour Act 2006 — Section 46 (112 Days: 8w Pre + 8w Post)</field>
+            <field name="is_paid" eval="True"/>
+            <field name="requires_allocation" eval="True"/>
+            <field name="default_annual_days">112.0</field>
+            <field name="allow_half_day" eval="False"/>
+            <field name="allow_sandwich_rule" eval="True"/>
+            <field name="requires_medical_doc" eval="True"/>
+            <field name="medical_doc_after_days">1.0</field>
+            <field name="gender_restriction">female</field>
+            <field name="probation_eligible" eval="False"/>
+            <field name="color">6</field>
+            <field name="policy_notes">112 continuous calendar days (8 weeks preceding and 8 weeks succeeding delivery) with full maternity benefit for female employees.</field>
+        </record>
+
+        <!-- 5. Paternity Leave (Corporate Welfare Policy: 5 Days) -->
+        <record id="leave_type_bd_paternity" model="dsl.leave.type">
+            <field name="sequence">50</field>
+            <field name="name">Paternity Leave (PL)</field>
+            <field name="name_bn">পিতৃত্বকালীন ছুটি</field>
+            <field name="code">PL</field>
+            <field name="leave_category">paternity</field>
+            <field name="statutory_section">Group Corporate HR Welfare Policy (5 Days)</field>
+            <field name="is_paid" eval="True"/>
+            <field name="requires_allocation" eval="True"/>
+            <field name="default_annual_days">5.0</field>
+            <field name="allow_half_day" eval="False"/>
+            <field name="gender_restriction">male</field>
+            <field name="color">5</field>
+        </record>
+
+        <!-- 6. Compensatory / Festival Replacement Leave (CPL) -->
+        <record id="leave_type_bd_compensatory" model="dsl.leave.type">
+            <field name="sequence">60</field>
+            <field name="name">Compensatory Leave (Comp-Off)</field>
+            <field name="name_bn">বিকল্প ছুটি</field>
+            <field name="code">CPL</field>
+            <field name="leave_category">compensatory</field>
+            <field name="statutory_section">Bangladesh Labour Act 2006 — Sec 103 / 118 Compensatory Off</field>
+            <field name="is_paid" eval="True"/>
+            <field name="requires_allocation" eval="True"/>
+            <field name="default_annual_days">3.0</field>
+            <field name="allow_half_day" eval="True"/>
+            <field name="color">3</field>
+        </record>
+
+        <!-- 7. Leave Without Pay (LWP - Unpaid Emergency Leave) -->
+        <record id="leave_type_bd_lwp" model="dsl.leave.type">
+            <field name="sequence">70</field>
+            <field name="name">Leave Without Pay (LWP)</field>
+            <field name="name_bn">বিনা বেতনে ছুটি</field>
+            <field name="code">LWP</field>
+            <field name="leave_category">unpaid</field>
+            <field name="statutory_section">Unpaid Leave — Deducted Pro-Rata in Monthly Payroll</field>
+            <field name="is_paid" eval="False"/>
+            <field name="requires_allocation" eval="False"/>
+            <field name="default_annual_days">0.0</field>
+            <field name="allow_half_day" eval="True"/>
+            <field name="color">1</field>
+        </record>
+    </data>
+</odoo>
+
