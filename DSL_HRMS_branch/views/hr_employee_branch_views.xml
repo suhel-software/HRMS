@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Add Branch / Duty Station to Employee Form -->
+    <record id="view_employee_form_inherit_dsl_branch" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.branch</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='department_id']" position="before">
+                <field name="branch_id" options="{'no_create_edit': True}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 2. Add Branch to Employee List -->
+    <record id="view_employee_tree_inherit_dsl_branch" model="ir.ui.view">
+        <field name="name">hr.employee.list.dsl.branch</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='department_id']" position="before">
+                <field name="branch_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 3. Add Branch Filter, SearchPanel & Group By to Employee Search -->
+    <record id="view_employee_filter_inherit_dsl_branch" model="ir.ui.view">
+        <field name="name">hr.employee.search.dsl.branch</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="/search/field[@name='department_id']" position="after">
+                <field name="branch_id"/>
+            </xpath>
+            <xpath expr="//searchpanel/field[@name='department_id']" position="before">
+                <field name="branch_id" icon="fa-map-marker" enable_counters="1"/>
+            </xpath>
+            <xpath expr="//group" position="inside">
+                <filter string="Branch / Location" name="group_by_dsl_branch" domain="[]" context="{'group_by': 'branch_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 4. Add Branch to Department Form & List -->
+    <record id="view_department_form_inherit_dsl_branch" model="ir.ui.view">
+        <field name="name">hr.department.form.dsl.branch</field>
+        <field name="model">hr.department</field>
+        <field name="inherit_id" ref="hr.view_department_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='parent_id']" position="after">
+                <field name="branch_id" options="{'no_create_edit': True}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_department_tree_inherit_dsl_branch" model="ir.ui.view">
+        <field name="name">hr.department.list.dsl.branch</field>
+        <field name="model">hr.department</field>
+        <field name="inherit_id" ref="hr.view_department_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='parent_id']" position="after">
+                <field name="branch_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 5. Add Operational Branches Tab & Counter to Company Form & List -->
+    <record id="view_company_form_inherit_dsl_branch_tab" model="ir.ui.view">
+        <field name="name">res.company.form.dsl.branch.tab</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Branches &amp; Plants" name="dsl_company_branches_tab">
+                    <field name="dsl_branch_ids" context="{'default_company_id': id}">
+                        <list>
+                            <field name="code" decoration-bf="1"/>
+                            <field name="name" decoration-bf="1"/>
+                            <field name="branch_type" widget="badge"
+                                   decoration-primary="branch_type == 'hq'"
+                                   decoration-info="branch_type == 'regional'"
+                                   decoration-warning="branch_type == 'factory'"
+                                   decoration-success="branch_type in ('showroom', 'warehouse')"/>
+                            <field name="coa_mode" widget="badge"
+                                   decoration-success="coa_mode == 'separate'"
+                                   decoration-info="coa_mode == 'shared'"/>
+                            <field name="accounting_company_id" string="COA Entity"/>
+                            <field name="city"/>
+                            <field name="manager_id" widget="many2one_avatar_employee"/>
+                            <field name="employee_count" string="Staff"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_company_tree_inherit_dsl_branch_count" model="ir.ui.view">
+        <field name="name">res.company.list.dsl.branch.count</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="before">
+                <field name="dsl_branch_total" string="Branches"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

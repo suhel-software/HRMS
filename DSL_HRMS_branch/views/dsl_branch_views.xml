@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Branch Form View -->
+    <record id="view_dsl_branch_form" model="ir.ui.view">
+        <field name="name">dsl.branch.form</field>
+        <field name="model">dsl.branch</field>
+        <field name="arch" type="xml">
+            <form string="Branch / Operational Location">
+                <sheet>
+                    <div class="oe_button_box" name="button_box" invisible="not id">
+                        <button class="oe_stat_button"
+                                name="action_view_employees"
+                                type="object"
+                                icon="fa-users">
+                            <field string="Employees" name="employee_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button"
+                                name="action_view_departments"
+                                type="object"
+                                icon="fa-sitemap">
+                            <field string="Departments" name="department_count" widget="statinfo"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <field name="active" invisible="1"/>
+
+                    <div class="oe_title">
+                        <label for="name" string="Branch / Facility Name"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Gazipur Composite Plant Unit-1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Entity &amp; Classification">
+                            <field name="code" placeholder="e.g. DHK-HQ / FAC-01"/>
+                            <field name="branch_type"/>
+                            <field name="company_id" options="{'no_create': True}"/>
+                            <field name="parent_branch_id" options="{'no_create': True}"/>
+                        </group>
+                        <group string="Leadership &amp; Operations">
+                            <field name="manager_id" widget="many2one_avatar_employee"/>
+                            <field name="hr_incharge_id" widget="many2one_avatar_employee"/>
+                            <field name="working_hours_id"/>
+                            <field name="capacity"/>
+                        </group>
+                    </group>
+
+                    <group string="Branch Chart of Accounts (COA) &amp; Bank Setup">
+                        <group>
+                            <field name="coa_mode" widget="radio"/>
+                            <field name="accounting_company_id"
+                                   options="{'no_create': True}"
+                                   readonly="coa_mode == 'separate'"/>
+                        </group>
+                        <group>
+                            <field name="branch_bank_name" placeholder="e.g. City Bank PLC / Dutch-Bangla Bank"/>
+                            <field name="branch_bank_acc" placeholder="e.g. 1402918273001"/>
+                            <field name="branch_tin_bin" placeholder="e.g. 003847561-0205"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Address &amp; Contact" name="address_contact">
+                            <group>
+                                <group string="Location Address">
+                                    <label for="street" string="Address"/>
+                                    <div class="o_address_format">
+                                        <field name="street" placeholder="Plot / House / Road..." class="o_address_street"/>
+                                        <field name="street2" placeholder="Industrial Area / Thana..." class="o_address_street"/>
+                                        <field name="city" placeholder="City / District" class="o_address_city"/>
+                                        <field name="state_id" class="o_address_state" placeholder="Division" options="{'no_open': True}"/>
+                                        <field name="zip" placeholder="Postal Code" class="o_address_zip"/>
+                                        <field name="country_id" placeholder="Country" class="o_address_country" options="{'no_open': True, 'no_create': True}"/>
+                                    </div>
+                                </group>
+                                <group string="Official Contacts">
+                                    <field name="phone" widget="phone"/>
+                                    <field name="mobile" widget="phone"/>
+                                    <field name="email" widget="email"/>
+                                    <field name="website" widget="url" placeholder="e.g. https://maps.google.com/..."/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Compliance &amp; GPS Geofence" name="geofence_compliance">
+                            <group>
+                                <group string="Statutory &amp; Establishment">
+                                    <field name="establishment_date"/>
+                                    <field name="factory_reg_no" placeholder="e.g. DIFE/GAZ/20491"/>
+                                    <field name="color" widget="color_picker"/>
+                                </group>
+                                <group string="Mobile Attendance Geofence">
+                                    <field name="latitude" placeholder="e.g. 23.7924961"/>
+                                    <field name="longitude" placeholder="e.g. 90.4078058"/>
+                                    <field name="geofence_radius"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Sub-Branches" name="sub_branches" invisible="not child_branch_ids">
+                            <field name="child_branch_ids" readonly="1">
+                                <list>
+                                    <field name="code"/>
+                                    <field name="name"/>
+                                    <field name="branch_type"/>
+                                    <field name="coa_mode"/>
+                                    <field name="city"/>
+                                    <field name="manager_id" widget="many2one_avatar_employee"/>
+                                    <field name="employee_count"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- 2. Branch List View -->
+    <record id="view_dsl_branch_tree" model="ir.ui.view">
+        <field name="name">dsl.branch.list</field>
+        <field name="model">dsl.branch</field>
+        <field name="arch" type="xml">
+            <list string="Branches &amp; Locations" sample="1">
+                <field name="sequence" widget="handle"/>
+                <field name="code" decoration-bf="1"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="branch_type" widget="badge"
+                       decoration-primary="branch_type == 'hq'"
+                       decoration-info="branch_type == 'regional'"
+                       decoration-warning="branch_type == 'factory'"
+                       decoration-success="branch_type in ('showroom', 'warehouse')"/>
+                <field name="company_id"/>
+                <field name="coa_mode" string="COA Setup" widget="badge"
+                       decoration-success="coa_mode == 'separate'"
+                       decoration-info="coa_mode == 'shared'"/>
+                <field name="accounting_company_id" string="COA Books Entity" optional="show"/>
+                <field name="city"/>
+                <field name="manager_id" widget="many2one_avatar_employee"/>
+                <field name="employee_count" string="Staff"/>
+                <field name="department_count" string="Departments" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- 3. Branch Modern Kanban View -->
+    <record id="view_dsl_branch_kanban" model="ir.ui.view">
+        <field name="name">dsl.branch.kanban</field>
+        <field name="model">dsl.branch</field>
+        <field name="arch" type="xml">
+            <kanban highlight_color="color" sample="1">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="branch_type"/>
+                <field name="coa_mode"/>
+                <field name="accounting_company_id"/>
+                <field name="company_id"/>
+                <field name="city"/>
+                <field name="manager_id"/>
+                <field name="employee_count"/>
+                <field name="department_count"/>
+                <field name="color"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge text-bg-light border me-1"><field name="code"/></span>
+                                <field name="name" class="fw-bold fs-5 text-dark d-block mt-1"/>
+                            </div>
+                            <field name="branch_type" widget="badge"
+                                   decoration-primary="branch_type == 'hq'"
+                                   decoration-info="branch_type == 'regional'"
+                                   decoration-warning="branch_type == 'factory'"
+                                   decoration-success="branch_type in ('showroom', 'warehouse')"/>
+                        </div>
+                        <div class="small text-muted mb-2">
+                            <div><i class="fa fa-building-o me-1" title="Company"/> <field name="company_id"/></div>
+                            <div class="mt-1">
+                                <i class="fa fa-book text-primary me-1" title="COA Books"/>
+                                <span t-if="record.coa_mode.raw_value == 'separate'" class="text-success fw-semibold">Separate COA</span>
+                                <span t-else="" class="text-info fw-semibold">Shared COA</span>
+                                <span t-if="record.accounting_company_id.raw_value"> · <field name="accounting_company_id"/></span>
+                            </div>
+                            <div t-if="record.city.raw_value" class="mt-1">
+                                <i class="fa fa-map-marker text-danger me-1" title="City"/> <field name="city"/>
+                            </div>
+                        </div>
+                        <div class="mb-2" t-if="record.manager_id.raw_value">
+                            <field name="manager_id" widget="many2one_avatar_employee" options="{'display_avatar_name': True}"/>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-auto small fw-semibold">
+                            <a name="action_view_employees" type="object" class="text-primary text-decoration-none" title="Branch Staff">
+                                <i class="fa fa-users me-1" title="Staff"/> <field name="employee_count"/> Staff
+                            </a>
+                            <a name="action_view_departments" type="object" class="text-secondary text-decoration-none" title="Branch Departments">
+                                <i class="fa fa-sitemap me-1" title="Departments"/> <field name="department_count"/> Depts
+                            </a>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- 4. Branch Search View -->
+    <record id="view_dsl_branch_search" model="ir.ui.view">
+        <field name="name">dsl.branch.search</field>
+        <field name="model">dsl.branch</field>
+        <field name="arch" type="xml">
+            <search string="Search Branches">
+                <field name="name" filter_domain="['|', ('name', 'ilike', self), ('code', 'ilike', self)]" string="Branch or Code"/>
+                <field name="company_id"/>
+                <field name="accounting_company_id"/>
+                <field name="city"/>
+                <field name="manager_id"/>
+                <filter string="Separate COA Branches" name="filter_separate_coa" domain="[('coa_mode', '=', 'separate')]"/>
+                <filter string="Shared / Grouped COA Branches" name="filter_shared_coa" domain="[('coa_mode', '=', 'shared')]"/>
+                <separator/>
+                <filter string="Head Offices" name="filter_hq" domain="[('branch_type', '=', 'hq')]"/>
+                <filter string="Factories &amp; Plants" name="filter_factory" domain="[('branch_type', '=', 'factory')]"/>
+                <filter string="Regional Offices" name="filter_regional" domain="[('branch_type', '=', 'regional')]"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}"/>
+                    <filter string="COA Mode" name="group_coa_mode" context="{'group_by': 'coa_mode'}"/>
+                    <filter string="COA Books Entity" name="group_coa_entity" context="{'group_by': 'accounting_company_id'}"/>
+                    <filter string="Location Type" name="group_type" context="{'group_by': 'branch_type'}"/>
+                    <filter string="City / District" name="group_city" context="{'group_by': 'city'}"/>
+                </group>
+                <searchpanel>
+                    <field name="company_id" string="COMPANY" icon="fa-building" enable_counters="1" select="one"/>
+                    <field name="branch_type" string="LOCATION TYPE" icon="fa-map-marker" enable_counters="1"/>
+                    <field name="coa_mode" string="COA MODE" icon="fa-book" enable_counters="1"/>
+                </searchpanel>
+            </search>
+        </field>
+    </record>
+
+    <!-- 5. Branch Window Action & Menu -->
+    <record id="action_dsl_branch" model="ir.actions.act_window">
+        <field name="name">Branches &amp; Operational Locations</field>
+        <field name="res_model">dsl.branch</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register a Corporate Branch, Regional Office, or Factory Plant (Shared or Separate COA)
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_dsl_branch_action"
+              name="Branches &amp; Locations"
+              parent="DSL_HRMS_core.menu_dsl_hrms_workforce"
+              action="action_dsl_branch"
+              sequence="15"/>
+</odoo>
