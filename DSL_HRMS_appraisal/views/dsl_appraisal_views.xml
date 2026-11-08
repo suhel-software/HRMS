@@ -1,0 +1,1604 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ===================================================================
+         1. LEGACY APPRAISAL VIEWS (PRESERVED FOR BACKWARD COMPATIBILITY)
+         =================================================================== -->
+    <record id="view_dsl_employee_appraisal_list" model="ir.ui.view">
+        <field name="name">dsl.employee.appraisal.list</field>
+        <field name="model">dsl.employee.appraisal</field>
+        <field name="arch" type="xml">
+            <list string="KPI &amp; Performance Appraisals" decoration-success="state == 'hr_calibrated'">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="cycle_id"/>
+                <field name="department_id"/>
+                <field name="self_weighted_score"/>
+                <field name="final_weighted_score" decoration-bf="1"/>
+                <field name="performance_band" widget="badge"/>
+                <field name="recommended_increment_pct"/>
+                <field name="state" widget="badge"
+                       decoration-info="state in ('self_review', 'manager_review')"
+                       decoration-success="state == 'hr_calibrated'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_employee_appraisal_form" model="ir.ui.view">
+        <field name="name">dsl.employee.appraisal.form</field>
+        <field name="model">dsl.employee.appraisal</field>
+        <field name="arch" type="xml">
+            <form string="KPI &amp; Annual Performance Appraisal">
+                <header>
+                    <button name="action_send_self_review" string="Launch Self-Review" type="object"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_submit_to_manager" string="Submit to Supervisor" type="object"
+                            class="btn-primary" invisible="state != 'self_review'"/>
+                    <button name="action_finalize_hr" string="Calibrate &amp; Finalize (HR)" type="object"
+                            class="btn-success" invisible="state not in ('self_review', 'manager_review')"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,self_review,manager_review,hr_calibrated"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Performance Appraisal Ref."/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Review Cycle">
+                            <field name="cycle_id" readonly="state == 'hr_calibrated'"/>
+                            <field name="employee_id" readonly="state == 'hr_calibrated'"/>
+                            <field name="reviewer_id" readonly="state == 'hr_calibrated'"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                        </group>
+                        <group string="Weighted Score &amp; Bell-Curve Rating">
+                            <field name="total_weight" decoration-danger="total_weight != 100"/>
+                            <field name="self_weighted_score"/>
+                            <field name="final_weighted_score" decoration-bf="1"/>
+                            <field name="performance_band" widget="badge"/>
+                            <field name="recommended_increment_pct"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="1. KPI Objectives &amp; Weightage (100%)" name="kpis">
+                            <field name="kpi_line_ids" readonly="state == 'hr_calibrated'">
+                                <list editable="bottom">
+                                    <field name="kpi_title"/>
+                                    <field name="target_metric"/>
+                                    <field name="weight_pct" sum="Total Weight (%)"/>
+                                    <field name="self_rating"/>
+                                    <field name="manager_rating"/>
+                                    <field name="weighted_points" sum="Weighted Score" decoration-bf="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="2. Self-Reflection &amp; Supervisor Feedback" name="feedback">
+                            <group>
+                                <field name="employee_comments" placeholder="Key accomplishments, challenges &amp; L&amp;D training goals..."/>
+                                <field name="manager_feedback" placeholder="Supervisor feedback, strengths &amp; promotion readiness..."/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_employee_appraisal" model="ir.actions.act_window">
+        <field name="name">Legacy KPI Appraisals</field>
+        <field name="res_model">dsl.employee.appraisal</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_dsl_appraisal_cycle_form" model="ir.ui.view">
+        <field name="name">dsl.appraisal.cycle.form</field>
+        <field name="model">dsl.appraisal.cycle</field>
+        <field name="arch" type="xml">
+            <form string="Appraisal Cycle">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_appraisal_cycle" model="ir.actions.act_window">
+        <field name="name">Legacy Appraisal Cycles</field>
+        <field name="res_model">dsl.appraisal.cycle</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================================================================
+         2. UNIFIED ASSESSMENT ENGINE (#33 dsl.hrms.assessment)
+            Standard / Advanced / 360° / Probation in One Engine
+         =================================================================== -->
+    <record id="view_dsl_hrms_assessment_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.list</field>
+        <field name="model">dsl.hrms.assessment</field>
+        <field name="arch" type="xml">
+            <list string="Enterprise Employee Assessments"
+                  decoration-success="state in ('approved', 'published', 'acknowledged')"
+                  decoration-info="state in ('in_progress', 'under_review', 'calibration')"
+                  decoration-warning="state == 'appealed'">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="branch_id" optional="show"/>
+                <field name="department_id"/>
+                <field name="designation_id" optional="show"/>
+                <field name="cycle_id"/>
+                <field name="assessment_type_id" widget="badge"/>
+                <field name="assessment_scope" widget="badge"/>
+                <field name="self_score_display"/>
+                <field name="manager_score_display"/>
+                <field name="peer_score_display" optional="show"/>
+                <field name="final_score" decoration-bf="1"/>
+                <field name="rating_level_id" widget="badge"/>
+                <field name="locked" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-success="state in ('approved', 'published', 'acknowledged')"
+                       decoration-info="state in ('in_progress', 'under_review', 'calibration')"
+                       decoration-warning="state in ('pending_approval', 'appealed')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_assessment_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.form</field>
+        <field name="model">dsl.hrms.assessment</field>
+        <field name="arch" type="xml">
+            <form string="Enterprise Employee Performance Assessment">
+                <header>
+                    <button name="action_initialize_assessment" string="1. Initialize Phases &amp; Reviewers"
+                            type="object" class="btn-primary"
+                            invisible="state not in ('draft', 'pending_assignment')"/>
+                    <button name="action_calculate_final_score" string="2. Calculate Weighted Score (/100)"
+                            type="object" class="btn-primary"
+                            invisible="locked"/>
+                    <button name="action_submit_for_approval" string="3. Submit for Approval"
+                            type="object" class="btn-primary"
+                            invisible="state not in ('in_progress', 'under_review', 'calibration')"/>
+                    <button name="action_approve_assessment" string="4. Approve Assessment"
+                            type="object" class="btn-success"
+                            invisible="state != 'pending_approval'"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <button name="action_publish_result" string="5. Publish &amp; Lock Result"
+                            type="object" class="btn-success"
+                            invisible="state != 'approved'"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                    <button name="action_acknowledge_result" string="6. Employee Sign-Off &amp; Acknowledge"
+                            type="object" class="btn-secondary"
+                            invisible="state != 'published'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,in_progress,under_review,calibration,pending_approval,approved,published,acknowledged"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Assessment Reference"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Frozen Organizational Snapshot (Part 16 Rule #5)">
+                            <field name="employee_id" readonly="locked"/>
+                            <field name="company_id" readonly="locked"/>
+                            <field name="branch_id" readonly="locked"/>
+                            <field name="department_id" readonly="locked"/>
+                            <field name="designation_id" readonly="locked"/>
+                            <field name="manager_id" readonly="locked"/>
+                        </group>
+                        <group string="Cycle, Policy Version &amp; Normalized Scoring Summary">
+                            <field name="cycle_id" readonly="locked"/>
+                            <field name="assessment_scope" readonly="locked"/>
+                            <field name="policy_version_id"/>
+                            <field name="assessment_type_id"/>
+                            <field name="template_id" readonly="locked"/>
+                            <field name="template_version_id" readonly="1"/>
+                            <field name="rating_scale_id" readonly="locked"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="self_score_display"/>
+                            <field name="manager_score_display"/>
+                            <field name="peer_score_display"/>
+                            <field name="final_score" decoration-bf="1"/>
+                            <field name="rating_level_id" widget="badge"/>
+                            <field name="locked" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="1 · Runtime Phases &amp; Frozen Weightages" name="tab_phases">
+                            <field name="phase_instance_ids" readonly="locked">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="phase_id"/>
+                                    <field name="reviewer_type" widget="badge"/>
+                                    <field name="weightage_snapshot" sum="Total Phase Weight (%)"/>
+                                    <field name="required"/>
+                                    <field name="is_enabled"/>
+                                    <field name="start_date"/>
+                                    <field name="deadline"/>
+                                    <field name="completion_percentage" widget="progressbar"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="2 · Reviewer Assignments &amp; 360° Roles" name="tab_reviewers">
+                            <field name="reviewer_ids" readonly="locked">
+                                <list editable="bottom">
+                                    <field name="phase_instance_id"/>
+                                    <field name="reviewer_role" widget="badge"/>
+                                    <field name="display_reviewer_name" string="Reviewer Identity"/>
+                                    <field name="reviewer_employee_id" groups="DSL_HRMS_core.group_dsl_hrms_manager"/>
+                                    <field name="assignment_method"/>
+                                    <field name="is_anonymous"/>
+                                    <field name="due_date"/>
+                                    <field name="submitted_at"/>
+                                    <field name="replacement_reviewer_id" optional="show"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="3 · Submitted Responses &amp; Answers" name="tab_responses">
+                            <field name="response_ids" readonly="locked">
+                                <list>
+                                    <field name="phase_instance_id"/>
+                                    <field name="display_submitted_by" string="Submitted By"/>
+                                    <field name="response_version"/>
+                                    <field name="total_score" decoration-bf="1"/>
+                                    <field name="weighted_score" decoration-bf="1"/>
+                                    <field name="is_anonymous"/>
+                                    <field name="is_locked"/>
+                                    <field name="response_date"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="4 · Phase Score Breakdown &amp; Result" name="tab_scores">
+                            <group>
+                                <field name="result_id" readonly="1"/>
+                            </group>
+                            <separator string="Versioned Phase &amp; Reviewer Calculation Breakdown (#41)"/>
+                            <field name="score_ids" readonly="1">
+                                <list>
+                                    <field name="phase_instance_id"/>
+                                    <field name="score_type" widget="badge"/>
+                                    <field name="raw_score"/>
+                                    <field name="normalized_score"/>
+                                    <field name="weightage_snapshot"/>
+                                    <field name="weighted_score" sum="Final Score (/100)" decoration-bf="1"/>
+                                    <field name="calculation_version"/>
+                                    <field name="calculated_at"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="5 · Multi-Level Approvals" name="tab_approvals">
+                            <field name="approval_ids">
+                                <list>
+                                    <field name="approval_type"/>
+                                    <field name="submitted_at"/>
+                                    <field name="completed_at"/>
+                                    <field name="final_approver_id"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="6 · Sign-Off, Appeals &amp; Reopen" name="tab_acknowledgment_appeals">
+                            <separator string="Employee Result Acknowledgments (#44)"/>
+                            <field name="acknowledgment_ids">
+                                <list>
+                                    <field name="employee_id"/>
+                                    <field name="acknowledged"/>
+                                    <field name="disagreement_flag"/>
+                                    <field name="employee_comment"/>
+                                    <field name="acknowledged_at"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                            <separator string="Formal Employee Appeals (#50)"/>
+                            <field name="appeal_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="appeal_reason"/>
+                                    <field name="detailed_explanation"/>
+                                    <field name="revised_score"/>
+                                    <field name="resolved_at"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                            <separator string="Controlled Reopen Requests (#51)"/>
+                            <field name="reopen_request_ids">
+                                <list>
+                                    <field name="reviewer_id"/>
+                                    <field name="requested_by"/>
+                                    <field name="request_reason"/>
+                                    <field name="approved_by"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="7 · Comments &amp; Evidence Attachments" name="tab_comments_attachments">
+                            <separator string="Feedback &amp; Coaching Comments (#40)"/>
+                            <field name="comment_ids">
+                                <list editable="bottom">
+                                    <field name="comment_type"/>
+                                    <field name="author_user_id"/>
+                                    <field name="comment"/>
+                                    <field name="visibility"/>
+                                    <field name="is_confidential"/>
+                                    <field name="created_at"/>
+                                </list>
+                            </field>
+                            <separator string="Supporting Evidence Attachments (#45)"/>
+                            <field name="attachment_ids">
+                                <list editable="bottom">
+                                    <field name="attachment_name"/>
+                                    <field name="attachment_type"/>
+                                    <field name="visibility"/>
+                                    <field name="uploaded_by"/>
+                                    <field name="uploaded_at"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="8 · Immutable Audit Trail (#52)" name="tab_audit">
+                            <field name="audit_log_ids" readonly="1">
+                                <list>
+                                    <field name="action_timestamp"/>
+                                    <field name="actor_user_id"/>
+                                    <field name="action_type" widget="badge"/>
+                                    <field name="field_name"/>
+                                    <field name="old_value"/>
+                                    <field name="new_value"/>
+                                    <field name="reason"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_assessment" model="ir.actions.act_window">
+        <field name="name">Enterprise Assessments (Standard / Advanced / 360° / Probation)</field>
+        <field name="res_model">dsl.hrms.assessment</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================================================================
+         3. MULTI-COMPANY POLICY & SELECTIVE OVERRIDE (#2 dsl.hrms.assessment.policy)
+         =================================================================== -->
+    <record id="view_dsl_hrms_assessment_policy_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.policy.list</field>
+        <field name="model">dsl.hrms.assessment.policy</field>
+        <field name="arch" type="xml">
+            <list string="Mother &amp; Sub-Company Assessment Policies" decoration-success="state == 'active'">
+                <field name="code" decoration-bf="1"/>
+                <field name="name"/>
+                <field name="scope_type" widget="badge"/>
+                <field name="owner_company_id"/>
+                <field name="parent_policy_id"/>
+                <field name="inheritance_mode" widget="badge"/>
+                <field name="assessment_type_id" widget="badge"/>
+                <field name="default_cycle_type_id"/>
+                <field name="default_rating_scale_id"/>
+                <field name="policy_version_id"/>
+                <field name="state" widget="badge" decoration-success="state == 'active'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_assessment_policy_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.policy.form</field>
+        <field name="model">dsl.hrms.assessment.policy</field>
+        <field name="arch" type="xml">
+            <form string="Multi-Company Assessment Governance Policy">
+                <header>
+                    <button name="action_publish_new_version" string="Publish &amp; Snapshot Policy Version"
+                            type="object" class="btn-primary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,archived"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Assessment Policy Name"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="1. Multi-Company Scope &amp; Inheritance">
+                            <field name="code"/>
+                            <field name="scope_type"/>
+                            <field name="owner_company_id"/>
+                            <field name="consumer_company_ids" widget="many2many_tags"/>
+                            <field name="parent_policy_id" invisible="scope_type == 'group'"/>
+                            <field name="inheritance_mode"/>
+                            <field name="override_allowed"/>
+                            <field name="mandatory_group_policy"/>
+                            <field name="effective_from"/>
+                            <field name="effective_to"/>
+                            <field name="policy_version_id" readonly="1"/>
+                        </group>
+                        <group string="2. Assessment Engine &amp; Defaults">
+                            <field name="assessment_type_id"/>
+                            <field name="default_cycle_type_id"/>
+                            <field name="default_rating_scale_id"/>
+                            <field name="default_template_id"/>
+                            <field name="minimum_service_days"/>
+                            <field name="optional_phase_mode"/>
+                            <field name="min_anonymous_reviewers"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="1 · Phase Activation &amp; Mother Company Override Locks" name="tab_toggles">
+                            <group>
+                                <group string="Core Governance Switches">
+                                    <field name="self_review_enabled"/>
+                                    <field name="peer_review_enabled"/>
+                                    <field name="hr_review_mandatory"/>
+                                    <field name="final_approval_authority"/>
+                                    <field name="allow_multi_phase_same_reviewer"/>
+                                </group>
+                                <group string="Mother Company Sub-Company Override Permissions (Part 3.2)">
+                                    <field name="allow_override_frequency"/>
+                                    <field name="allow_override_rating_scale"/>
+                                    <field name="allow_override_self_review"/>
+                                    <field name="allow_override_peer_review"/>
+                                    <field name="allow_override_min_service"/>
+                                    <field name="allow_override_hr_review"/>
+                                    <field name="allow_override_final_approval"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="2 · Policy Versions &amp; 100% Phase Weightages (#3, #4)" name="tab_versions">
+                            <field name="version_ids">
+                                <list>
+                                    <field name="version_number"/>
+                                    <field name="version_name"/>
+                                    <field name="total_scored_weightage" decoration-bf="1"/>
+                                    <field name="effective_from"/>
+                                    <field name="approved_by"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="3 · Sub-Company Override Audit Log (#10)" name="tab_override_logs">
+                            <field name="override_log_ids" readonly="1">
+                                <list>
+                                    <field name="company_id"/>
+                                    <field name="override_category"/>
+                                    <field name="field_name"/>
+                                    <field name="parent_value"/>
+                                    <field name="override_value"/>
+                                    <field name="reason"/>
+                                    <field name="approved_by"/>
+                                    <field name="approved_at"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_assessment_policy" model="ir.actions.act_window">
+        <field name="name">Assessment Policies &amp; Sub-Company Overrides</field>
+        <field name="res_model">dsl.hrms.assessment.policy</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================================================================
+         4. CONCURRENT ASSESSMENT CYCLES (#7 dsl.hrms.assessment.cycle)
+         =================================================================== -->
+    <record id="view_dsl_hrms_assessment_cycle_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.cycle.list</field>
+        <field name="model">dsl.hrms.assessment.cycle</field>
+        <field name="arch" type="xml">
+            <list string="Concurrent Assessment Cycles"
+                  decoration-success="state in ('open', 'in_progress')"
+                  decoration-info="state in ('scheduled', 'under_review')">
+                <field name="code" decoration-bf="1"/>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="cycle_type_id" widget="badge"/>
+                <field name="assessment_type_id" widget="badge"/>
+                <field name="assessment_scope" widget="badge"/>
+                <field name="policy_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="total_scored_weightage" sum="Weightage (%)"/>
+                <field name="assessment_count"/>
+                <field name="locked"/>
+                <field name="state" widget="badge"
+                       decoration-success="state in ('open', 'in_progress')"
+                       decoration-info="state in ('scheduled', 'under_review')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_assessment_cycle_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.cycle.form</field>
+        <field name="model">dsl.hrms.assessment.cycle</field>
+        <field name="arch" type="xml">
+            <form string="Concurrent Assessment Cycle">
+                <header>
+                    <button name="action_sync_phases_from_policy" string="Load Phases from Policy"
+                            type="object" class="btn-secondary" invisible="locked"/>
+                    <button name="action_validate_cycle" string="1. Validate Cycle (100% Weightage)"
+                            type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_launch_and_freeze" string="2. Launch &amp; Freeze Cycle"
+                            type="object" class="btn-primary" invisible="state not in ('draft', 'scheduled')"/>
+                    <button name="action_generate_assessments_batch" string="3. Generate Eligible Employee Assessments"
+                            type="object" class="btn-success" invisible="state not in ('open', 'in_progress')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,scheduled,open,in_progress,under_review,approved,published,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Assessment Cycle Title"/>
+                        <h1><field name="name" readonly="locked"/></h1>
+                    </div>
+                    <group>
+                        <group string="Company, Policy &amp; Concurrent Scope">
+                            <field name="code" readonly="locked"/>
+                            <field name="company_id" readonly="locked"/>
+                            <field name="cycle_type_id" readonly="locked"/>
+                            <field name="assessment_scope" readonly="locked"/>
+                            <field name="policy_id" readonly="locked"/>
+                            <field name="policy_version_id" readonly="1"/>
+                            <field name="assessment_type_id" readonly="locked"/>
+                            <field name="rating_scale_id" readonly="locked"/>
+                            <field name="template_id" readonly="locked"/>
+                            <field name="template_version_id" readonly="1"/>
+                        </group>
+                        <group string="Schedule, Freeze Status &amp; Progress">
+                            <field name="date_from" readonly="locked"/>
+                            <field name="date_to" readonly="locked"/>
+                            <field name="launch_date" readonly="locked"/>
+                            <field name="self_deadline"/>
+                            <field name="manager_deadline"/>
+                            <field name="hr_deadline"/>
+                            <field name="result_publish_date"/>
+                            <field name="minimum_service_days"/>
+                            <field name="include_probation"/>
+                            <field name="total_scored_weightage" decoration-danger="total_scored_weightage != 100"/>
+                            <field name="assessment_count"/>
+                            <field name="locked" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="1 · Cycle Phases &amp; Weightages (100%)" name="tab_cycle_phases">
+                            <field name="cycle_phase_ids" readonly="locked">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="phase_id"/>
+                                    <field name="reviewer_type" widget="badge"/>
+                                    <field name="enabled"/>
+                                    <field name="required"/>
+                                    <field name="weightage" sum="Total Weightage (%)"/>
+                                    <field name="reviewer_minimum"/>
+                                    <field name="reviewer_maximum"/>
+                                    <field name="anonymous"/>
+                                    <field name="start_date"/>
+                                    <field name="deadline"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="2 · Eligibility Rules (#9)" name="tab_eligibility">
+                            <field name="eligibility_rule_ids" readonly="locked">
+                                <list editable="bottom">
+                                    <field name="priority"/>
+                                    <field name="department_id"/>
+                                    <field name="branch_id"/>
+                                    <field name="designation_id"/>
+                                    <field name="employment_category"/>
+                                    <field name="minimum_service_days"/>
+                                    <field name="include_probation"/>
+                                    <field name="is_included"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="3 · Generated Employee Assessments" name="tab_assessments">
+                            <field name="assessment_ids" readonly="1">
+                                <list>
+                                    <field name="name" decoration-bf="1"/>
+                                    <field name="employee_id"/>
+                                    <field name="department_id"/>
+                                    <field name="designation_id"/>
+                                    <field name="final_score" decoration-bf="1"/>
+                                    <field name="rating_level_id" widget="badge"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_assessment_cycle" model="ir.actions.act_window">
+        <field name="name">Concurrent Assessment Cycles</field>
+        <field name="res_model">dsl.hrms.assessment.cycle</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================================================================
+         5. REVIEWER RESPONSE & QUESTION-WISE EVALUATION (#38)
+         =================================================================== -->
+    <record id="view_dsl_hrms_assessment_response_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.response.list</field>
+        <field name="model">dsl.hrms.assessment.response</field>
+        <field name="arch" type="xml">
+            <list string="Reviewer Assessment Responses" decoration-success="state == 'locked'">
+                <field name="assessment_id" decoration-bf="1"/>
+                <field name="phase_instance_id"/>
+                <field name="display_submitted_by"/>
+                <field name="response_version"/>
+                <field name="total_score" decoration-bf="1"/>
+                <field name="weighted_score" decoration-bf="1"/>
+                <field name="is_anonymous"/>
+                <field name="is_locked"/>
+                <field name="response_date"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_assessment_response_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.response.form</field>
+        <field name="model">dsl.hrms.assessment.response</field>
+        <field name="arch" type="xml">
+            <form string="Reviewer Evaluation &amp; Question Responses">
+                <header>
+                    <button name="action_load_template_questions" string="Load Template Questions"
+                            type="object" class="btn-secondary" invisible="is_locked"/>
+                    <button name="action_submit_and_lock" string="Submit &amp; Lock Evaluation"
+                            type="object" class="btn-primary" invisible="is_locked"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,locked,reopened"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Assessment &amp; Reviewer">
+                            <field name="assessment_id" readonly="is_locked"/>
+                            <field name="phase_instance_id" readonly="is_locked"/>
+                            <field name="reviewer_id" readonly="is_locked"/>
+                            <field name="display_submitted_by"/>
+                            <field name="response_version" readonly="1"/>
+                            <field name="is_anonymous" readonly="1"/>
+                        </group>
+                        <group string="Normalized Score &amp; Lock Status">
+                            <field name="total_score" decoration-bf="1"/>
+                            <field name="weighted_score" decoration-bf="1"/>
+                            <field name="response_date" readonly="1"/>
+                            <field name="is_locked" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="1 · Question-Wise Ratings &amp; Normalized Scores (#39)" name="tab_lines">
+                            <field name="line_ids" readonly="is_locked">
+                                <list editable="bottom">
+                                    <field name="question_id"/>
+                                    <field name="answer_type"/>
+                                    <field name="rating_value"/>
+                                    <field name="numeric_answer" optional="show"/>
+                                    <field name="boolean_answer" optional="show"/>
+                                    <field name="question_weightage_snapshot" sum="Total Question Weight (%)"/>
+                                    <field name="normalized_score"/>
+                                    <field name="calculated_score" sum="Weighted Score (/100)" decoration-bf="1"/>
+                                    <field name="comment"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="2 · Qualitative Summary &amp; Recommendations" name="tab_summary">
+                            <group>
+                                <field name="overall_comment" readonly="is_locked"/>
+                                <field name="strengths" readonly="is_locked"/>
+                                <field name="improvement_areas" readonly="is_locked"/>
+                                <field name="recommendations" readonly="is_locked"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_assessment_response" model="ir.actions.act_window">
+        <field name="name">Reviewer Evaluations &amp; Responses</field>
+        <field name="res_model">dsl.hrms.assessment.response</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================================================================
+         6. HR CALIBRATION SESSIONS (#48), APPEALS (#50) & PIP (#53)
+         =================================================================== -->
+    <record id="view_dsl_hrms_assessment_calibration_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.calibration.list</field>
+        <field name="model">dsl.hrms.assessment.calibration</field>
+        <field name="arch" type="xml">
+            <list string="HR Bell-Curve &amp; Score Calibration Sessions" decoration-success="state == 'applied'">
+                <field name="code" decoration-bf="1"/>
+                <field name="name"/>
+                <field name="cycle_id"/>
+                <field name="company_id"/>
+                <field name="calibration_method" widget="badge"/>
+                <field name="calibrator_user_id"/>
+                <field name="session_date"/>
+                <field name="state" widget="badge" decoration-success="state == 'applied'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_assessment_calibration_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.calibration.form</field>
+        <field name="model">dsl.hrms.assessment.calibration</field>
+        <field name="arch" type="xml">
+            <form string="HR Score Calibration Session">
+                <header>
+                    <button name="action_apply_calibration" string="Apply Calibration (Preserves Original Score)"
+                            type="object" class="btn-primary" invisible="state == 'applied'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_review,applied"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Calibration Session"/>
+                        <h1><field name="name" readonly="state == 'applied'"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" readonly="1"/>
+                            <field name="cycle_id" readonly="state == 'applied'"/>
+                            <field name="company_id"/>
+                            <field name="department_id" readonly="state == 'applied'"/>
+                        </group>
+                        <group>
+                            <field name="calibration_method" readonly="state == 'applied'"/>
+                            <field name="calibrator_user_id" readonly="state == 'applied'"/>
+                            <field name="session_date" readonly="state == 'applied'"/>
+                            <field name="approved_by" readonly="1"/>
+                            <field name="approved_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Employee Score Calibrations (#49)" name="tab_cal_lines">
+                            <field name="line_ids" readonly="state == 'applied'">
+                                <list editable="bottom">
+                                    <field name="assessment_id"/>
+                                    <field name="employee_id"/>
+                                    <field name="original_score" readonly="1"/>
+                                    <field name="calibrated_score" decoration-bf="1"/>
+                                    <field name="adjustment_delta"/>
+                                    <field name="original_rating_id" readonly="1"/>
+                                    <field name="calibrated_rating_id" readonly="1"/>
+                                    <field name="justification"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Committee Minutes" name="tab_notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_assessment_calibration" model="ir.actions.act_window">
+        <field name="name">HR Calibration Sessions</field>
+        <field name="res_model">dsl.hrms.assessment.calibration</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- PIP (#53) -->
+    <record id="view_dsl_hrms_employee_pip_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.employee.pip.list</field>
+        <field name="model">dsl.hrms.employee.pip</field>
+        <field name="arch" type="xml">
+            <list string="Performance Improvement Plans (PIP)">
+                <field name="name" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="assessment_id"/>
+                <field name="manager_id"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="review_frequency"/>
+                <field name="final_outcome" widget="badge"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_employee_pip_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.employee.pip.form</field>
+        <field name="model">dsl.hrms.employee.pip</field>
+        <field name="arch" type="xml">
+            <form string="Performance Improvement Plan (PIP)">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,review,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="PIP Reference"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="assessment_id"/>
+                            <field name="manager_id"/>
+                            <field name="hr_owner_id"/>
+                        </group>
+                        <group>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="review_frequency"/>
+                            <field name="final_outcome"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="reason"/>
+                        <field name="expected_improvement"/>
+                        <field name="support_plan"/>
+                    </group>
+                    <notebook>
+                        <page string="PIP Action Milestones (#54)" name="tab_pip_actions">
+                            <field name="action_ids">
+                                <list editable="bottom">
+                                    <field name="action_title"/>
+                                    <field name="target_metric"/>
+                                    <field name="target_date"/>
+                                    <field name="completion_percentage" widget="progressbar"/>
+                                    <field name="progress_notes"/>
+                                    <field name="manager_feedback"/>
+                                    <field name="status" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_employee_pip" model="ir.actions.act_window">
+        <field name="name">Performance Improvement Plans (PIP)</field>
+        <field name="res_model">dsl.hrms.employee.pip</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================================================================
+         7. GOALS, KRAs, KPIs, COMPETENCIES, TEMPLATES, SCALES, APPEALS & INCREMENTS
+         =================================================================== -->
+    <!-- 7.1 Employee Assigned KPIs (#28) -->
+    <record id="view_dsl_hrms_employee_kpi_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.employee.kpi.list</field>
+        <field name="model">dsl.hrms.employee.kpi</field>
+        <field name="arch" type="xml">
+            <list string="Employee Assigned KPIs &amp; Targets" editable="bottom"
+                  decoration-success="state == 'verified'">
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" optional="show"/>
+                <field name="cycle_id"/>
+                <field name="kpi_id"/>
+                <field name="kra_id" optional="show"/>
+                <field name="target_value"/>
+                <field name="actual_value"/>
+                <field name="unit"/>
+                <field name="achievement_percentage" widget="progressbar"/>
+                <field name="weightage" sum="Total Weight (%)"/>
+                <field name="calculated_score" sum="Weighted Score" decoration-bf="1"/>
+                <field name="overlap_warning" optional="show" decoration-warning="1"/>
+                <field name="state" widget="badge" decoration-success="state == 'verified'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- 7.2 Master KPIs (#24) -->
+    <record id="view_dsl_hrms_kpi_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.kpi.list</field>
+        <field name="model">dsl.hrms.kpi</field>
+        <field name="arch" type="xml">
+            <list string="Master KPIs &amp; Formula Engine">
+                <field name="code" decoration-bf="1"/>
+                <field name="name"/>
+                <field name="kra_id"/>
+                <field name="department_id"/>
+                <field name="measurement_type" widget="badge"/>
+                <field name="calculation_method" widget="badge"/>
+                <field name="default_target"/>
+                <field name="unit"/>
+                <field name="default_weightage"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_kpi_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.kpi.form</field>
+        <field name="model">dsl.hrms.kpi</field>
+        <field name="arch" type="xml">
+            <form string="Master KPI &amp; Formula Definition">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="KPI Title"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Classification &amp; Scope">
+                            <field name="code"/>
+                            <field name="kra_id"/>
+                            <field name="company_id"/>
+                            <field name="department_id"/>
+                            <field name="designation_id"/>
+                        </group>
+                        <group string="Part 7.5 Formula &amp; Scoring Direction">
+                            <field name="measurement_type"/>
+                            <field name="calculation_method"/>
+                            <field name="default_target"/>
+                            <field name="unit"/>
+                            <field name="default_weightage"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="KPI Definition &amp; Benchmark Guidelines">
+                        <field name="description" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- 7.3 Corporate Goals & OKRs (#21) -->
+    <record id="view_dsl_hrms_goal_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.goal.list</field>
+        <field name="model">dsl.hrms.goal</field>
+        <field name="arch" type="xml">
+            <list string="Corporate Goals &amp; OKRs" decoration-success="state == 'active'">
+                <field name="code" decoration-bf="1"/>
+                <field name="name"/>
+                <field name="goal_level" widget="badge"/>
+                <field name="company_id"/>
+                <field name="department_id"/>
+                <field name="owner_employee_id"/>
+                <field name="target_value"/>
+                <field name="unit"/>
+                <field name="weightage"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_goal_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.goal.form</field>
+        <field name="model">dsl.hrms.goal</field>
+        <field name="arch" type="xml">
+            <form string="Corporate Goal &amp; Key Results (OKR)">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Strategic Goal Title"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="goal_level"/>
+                            <field name="parent_goal_id"/>
+                            <field name="company_id"/>
+                            <field name="department_id"/>
+                            <field name="owner_employee_id"/>
+                        </group>
+                        <group>
+                            <field name="measurement_type"/>
+                            <field name="target_value"/>
+                            <field name="unit"/>
+                            <field name="weightage"/>
+                            <field name="priority"/>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Key Results (KRs) (#22)" name="tab_krs">
+                            <field name="key_result_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="measurement_type"/>
+                                    <field name="baseline_value"/>
+                                    <field name="target_value"/>
+                                    <field name="actual_value"/>
+                                    <field name="unit"/>
+                                    <field name="weightage"/>
+                                    <field name="progress_percentage" widget="progressbar"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Description" name="tab_desc">
+                            <field name="description"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- 7.4 Competency Framework (#25) -->
+    <record id="view_dsl_hrms_competency_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.competency.list</field>
+        <field name="model">dsl.hrms.competency</field>
+        <field name="arch" type="xml">
+            <list string="Competency Library">
+                <field name="code" decoration-bf="1"/>
+                <field name="name"/>
+                <field name="competency_type" widget="badge"/>
+                <field name="category_id"/>
+                <field name="company_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_competency_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.competency.form</field>
+        <field name="model">dsl.hrms.competency</field>
+        <field name="arch" type="xml">
+            <form string="Competency &amp; Behavioral Proficiency Levels">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Competency Title"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="competency_type"/>
+                            <field name="category_id"/>
+                        </group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Behavioral definition..."/>
+                    <notebook>
+                        <page string="Proficiency Levels (L1–L5) (#26)" name="tab_levels">
+                            <field name="level_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="level"/>
+                                    <field name="name"/>
+                                    <field name="description"/>
+                                    <field name="expected_behaviour"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- 7.5 Assessment Templates & Question Builder (#11..#16) -->
+    <record id="view_dsl_hrms_assessment_template_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.template.list</field>
+        <field name="model">dsl.hrms.assessment.template</field>
+        <field name="arch" type="xml">
+            <list string="Assessment Form Templates" decoration-success="state == 'published'">
+                <field name="code" decoration-bf="1"/>
+                <field name="name"/>
+                <field name="scope_type" widget="badge"/>
+                <field name="template_type" widget="badge"/>
+                <field name="owner_company_id"/>
+                <field name="rating_scale_id"/>
+                <field name="total_section_weightage"/>
+                <field name="version"/>
+                <field name="state" widget="badge" decoration-success="state == 'published'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_assessment_template_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.template.form</field>
+        <field name="model">dsl.hrms.assessment.template</field>
+        <field name="arch" type="xml">
+            <form string="Assessment Form Template &amp; Question Builder">
+                <header>
+                    <button name="action_publish_template_version" string="Publish &amp; Snapshot Template Version"
+                            type="object" class="btn-primary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,published,archived"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Template Title"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="scope_type"/>
+                            <field name="owner_company_id"/>
+                            <field name="template_type"/>
+                        </group>
+                        <group>
+                            <field name="rating_scale_id"/>
+                            <field name="total_section_weightage" decoration-danger="total_section_weightage != 100"/>
+                            <field name="version" readonly="1"/>
+                            <field name="effective_from"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="1 · Form Sections &amp; Questions (#13, #14)" name="tab_sections">
+                            <field name="section_ids">
+                                <list>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="code"/>
+                                    <field name="name"/>
+                                    <field name="category_id"/>
+                                    <field name="weightage" sum="Total Section Weight (%)"/>
+                                    <field name="required"/>
+                                    <field name="scored"/>
+                                </list>
+                                <form string="Template Section &amp; Questions">
+                                    <group>
+                                        <group>
+                                            <field name="code"/>
+                                            <field name="name"/>
+                                            <field name="category_id"/>
+                                        </group>
+                                        <group>
+                                            <field name="sequence"/>
+                                            <field name="weightage"/>
+                                            <field name="required"/>
+                                            <field name="scored"/>
+                                        </group>
+                                    </group>
+                                    <separator string="Evaluation Questions in this Section (#14)"/>
+                                    <field name="question_ids">
+                                        <list editable="bottom">
+                                            <field name="sequence" widget="handle"/>
+                                            <field name="code"/>
+                                            <field name="question_text"/>
+                                            <field name="question_type"/>
+                                            <field name="rating_scale_id"/>
+                                            <field name="weightage" sum="Section Questions Weight"/>
+                                            <field name="required"/>
+                                            <field name="scored"/>
+                                        </list>
+                                    </field>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="2 · Published Version Snapshots (#12)" name="tab_tpl_versions">
+                            <field name="version_ids" readonly="1">
+                                <list>
+                                    <field name="version_number"/>
+                                    <field name="name"/>
+                                    <field name="change_summary"/>
+                                    <field name="published_by"/>
+                                    <field name="published_at"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- 7.6 Rating Scales & Bands (#17, #18) -->
+    <record id="view_dsl_hrms_assessment_rating_scale_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.rating.scale.list</field>
+        <field name="model">dsl.hrms.assessment.rating.scale</field>
+        <field name="arch" type="xml">
+            <list string="Rating Scales &amp; Normalization Bands">
+                <field name="code" decoration-bf="1"/>
+                <field name="name"/>
+                <field name="scope_type" widget="badge"/>
+                <field name="scale_type" widget="badge"/>
+                <field name="minimum_value"/>
+                <field name="maximum_value"/>
+                <field name="rounding_method"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_assessment_rating_scale_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.rating.scale.form</field>
+        <field name="model">dsl.hrms.assessment.rating.scale</field>
+        <field name="arch" type="xml">
+            <form string="Rating Scale &amp; Bell-Curve Normalization">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Rating Scale Name"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="scope_type"/>
+                            <field name="owner_company_id"/>
+                            <field name="scale_type"/>
+                        </group>
+                        <group>
+                            <field name="minimum_value"/>
+                            <field name="maximum_value"/>
+                            <field name="decimal_precision"/>
+                            <field name="rounding_method"/>
+                            <field name="state"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Rating Levels &amp; 100% Score Bands (#18)" name="tab_levels">
+                            <field name="rating_level_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="rating_value"/>
+                                    <field name="rating_label"/>
+                                    <field name="score_from"/>
+                                    <field name="score_to"/>
+                                    <field name="recommended_increment_pct"/>
+                                    <field name="display_color" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- 7.7 Assessment Appeals (#50) -->
+    <record id="view_dsl_hrms_assessment_appeal_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.appeal.list</field>
+        <field name="model">dsl.hrms.assessment.appeal</field>
+        <field name="arch" type="xml">
+            <list string="Employee Assessment Appeals &amp; Disputes">
+                <field name="name" decoration-bf="1"/>
+                <field name="assessment_id"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="appeal_reason" widget="badge"/>
+                <field name="submitted_at"/>
+                <field name="assigned_reviewer_id"/>
+                <field name="revised_score"/>
+                <field name="resolved_at"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_hrms_assessment_appeal_form" model="ir.ui.view">
+        <field name="name">dsl.hrms.assessment.appeal.form</field>
+        <field name="model">dsl.hrms.assessment.appeal</field>
+        <field name="arch" type="xml">
+            <form string="Employee Assessment Appeal">
+                <header>
+                    <button name="action_resolve_appeal" string="Uphold Appeal &amp; Update Score"
+                            type="object" class="btn-primary" invisible="state in ('upheld', 'rejected')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="submitted,under_review,upheld,rejected"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Appeal Reference"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="assessment_id"/>
+                            <field name="employee_id"/>
+                            <field name="result_id"/>
+                            <field name="appeal_reason"/>
+                        </group>
+                        <group>
+                            <field name="submitted_at"/>
+                            <field name="assigned_reviewer_id"/>
+                            <field name="revised_score"/>
+                            <field name="revised_rating_id"/>
+                            <field name="resolved_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="detailed_explanation"/>
+                        <field name="requested_outcome"/>
+                        <field name="resolution_notes"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- 7.8 Salary Increment Recommendations (#58) -->
+    <record id="view_dsl_hrms_increment_recommendation_list" model="ir.ui.view">
+        <field name="name">dsl.hrms.employee.increment.recommendation.list</field>
+        <field name="model">dsl.hrms.employee.increment.recommendation</field>
+        <field name="arch" type="xml">
+            <list string="Assessment-Linked Salary Increment Proposals" decoration-success="state == 'approved'">
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="assessment_id"/>
+                <field name="company_id"/>
+                <field name="current_salary" groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                <field name="proposed_increment_percentage" groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                <field name="proposed_increment_amount" groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                <field name="proposed_salary" decoration-bf="1" groups="DSL_HRMS_core.group_dsl_hrms_officer"/>
+                <field name="effective_date"/>
+                <field name="payroll_sync_status" widget="badge"/>
+                <field name="state" widget="badge" decoration-success="state == 'approved'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_dsl_hrms_goal" model="ir.actions.act_window">
+        <field name="name">Goals &amp; OKRs</field>
+        <field name="res_model">dsl.hrms.goal</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_dsl_hrms_kpi" model="ir.actions.act_window">
+        <field name="name">Master KPIs &amp; Formula Engine</field>
+        <field name="res_model">dsl.hrms.kpi</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_dsl_hrms_employee_kpi" model="ir.actions.act_window">
+        <field name="name">Employee Assigned KPIs</field>
+        <field name="res_model">dsl.hrms.employee.kpi</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_dsl_hrms_competency" model="ir.actions.act_window">
+        <field name="name">Competency Framework</field>
+        <field name="res_model">dsl.hrms.competency</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_dsl_hrms_assessment_template" model="ir.actions.act_window">
+        <field name="name">Assessment Templates &amp; Questions</field>
+        <field name="res_model">dsl.hrms.assessment.template</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_dsl_hrms_assessment_rating_scale" model="ir.actions.act_window">
+        <field name="name">Rating Scales &amp; Normalization Bands</field>
+        <field name="res_model">dsl.hrms.assessment.rating.scale</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_dsl_hrms_assessment_appeal" model="ir.actions.act_window">
+        <field name="name">Assessment Appeals &amp; Disputes</field>
+        <field name="res_model">dsl.hrms.assessment.appeal</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_dsl_hrms_increment_recommendation" model="ir.actions.act_window">
+        <field name="name">Increment Recommendations</field>
+        <field name="res_model">dsl.hrms.employee.increment.recommendation</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ===================================================================
+         8. POPULATE TAB 14 ("14 · Performance") ON EMPLOYEE DOSSIER
+         =================================================================== -->
+    <record id="view_employee_form_inherit_dsl_appraisal" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.appraisal</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="DSL_HRMS_employee.view_employee_form_inherit_dsl_dossier"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='dsl_tab_14_performance']" position="inside">
+                <separator string="1. Multi-Cycle Enterprise Assessments (Standard / Advanced / 360° / Probation)"/>
+                <field name="dsl_assessment_ids" context="{'default_employee_id': id}">
+                    <list decoration-success="state in ('approved', 'published', 'acknowledged')">
+                        <field name="name" decoration-bf="1"/>
+                        <field name="cycle_id"/>
+                        <field name="assessment_type_id" widget="badge"/>
+                        <field name="assessment_scope" widget="badge"/>
+                        <field name="self_score_display"/>
+                        <field name="manager_score_display"/>
+                        <field name="peer_score_display"/>
+                        <field name="final_score" decoration-bf="1"/>
+                        <field name="rating_level_id" widget="badge"/>
+                        <field name="state" widget="badge"/>
+                    </list>
+                </field>
+
+                <separator string="2. Assigned Quantitative KPIs &amp; Achievement Score"/>
+                <field name="dsl_emp_kpi_ids" context="{'default_employee_id': id}">
+                    <list editable="bottom">
+                        <field name="cycle_id"/>
+                        <field name="kpi_id"/>
+                        <field name="target_value"/>
+                        <field name="actual_value"/>
+                        <field name="achievement_percentage"/>
+                        <field name="weightage"/>
+                        <field name="calculated_score" decoration-bf="1"/>
+                        <field name="overlap_warning" optional="show"/>
+                        <field name="state" widget="badge"/>
+                    </list>
+                </field>
+
+                <separator string="3. Performance Improvement Plans (PIP) &amp; Coaching"/>
+                <field name="dsl_pip_ids" context="{'default_employee_id': id}">
+                    <list>
+                        <field name="name" decoration-bf="1"/>
+                        <field name="assessment_id"/>
+                        <field name="manager_id"/>
+                        <field name="start_date"/>
+                        <field name="end_date"/>
+                        <field name="final_outcome" widget="badge"/>
+                        <field name="state" widget="badge"/>
+                    </list>
+                </field>
+
+                <separator string="4. Legacy KPI Appraisal History (DSL_HRMS_employee_performance)"/>
+                <field name="dsl_appraisal_ids" context="{'default_employee_id': id}">
+                    <list decoration-success="performance_band in ('A_plus', 'A')">
+                        <field name="name" decoration-bf="1"/>
+                        <field name="cycle_id"/>
+                        <field name="reviewer_id" widget="many2one_avatar_employee"/>
+                        <field name="self_weighted_score"/>
+                        <field name="final_weighted_score" decoration-bf="1"/>
+                        <field name="performance_band" widget="badge"
+                               decoration-success="performance_band in ('A_plus', 'A')"
+                               decoration-info="performance_band == 'B'"
+                               decoration-warning="performance_band == 'C'"
+                               decoration-danger="performance_band == 'D'"/>
+                        <field name="recommended_increment_pct"/>
+                        <field name="state" widget="badge"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ===================================================================
+         9. MENU STRUCTURE UNDER WORKFORCE / TALENT & CONFIGURATION
+         =================================================================== -->
+    <menuitem id="menu_dsl_hrms_performance_engine_root"
+              name="Performance &amp; 360° Assessment"
+              parent="DSL_HRMS_core.menu_dsl_hrms_talent_root"
+              sequence="40"/>
+
+    <menuitem id="menu_dsl_hrms_assessment_records"
+              name="1. Employee Assessments (All Modes)"
+              parent="menu_dsl_hrms_performance_engine_root"
+              action="action_dsl_hrms_assessment"
+              sequence="10"/>
+
+    <menuitem id="menu_dsl_hrms_assessment_cycles"
+              name="2. Concurrent Assessment Cycles"
+              parent="menu_dsl_hrms_performance_engine_root"
+              action="action_dsl_hrms_assessment_cycle"
+              sequence="20"/>
+
+    <menuitem id="menu_dsl_hrms_assessment_responses"
+              name="3. Reviewer Evaluation Inbox"
+              parent="menu_dsl_hrms_performance_engine_root"
+              action="action_dsl_hrms_assessment_response"
+              sequence="30"/>
+
+    <menuitem id="menu_dsl_hrms_employee_kpis"
+              name="4. Employee KPIs &amp; Targets"
+              parent="menu_dsl_hrms_performance_engine_root"
+              action="action_dsl_hrms_employee_kpi"
+              sequence="40"/>
+
+    <menuitem id="menu_dsl_hrms_calibration_sessions"
+              name="5. HR Bell-Curve Calibration"
+              parent="menu_dsl_hrms_performance_engine_root"
+              action="action_dsl_hrms_assessment_calibration"
+              sequence="50"/>
+
+    <menuitem id="menu_dsl_hrms_assessment_appeals"
+              name="6. Employee Appeals &amp; Disputes"
+              parent="menu_dsl_hrms_performance_engine_root"
+              action="action_dsl_hrms_assessment_appeal"
+              sequence="60"/>
+
+    <menuitem id="menu_dsl_hrms_employee_pips"
+              name="7. Performance Improvement Plans (PIP)"
+              parent="menu_dsl_hrms_performance_engine_root"
+              action="action_dsl_hrms_employee_pip"
+              sequence="70"/>
+
+    <menuitem id="menu_dsl_hrms_increment_recs"
+              name="8. Salary Increment Recommendations"
+              parent="menu_dsl_hrms_performance_engine_root"
+              action="action_dsl_hrms_increment_recommendation"
+              sequence="80"/>
+
+    <menuitem id="menu_dsl_employee_appraisal"
+              name="9. Legacy KPI Appraisals"
+              parent="menu_dsl_hrms_performance_engine_root"
+              action="action_dsl_employee_appraisal"
+              sequence="90"/>
+
+    <!-- Configuration Submenus -->
+    <menuitem id="menu_dsl_hrms_perf_config_root"
+              name="Performance &amp; Assessment Engine"
+              parent="DSL_HRMS_core.menu_dsl_hrms_configuration_root"
+              sequence="78"/>
+
+    <menuitem id="menu_dsl_hrms_assessment_policy_cfg"
+              name="1. Mother &amp; Sub-Company Policies"
+              parent="menu_dsl_hrms_perf_config_root"
+              action="action_dsl_hrms_assessment_policy"
+              sequence="10"/>
+
+    <menuitem id="menu_dsl_hrms_assessment_template_cfg"
+              name="2. Templates &amp; Question Builder"
+              parent="menu_dsl_hrms_perf_config_root"
+              action="action_dsl_hrms_assessment_template"
+              sequence="20"/>
+
+    <menuitem id="menu_dsl_hrms_assessment_rating_scale_cfg"
+              name="3. Rating Scales &amp; Bands"
+              parent="menu_dsl_hrms_perf_config_root"
+              action="action_dsl_hrms_assessment_rating_scale"
+              sequence="30"/>
+
+    <menuitem id="menu_dsl_hrms_master_kpi_cfg"
+              name="4. Master KPIs &amp; Formulas"
+              parent="menu_dsl_hrms_perf_config_root"
+              action="action_dsl_hrms_kpi"
+              sequence="40"/>
+
+    <menuitem id="menu_dsl_hrms_master_goal_cfg"
+              name="5. Corporate Goals &amp; OKRs"
+              parent="menu_dsl_hrms_perf_config_root"
+              action="action_dsl_hrms_goal"
+              sequence="50"/>
+
+    <menuitem id="menu_dsl_hrms_master_competency_cfg"
+              name="6. Competency Library"
+              parent="menu_dsl_hrms_perf_config_root"
+              action="action_dsl_hrms_competency"
+              sequence="60"/>
+
+    <menuitem id="menu_dsl_appraisal_cycle"
+              name="7. Legacy Appraisal Cycles"
+              parent="menu_dsl_hrms_perf_config_root"
+              action="action_dsl_appraisal_cycle"
+              sequence="70"/>
+</odoo>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- ===============================================================
+             PART 6.1: 12 ENTERPRISE ASSESSMENT SECURITY GROUPS
+             =============================================================== -->
+        <record id="group_assessment_employee" model="res.groups">
+            <field name="name">Assessment: Employee (Self Review &amp; Acknowledge)</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <record id="group_assessment_reviewer" model="res.groups">
+            <field name="name">Assessment: Reviewer (Peer / Subordinate / Assigned)</field>
+            <field name="implied_ids" eval="[(4, ref('group_assessment_employee'))]"/>
+        </record>
+
+        <record id="group_assessment_manager" model="res.groups">
+            <field name="name">Assessment: Reporting Manager</field>
+            <field name="implied_ids" eval="[(4, ref('group_assessment_reviewer'))]"/>
+        </record>
+
+        <record id="group_assessment_department_head" model="res.groups">
+            <field name="name">Assessment: Department Head</field>
+            <field name="implied_ids" eval="[(4, ref('group_assessment_manager'))]"/>
+        </record>
+
+        <record id="group_assessment_branch_hr" model="res.groups">
+            <field name="name">Assessment: Branch HR Officer</field>
+            <field name="implied_ids" eval="[(4, ref('group_assessment_department_head')), (4, ref('DSL_HRMS_core.group_dsl_hrms_officer'))]"/>
+        </record>
+
+        <record id="group_assessment_calibrator" model="res.groups">
+            <field name="name">Assessment: HR Calibrator / Moderation Committee</field>
+            <field name="implied_ids" eval="[(4, ref('group_assessment_branch_hr'))]"/>
+        </record>
+
+        <record id="group_assessment_payroll_viewer" model="res.groups">
+            <field name="name">Assessment: Payroll Increment Viewer</field>
+            <field name="implied_ids" eval="[(4, ref('DSL_HRMS_core.group_dsl_hrms_officer'))]"/>
+        </record>
+
+        <record id="group_assessment_company_admin" model="res.groups">
+            <field name="name">Assessment: Sub-Company HR Admin</field>
+            <field name="implied_ids" eval="[(4, ref('group_assessment_calibrator'))]"/>
+        </record>
+
+        <record id="group_assessment_company_head" model="res.groups">
+            <field name="name">Assessment: Company Head / MD</field>
+            <field name="implied_ids" eval="[(4, ref('group_assessment_company_admin'))]"/>
+        </record>
+
+        <record id="group_assessment_group_viewer" model="res.groups">
+            <field name="name">Assessment: Group Executive Analytics Viewer</field>
+            <field name="implied_ids" eval="[(4, ref('group_assessment_employee'))]"/>
+        </record>
+
+        <record id="group_assessment_group_hr" model="res.groups">
+            <field name="name">Assessment: Mother Company Group HR Admin</field>
+            <field name="implied_ids" eval="[(4, ref('group_assessment_company_head')), (4, ref('DSL_HRMS_core.group_dsl_hrms_manager'))]"/>
+        </record>
+
+        <record id="group_assessment_super_admin" model="res.groups">
+            <field name="name">Assessment: Super Admin (Full Engine Control)</field>
+            <field name="implied_ids" eval="[(4, ref('group_assessment_group_hr'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        </record>
+
+        <!-- Multi-Company Record Rules (noupdate=0 so all operational views respect active company switcher) -->
+        <record id="rule_dsl_appraisal_multi_company" model="ir.rule">
+            <field name="name">DSL Appraisal: Multi-Company</field>
+            <field name="model_id" ref="model_dsl_employee_appraisal"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_dsl_hrms_assessment_cycle_multi_company" model="ir.rule">
+            <field name="name">DSL Assessment Cycle: Multi-Company</field>
+            <field name="model_id" ref="model_dsl_hrms_assessment_cycle"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_dsl_hrms_assessment_multi_company" model="ir.rule">
+            <field name="name">DSL Assessment Record: Multi-Company Snapshot</field>
+            <field name="model_id" ref="model_dsl_hrms_assessment"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_dsl_hrms_assessment_response_multi_company" model="ir.rule">
+            <field name="name">DSL Assessment Response: Multi-Company</field>
+            <field name="model_id" ref="model_dsl_hrms_assessment_response"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_dsl_hrms_employee_kpi_multi_company" model="ir.rule">
+            <field name="name">DSL Employee KPI: Multi-Company</field>
+            <field name="model_id" ref="model_dsl_hrms_employee_kpi"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_dsl_hrms_assessment_calibration_multi_company" model="ir.rule">
+            <field name="name">DSL Assessment Calibration: Multi-Company</field>
+            <field name="model_id" ref="model_dsl_hrms_assessment_calibration"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_dsl_hrms_assessment_appeal_multi_company" model="ir.rule">
+            <field name="name">DSL Assessment Appeal: Multi-Company</field>
+            <field name="model_id" ref="model_dsl_hrms_assessment_appeal"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_dsl_hrms_employee_pip_multi_company" model="ir.rule">
+            <field name="name">DSL Employee PIP: Multi-Company</field>
+            <field name="model_id" ref="model_dsl_hrms_employee_pip"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="rule_dsl_hrms_increment_rec_multi_company" model="ir.rule">
+            <field name="name">DSL Increment Recommendation: Multi-Company</field>
+            <field name="model_id" ref="model_dsl_hrms_employee_increment_recommendation"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- ===============================================================
+             1. DOCUMENT SEQUENCES (POL, CYC, ASS, CAL, APL, PIP)
+             =============================================================== -->
+        <record id="seq_dsl_employee_appraisal" model="ir.sequence">
+            <field name="name">Employee Appraisal</field>
+            <field name="code">dsl.employee.appraisal</field>
+            <field name="prefix">APR-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_dsl_hrms_assessment_policy" model="ir.sequence">
+            <field name="name">Assessment Policy</field>
+            <field name="code">dsl.hrms.assessment.policy</field>
+            <field name="prefix">POL-%(year)s-</field>
+            <field name="padding">3</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_dsl_hrms_assessment_cycle" model="ir.sequence">
+            <field name="name">Assessment Cycle</field>
+            <field name="code">dsl.hrms.assessment.cycle</field>
+            <field name="prefix">CYC-%(year)s-</field>
+            <field name="padding">3</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_dsl_hrms_assessment" model="ir.sequence">
+            <field name="name">Employee Assessment</field>
+            <field name="code">dsl.hrms.assessment</field>
+            <field name="prefix">ASS-%(year)s-</field>
+            <field name="padding">4</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_dsl_hrms_assessment_calibration" model="ir.sequence">
+            <field name="name">Assessment Calibration Session</field>
+            <field name="code">dsl.hrms.assessment.calibration</field>
+            <field name="prefix">CAL-%(year)s-</field>
+            <field name="padding">3</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_dsl_hrms_assessment_appeal" model="ir.sequence">
+            <field name="name">Assessment Appeal</field>
+            <field name="code">dsl.hrms.assessment.appeal</field>
+            <field name="prefix">APL-%(year)s-</field>
+            <field name="padding">3</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <record id="seq_dsl_hrms_employee_pip" model="ir.sequence">
+            <field name="name">Performance Improvement Plan (PIP)</field>
+            <field name="code">dsl.hrms.employee.pip</field>
+            <field name="prefix">PIP-%(year)s-</field>
+            <field name="padding">3</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Keep Legacy Cycle Intact -->
+        <record id="appraisal_cycle_2026_27" model="dsl.appraisal.cycle">
+            <field name="name">Annual Performance Appraisal FY 2026–2027</field>
+            <field name="code">FY-2026-27</field>
+            <field name="date_start">2026-07-01</field>
+            <field name="date_end">2027-06-30</field>
+        </record>
+    </data>
+
+    <data noupdate="0">
+        <!-- ===============================================================
+             2. PART 12.2: 6 MASTER ASSESSMENT PHASES (#5)
+             =============================================================== -->
+        <record id="assessment_phase_self" model="dsl.hrms.assessment.phase">
+            <field name="name">Self Review Phase (নিজস্ব মূল্যায়ন)</field>
+            <field name="code">SELF</field>
+            <field name="sequence">10</field>
+            <field name="reviewer_role">self</field>
+            <field name="default_weightage">20.0</field>
+            <field name="default_anonymous" eval="False"/>
+        </record>
+
+        <record id="assessment_phase_manager" model="dsl.hrms.assessment.phase">
+            <field name="name">Reporting Manager Review Phase (লাইন ম্যানেজার)</field>
+            <field name="code">MANAGER</field>
+            <field name="sequence">20</field>
+            <field name="reviewer_role">manager</field>
+            <field name="default_weightage">50.0</field>
+            <field name="default_anonymous" eval="False"/>
+        </record>
+
+        <record id="assessment_phase_dept_head" model="dsl.hrms.assessment.phase">
+            <field name="name">Department Head Review Phase (বিভাগীয় প্রধান)</field>
+            <field name="code">DEPT_HEAD</field>
+            <field name="sequence">30</field>
+            <field name="reviewer_role">dept_head</field>
+            <field name="default_weightage">15.0</field>
+            <field name="default_anonymous" eval="False"/>
+        </record>
+
+        <record id="assessment_phase_peer" model="dsl.hrms.assessment.phase">
+            <field name="name">360° Peer Review Phase (সহকর্মী - Anonymous)</field>
+            <field name="code">PEER</field>
+            <field name="sequence">40</field>
+            <field name="reviewer_role">peer</field>
+            <field name="default_weightage">15.0</field>
+            <field name="default_anonymous" eval="True"/>
+        </record>
+
+        <record id="assessment_phase_subordinate" model="dsl.hrms.assessment.phase">
+            <field name="name">360° Subordinate Upward Feedback Phase (অধস্তন - Anonymous)</field>
+            <field name="code">SUBORDINATE</field>
+            <field name="sequence">50</field>
+            <field name="reviewer_role">subordinate</field>
+            <field name="default_weightage">10.0</field>
+            <field name="default_anonymous" eval="True"/>
+        </record>
+
+        <record id="assessment_phase_hr" model="dsl.hrms.assessment.phase">
+            <field name="name">HR Review &amp; Compliance Moderation Phase (এইচআর মূল্যায়ন)</field>
+            <field name="code">HR</field>
+            <field name="sequence">60</field>
+            <field name="reviewer_role">hr</field>
+            <field name="default_weightage">15.0</field>
+            <field name="default_anonymous" eval="False"/>
+        </record>
+
+        <!-- ===============================================================
+             3. PART 12.1: 4 CONFIGURABLE ASSESSMENT TYPES (#1)
+             =============================================================== -->
+        <record id="assessment_type_standard" model="dsl.hrms.assessment.type">
+            <field name="name">Standard Assessment (Self + Manager + HR)</field>
+            <field name="code">STANDARD</field>
+            <field name="sequence">10</field>
+            <field name="is_system_type" eval="True"/>
+            <field name="default_phase_ids" eval="[(6, 0, [ref('assessment_phase_self'), ref('assessment_phase_manager'), ref('assessment_phase_hr')])]"/>
+            <field name="description">Standard 3-step assessment: Self Review + Reporting Manager Review + HR Review.</field>
+        </record>
+
+        <record id="assessment_type_advanced" model="dsl.hrms.assessment.type">
+            <field name="name">Advanced Assessment (Self + Manager + Dept Head + HR Calibration)</field>
+            <field name="code">ADVANCED</field>
+            <field name="sequence">20</field>
+            <field name="is_system_type" eval="True"/>
+            <field name="default_phase_ids" eval="[(6, 0, [ref('assessment_phase_self'), ref('assessment_phase_manager'), ref('assessment_phase_dept_head'), ref('assessment_phase_hr')])]"/>
+            <field name="description">Enterprise multi-tier assessment with Goal/KPI achievement, Department Head moderation, and HR Bell-Curve Calibration.</field>
+        </record>
+
+        <record id="assessment_type_360_degree" model="dsl.hrms.assessment.type">
+            <field name="name">360° Multi-Rater Assessment (Self + Manager + Peer + Subordinate + HR)</field>
+            <field name="code">360_DEGREE</field>
+            <field name="sequence">30</field>
+            <field name="is_system_type" eval="True"/>
+            <field name="default_phase_ids" eval="[(6, 0, [ref('assessment_phase_self'), ref('assessment_phase_manager'), ref('assessment_phase_peer'), ref('assessment_phase_subordinate'), ref('assessment_phase_hr')])]"/>
+            <field name="description">Full 360-degree leadership &amp; collaboration feedback with anonymous Peer &amp; Subordinate reviews.</field>
+        </record>
+
+        <record id="assessment_type_probation" model="dsl.hrms.assessment.type">
+            <field name="name">Probation Confirmation Assessment</field>
+            <field name="code">PROBATION</field>
+            <field name="sequence">40</field>
+            <field name="is_system_type" eval="True"/>
+            <field name="default_phase_ids" eval="[(6, 0, [ref('assessment_phase_self'), ref('assessment_phase_manager'), ref('assessment_phase_hr')])]"/>
+            <field name="description">End-of-probation confirmation evaluation running concurrently alongside Annual/Quarterly cycles.</field>
+        </record>
+
+        <!-- ===============================================================
+             4. CYCLE TYPES (#6)
+             =============================================================== -->
+        <record id="cycle_type_annual" model="dsl.hrms.assessment.cycle.type">
+            <field name="name">Annual Performance Cycle</field>
+            <field name="code">ANNUAL</field>
+            <field name="sequence">10</field>
+            <field name="default_duration_days">365</field>
+            <field name="is_recurring" eval="True"/>
+        </record>
+
+        <record id="cycle_type_quarterly" model="dsl.hrms.assessment.cycle.type">
+            <field name="name">Quarterly Review Cycle</field>
+            <field name="code">QUARTERLY</field>
+            <field name="sequence">20</field>
+            <field name="default_duration_days">90</field>
+            <field name="is_recurring" eval="True"/>
+        </record>
+
+        <record id="cycle_type_probation" model="dsl.hrms.assessment.cycle.type">
+            <field name="name">Probation Confirmation Cycle</field>
+            <field name="code">PROBATION_CYC</field>
+            <field name="sequence">30</field>
+            <field name="default_duration_days">180</field>
+            <field name="is_recurring" eval="False"/>
+        </record>
+
+        <!-- ===============================================================
+             5. PART 12.3: 5-POINT RATING SCALE & LEVELS (1..5 -> 0..100%)
+             =============================================================== -->
+        <record id="rating_scale_5_point" model="dsl.hrms.assessment.rating.scale">
+            <field name="name">DSL Enterprise 5-Point Rating Scale (1–5 Normalized to 100%)</field>
+            <field name="code">SCALE_5_PT</field>
+            <field name="scope_type">group</field>
+            <field name="scale_type">point_5</field>
+            <field name="minimum_value">1.0</field>
+            <field name="maximum_value">5.0</field>
+            <field name="decimal_precision">2</field>
+            <field name="rounding_method">half_up</field>
+            <field name="state">active</field>
+        </record>
+
+        <record id="rating_level_5_outstanding" model="dsl.hrms.assessment.rating.level">
+            <field name="rating_scale_id" ref="rating_scale_5_point"/>
+            <field name="sequence">10</field>
+            <field name="rating_value">5.0</field>
+            <field name="rating_label">A+ — Outstanding / Role Model</field>
+            <field name="score_from">90.0</field>
+            <field name="score_to">100.0</field>
+            <field name="recommended_increment_pct">15.0</field>
+            <field name="display_color">success</field>
+        </record>
+
+        <record id="rating_level_4_exceeds" model="dsl.hrms.assessment.rating.level">
+            <field name="rating_scale_id" ref="rating_scale_5_point"/>
+            <field name="sequence">20</field>
+            <field name="rating_value">4.0</field>
+            <field name="rating_label">A — Exceeds Expectations</field>
+            <field name="score_from">75.0</field>
+            <field name="score_to">89.99</field>
+            <field name="recommended_increment_pct">10.0</field>
+            <field name="display_color">success</field>
+        </record>
+
+        <record id="rating_level_3_meets" model="dsl.hrms.assessment.rating.level">
+            <field name="rating_scale_id" ref="rating_scale_5_point"/>
+            <field name="sequence">30</field>
+            <field name="rating_value">3.0</field>
+            <field name="rating_label">B — Meets Expectations</field>
+            <field name="score_from">60.0</field>
+            <field name="score_to">74.99</field>
+            <field name="recommended_increment_pct">6.0</field>
+            <field name="display_color">info</field>
+        </record>
+
+        <record id="rating_level_2_needs_improvement" model="dsl.hrms.assessment.rating.level">
+            <field name="rating_scale_id" ref="rating_scale_5_point"/>
+            <field name="sequence">40</field>
+            <field name="rating_value">2.0</field>
+            <field name="rating_label">C — Needs Improvement</field>
+            <field name="score_from">50.0</field>
+            <field name="score_to">59.99</field>
+            <field name="recommended_increment_pct">0.0</field>
+            <field name="display_color">warning</field>
+        </record>
+
+        <record id="rating_level_1_unsatisfactory" model="dsl.hrms.assessment.rating.level">
+            <field name="rating_scale_id" ref="rating_scale_5_point"/>
+            <field name="sequence">50</field>
+            <field name="rating_value">1.0</field>
+            <field name="rating_label">D — Unsatisfactory / PIP</field>
+            <field name="score_from">0.0</field>
+            <field name="score_to">49.99</field>
+            <field name="recommended_increment_pct">0.0</field>
+            <field name="display_color">danger</field>
+        </record>
+
+        <!-- ===============================================================
+             6. PART 12.4: ASSESSMENT CATEGORIES & DEFAULT TEMPLATE
+             =============================================================== -->
+        <record id="ass_category_kpi" model="dsl.hrms.assessment.category">
+            <field name="name">Quantitative KPI &amp; Goal Delivery</field>
+            <field name="code">CAT_KPI</field>
+            <field name="sequence">10</field>
+            <field name="category_type">kpi</field>
+        </record>
+
+        <record id="ass_category_competency" model="dsl.hrms.assessment.category">
+            <field name="name">Core &amp; Technical Competencies</field>
+            <field name="code">CAT_COMP</field>
+            <field name="sequence">20</field>
+            <field name="category_type">competency</field>
+        </record>
+
+        <record id="ass_category_behaviour" model="dsl.hrms.assessment.category">
+            <field name="name">Values, Teamwork &amp; Discipline</field>
+            <field name="code">CAT_BEHAV</field>
+            <field name="sequence">30</field>
+            <field name="category_type">behaviour</field>
+        </record>
+
+        <record id="ass_template_enterprise_default" model="dsl.hrms.assessment.template">
+            <field name="name">DSL Enterprise Master Performance Evaluation Form</field>
+            <field name="code">TPL-ENT-2026</field>
+            <field name="scope_type">group</field>
+            <field name="template_type">general</field>
+            <field name="rating_scale_id" ref="rating_scale_5_point"/>
+            <field name="version">1</field>
+            <field name="state">published</field>
+        </record>
+
+        <record id="ass_tpl_sec_1" model="dsl.hrms.assessment.template.section">
+            <field name="template_id" ref="ass_template_enterprise_default"/>
+            <field name="category_id" ref="ass_category_kpi"/>
+            <field name="name">Section 1: Quantitative KPIs &amp; Operational Deliverables (50%)</field>
+            <field name="code">SEC-KPI</field>
+            <field name="sequence">10</field>
+            <field name="weightage">50.0</field>
+        </record>
+
+        <record id="ass_tpl_sec_2" model="dsl.hrms.assessment.template.section">
+            <field name="template_id" ref="ass_template_enterprise_default"/>
+            <field name="category_id" ref="ass_category_competency"/>
+            <field name="name">Section 2: Technical Mastery, Problem Solving &amp; Innovation (30%)</field>
+            <field name="code">SEC-COMP</field>
+            <field name="sequence">20</field>
+            <field name="weightage">30.0</field>
+        </record>
+
+        <record id="ass_tpl_sec_3" model="dsl.hrms.assessment.template.section">
+            <field name="template_id" ref="ass_template_enterprise_default"/>
+            <field name="category_id" ref="ass_category_behaviour"/>
+            <field name="name">Section 3: Leadership, Collaboration &amp; Organizational Values (20%)</field>
+            <field name="code">SEC-BEHAV</field>
+            <field name="sequence">30</field>
+            <field name="weightage">20.0</field>
+        </record>
+
+        <record id="ass_q_01" model="dsl.hrms.assessment.question">
+            <field name="section_id" ref="ass_tpl_sec_1"/>
+            <field name="sequence">10</field>
+            <field name="code">Q-KPI-01</field>
+            <field name="question_text">On-Time Delivery &amp; SLA Compliance across assigned projects/targets</field>
+            <field name="question_type">rating</field>
+            <field name="rating_scale_id" ref="rating_scale_5_point"/>
+            <field name="weightage">25.0</field>
+            <field name="scored" eval="True"/>
+        </record>
+
+        <record id="ass_q_02" model="dsl.hrms.assessment.question">
+            <field name="section_id" ref="ass_tpl_sec_1"/>
+            <field name="sequence">20</field>
+            <field name="code">Q-KPI-02</field>
+            <field name="question_text">Quality of Output, Accuracy &amp; Zero-Defect Execution</field>
+            <field name="question_type">rating</field>
+            <field name="rating_scale_id" ref="rating_scale_5_point"/>
+            <field name="weightage">25.0</field>
+            <field name="scored" eval="True"/>
+        </record>
+
+        <record id="ass_q_03" model="dsl.hrms.assessment.question">
+            <field name="section_id" ref="ass_tpl_sec_2"/>
+            <field name="sequence">30</field>
+            <field name="code">Q-COMP-01</field>
+            <field name="question_text">Domain Expertise, Analytical Problem Solving &amp; Process Ownership</field>
+            <field name="question_type">rating</field>
+            <field name="rating_scale_id" ref="rating_scale_5_point"/>
+            <field name="weightage">30.0</field>
+            <field name="scored" eval="True"/>
+        </record>
+
+        <record id="ass_q_04" model="dsl.hrms.assessment.question">
+            <field name="section_id" ref="ass_tpl_sec_3"/>
+            <field name="sequence">40</field>
+            <field name="code">Q-BEH-01</field>
+            <field name="question_text">Cross-Team Collaboration, Punctuality &amp; Adherence to Code of Conduct</field>
+            <field name="question_type">rating</field>
+            <field name="rating_scale_id" ref="rating_scale_5_point"/>
+            <field name="weightage">20.0</field>
+            <field name="scored" eval="True"/>
+        </record>
+
+        <!-- ===============================================================
+             7. PART 12.5: MOTHER COMPANY GROUP POLICY (POL-GROUP-001)
+             =============================================================== -->
+        <record id="policy_mother_group_001" model="dsl.hrms.assessment.policy">
+            <field name="name">DSL Group Master Performance Governance Policy</field>
+            <field name="code">POL-GROUP-001</field>
+            <field name="scope_type">group</field>
+            <field name="inheritance_mode">independent</field>
+            <field name="override_allowed" eval="True"/>
+            <field name="mandatory_group_policy" eval="True"/>
+            <field name="assessment_type_id" ref="assessment_type_advanced"/>
+            <field name="default_cycle_type_id" ref="cycle_type_annual"/>
+            <field name="default_rating_scale_id" ref="rating_scale_5_point"/>
+            <field name="default_template_id" ref="ass_template_enterprise_default"/>
+            <field name="minimum_service_days">90</field>
+            <field name="self_review_enabled" eval="True"/>
+            <field name="peer_review_enabled" eval="False"/>
+            <field name="hr_review_mandatory" eval="True"/>
+            <field name="final_approval_authority">group_hr</field>
+            <field name="optional_phase_mode">renormalize</field>
+            <!-- Mother Company Governance Locks -->
+            <field name="allow_override_frequency" eval="True"/>
+            <field name="allow_override_rating_scale" eval="True"/>
+            <field name="allow_override_self_review" eval="True"/>
+            <field name="allow_override_peer_review" eval="True"/>
+            <field name="allow_override_min_service" eval="True"/>
+            <field name="allow_override_hr_review" eval="False"/>
+            <field name="allow_override_final_approval" eval="False"/>
+            <field name="effective_from">2026-01-01</field>
+            <field name="state">active</field>
+        </record>
+
+        <!-- ===============================================================
+             8. MASTER GOALS, KRAs, KPIs & COMPETENCIES
+             =============================================================== -->
+        <record id="master_goal_2026_growth" model="dsl.hrms.goal">
+            <field name="name">FY 2026 Operational Excellence &amp; Digital Transformation</field>
+            <field name="code">GOAL-2026-01</field>
+            <field name="goal_level">company</field>
+            <field name="measurement_type">percentage</field>
+            <field name="target_value">100.0</field>
+            <field name="unit">%</field>
+            <field name="weightage">50.0</field>
+            <field name="start_date">2026-01-01</field>
+            <field name="end_date">2026-12-31</field>
+            <field name="state">active</field>
+        </record>
+
+        <record id="master_kra_delivery" model="dsl.hrms.kra">
+            <field name="name">Service Delivery, SLA Compliance &amp; Quality</field>
+            <field name="code">KRA-DELIVERY</field>
+            <field name="default_weightage">50.0</field>
+        </record>
+
+        <record id="master_kpi_sla_higher" model="dsl.hrms.kpi">
+            <field name="name">Sprint / Operational SLA On-Time Delivery Rate (%)</field>
+            <field name="code">KPI-SLA-RATE</field>
+            <field name="kra_id" ref="master_kra_delivery"/>
+            <field name="measurement_type">percentage</field>
+            <field name="calculation_method">higher_is_better</field>
+            <field name="default_target">95.0</field>
+            <field name="default_weightage">50.0</field>
+        </record>
+
+        <record id="master_kpi_defect_lower" model="dsl.hrms.kpi">
+            <field name="name">Production / Operational Defect Escape Count (Lower is Better)</field>
+            <field name="code">KPI-DEFECT-MAX</field>
+            <field name="kra_id" ref="master_kra_delivery"/>
+            <field name="measurement_type">number</field>
+            <field name="calculation_method">lower_is_better</field>
+            <field name="default_target">5.0</field>
+            <field name="default_weightage">50.0</field>
+        </record>
+
+        <record id="master_comp_leadership" model="dsl.hrms.competency">
+            <field name="name">Strategic Ownership, Leadership &amp; Stakeholder Communication</field>
+            <field name="code">COMP-LEAD-01</field>
+            <field name="category_id" ref="ass_category_competency"/>
+            <field name="competency_type">leadership</field>
+        </record>
+    </data>
+</odoo>
