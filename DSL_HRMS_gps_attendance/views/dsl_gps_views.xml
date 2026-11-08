@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Client Actions for One-Click Browser GPS Check-In / Check-Out -->
+    <record id="action_client_dsl_gps_check_in" model="ir.actions.client">
+        <field name="name">Live Browser GPS Check-In</field>
+        <field name="tag">dsl_gps_browser_punch</field>
+        <field name="params" eval="{'punch_type': 'check_in'}"/>
+    </record>
+
+    <record id="action_client_dsl_gps_check_out" model="ir.actions.client">
+        <field name="name">Live Browser GPS Check-Out</field>
+        <field name="tag">dsl_gps_browser_punch</field>
+        <field name="params" eval="{'punch_type': 'check_out'}"/>
+    </record>
+
+    <!-- 1. GPS Attendance List View -->
+    <record id="view_dsl_gps_attendance_list" model="ir.ui.view">
+        <field name="name">dsl.gps.attendance.log.list</field>
+        <field name="model">dsl.gps.attendance.log</field>
+        <field name="arch" type="xml">
+            <list string="Geo-Fenced GPS Attendance"
+                  decoration-success="validation_state in ('auto_verified', 'approved')"
+                  decoration-warning="validation_state == 'pending_approval'"
+                  decoration-danger="validation_state == 'rejected'">
+                <header>
+                    <button name="%(action_client_dsl_gps_check_in)d"
+                            string="📍 Live GPS Check-In"
+                            type="action"
+                            class="btn-primary"
+                            display="always"/>
+                    <button name="%(action_client_dsl_gps_check_out)d"
+                            string="📍 Live GPS Check-Out"
+                            type="action"
+                            class="btn-secondary"
+                            display="always"/>
+                    <button name="action_refresh_area_name"
+                            string="🔄 Refresh Area Name"
+                            type="object"
+                            class="btn-secondary"/>
+                </header>
+                <field name="name" decoration-bf="1"/>
+                <field name="punch_datetime"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id"/>
+                <field name="punch_type" widget="badge"
+                       decoration-success="punch_type == 'check_in'"
+                       decoration-info="punch_type == 'check_out'"/>
+                <field name="detected_area" string="Check-In / Out Area" decoration-bf="1"/>
+                <field name="full_geo_address" optional="hide"/>
+                <field name="work_mode" optional="show"/>
+                <field name="distance_from_branch_m" string="Distance (m)"/>
+                <field name="allowed_radius_m" string="Radius (m)" optional="hide"/>
+                <field name="within_geofence" string="Inside?" widget="boolean"/>
+                <field name="client_or_site_name" optional="show"/>
+                <field name="validation_state" widget="badge"
+                       decoration-success="validation_state in ('auto_verified', 'approved')"
+                       decoration-warning="validation_state == 'pending_approval'"
+                       decoration-danger="validation_state == 'rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- 2. GPS Attendance Kanban View -->
+    <record id="view_dsl_gps_attendance_kanban" model="ir.ui.view">
+        <field name="name">dsl.gps.attendance.log.kanban</field>
+        <field name="model">dsl.gps.attendance.log</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="punch_type"/>
+                <field name="punch_datetime"/>
+                <field name="detected_area"/>
+                <field name="distance_from_branch_m"/>
+                <field name="within_geofence"/>
+                <field name="validation_state"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge text-bg-light border text-dark fw-bold"><field name="name"/></span>
+                            <field name="validation_state" widget="badge"
+                                   decoration-success="validation_state in ('auto_verified', 'approved')"
+                                   decoration-warning="validation_state == 'pending_approval'"
+                                   decoration-danger="validation_state == 'rejected'"/>
+                        </div>
+                        <div class="mb-1">
+                            <field name="employee_id" widget="many2one_avatar_employee"/>
+                        </div>
+                        <div class="fw-semibold text-primary small mb-1" t-if="record.detected_area.raw_value">
+                            <i class="fa fa-map-marker text-danger me-1" title="Detected Area"/>
+                            <field name="detected_area"/>
+                        </div>
+                        <div class="text-muted small mb-2">
+                            <field name="distance_from_branch_m"/> m from branch · <field name="punch_datetime"/>
+                        </div>
+                        <footer class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <field name="punch_type" widget="badge"/>
+                            <span t-if="record.within_geofence.raw_value" class="text-success small fw-semibold">
+                                Inside Geofence
+                            </span>
+                            <span t-else="" class="text-warning small fw-semibold">
+                                Field / Outside
+                            </span>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- 3. GPS Attendance Full-Width Form with Mandatory Bottom Chatter -->
+    <record id="view_dsl_gps_attendance_form" model="ir.ui.view">
+        <field name="name">dsl.gps.attendance.log.form</field>
+        <field name="model">dsl.gps.attendance.log</field>
+        <field name="arch" type="xml">
+            <form string="Geo-Fenced GPS Attendance">
+                <header>
+                    <button name="action_approve_field_punch"
+                            string="Approve Field / Outside Punch"
+                            type="object"
+                            class="btn-primary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="validation_state != 'pending_approval'"/>
+                    <button name="action_reject_field_punch"
+                            string="Reject Punch"
+                            type="object"
+                            class="btn-secondary"
+                            groups="DSL_HRMS_core.group_dsl_hrms_officer"
+                            invisible="validation_state != 'pending_approval'"/>
+                    <button name="action_refresh_area_name"
+                            string="🔄 Detect / Refresh Area Name"
+                            type="object"
+                            class="btn-secondary"/>
+                    <field name="validation_state" widget="statusbar"
+                           statusbar_visible="auto_verified,pending_approval,approved"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="INSIDE GEOFENCE" bg_color="text-bg-success"
+                            invisible="not within_geofence"/>
+                    <widget name="web_ribbon" title="FIELD / OUTSIDE" bg_color="text-bg-warning"
+                            invisible="within_geofence"/>
+                    <field name="selfie_image" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <span class="badge text-bg-primary mb-1" invisible="not detected_area">
+                            📍 <field name="detected_area" readonly="1"/>
+                        </span>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Employee &amp; Detected Check-In / Out Area">
+                            <field name="employee_id"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id"/>
+                            <field name="department_id"/>
+                            <field name="punch_type"/>
+                            <field name="work_mode"/>
+                            <field name="punch_datetime"/>
+                            <field name="detected_area" decoration-bf="1"/>
+                            <field name="full_geo_address"/>
+                        </group>
+                        <group string="Haversine Geofence Verification">
+                            <field name="latitude"/>
+                            <field name="longitude"/>
+                            <field name="accuracy_meters"/>
+                            <field name="allowed_radius_m" readonly="1"/>
+                            <field name="distance_from_branch_m" readonly="1"/>
+                            <field name="within_geofence" readonly="1"/>
+                            <field name="map_url" widget="url" text="Open Pin on Interactive Map"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Field Duty / Client Visit Details">
+                            <field name="client_or_site_name" placeholder="e.g. Motijheel Corporate Client / Port Customs"/>
+                            <field name="location_note" placeholder="Address or landmark..."/>
+                        </group>
+                        <group string="Attendance Register Link">
+                            <field name="attendance_log_id"/>
+                            <field name="approved_by_id" invisible="not approved_by_id"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_gps_attendance" model="ir.actions.act_window">
+        <field name="name">GPS Geo-Attendance</field>
+        <field name="res_model">dsl.gps.attendance.log</field>
+        <field name="view_mode">list,kanban,form</field>
+    </record>
+
+    <menuitem id="menu_dsl_gps_attendance"
+              name="GPS Geo-Attendance"
+              parent="DSL_HRMS_core.menu_dsl_hrms_attendance_root"
+              action="action_dsl_gps_attendance"
+              sequence="40"/>
+</odoo>

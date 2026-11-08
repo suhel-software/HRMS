@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_gps_attendance_user,dsl.gps.attendance.log.user,model_dsl_gps_attendance_log,base.group_user,1,0,1,0
+access_dsl_gps_attendance_officer,dsl.gps.attendance.log.officer,model_dsl_gps_attendance_log,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_gps_attendance_manager,dsl.gps.attendance.log.manager,model_dsl_gps_attendance_log,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

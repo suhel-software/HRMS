@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Strict Multi-Company & Multi-Branch Isolation on GPS Punches -->
+        <record id="dsl_rule_gps_attendance_isolation" model="ir.rule">
+            <field name="name">DSL GPS Attendance: Multi-Company &amp; Branch Isolation</field>
+            <field name="model_id" ref="model_dsl_gps_attendance_log"/>
+            <field name="domain_force">(['&amp;', '|', ('company_id', '=', False), ('company_id', 'in', company_ids), '|', ('branch_id', '=', False), ('branch_id', 'in', dsl_branch_ids)] if dsl_is_mother_user else [('company_id', 'in', company_ids), ('branch_id', 'in', dsl_branch_ids)]) if dsl_strict_branch else ['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+    </data>
+</odoo>
+
