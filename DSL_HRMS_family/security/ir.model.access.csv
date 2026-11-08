@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_emp_family_user,dsl.employee.family.user,model_dsl_employee_family,DSL_HRMS_core.group_dsl_hrms_user,1,0,0,0
+access_dsl_emp_family_officer,dsl.employee.family.officer,model_dsl_employee_family,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_emp_family_manager,dsl.employee.family.manager,model_dsl_employee_family,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+
