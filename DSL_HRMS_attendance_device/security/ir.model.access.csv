@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_biometric_device_user,dsl.biometric.device.user,model_dsl_biometric_device,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_biometric_device_manager,dsl.biometric.device.manager,model_dsl_biometric_device,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+access_dsl_biometric_punch_log_user,dsl.biometric.punch.log.user,model_dsl_biometric_punch_log,DSL_HRMS_core.group_dsl_hrms_officer,1,1,1,0
+access_dsl_biometric_punch_log_manager,dsl.biometric.punch.log.manager,model_dsl_biometric_punch_log,DSL_HRMS_core.group_dsl_hrms_manager,1,1,1,1
+

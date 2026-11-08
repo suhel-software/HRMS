@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 1. Biometric Device Kanban View -->
+    <record id="view_dsl_biometric_device_kanban" model="ir.ui.view">
+        <field name="name">dsl.biometric.device.kanban</field>
+        <field name="model">dsl.biometric.device</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile">
+                <field name="name"/>
+                <field name="serial_number"/>
+                <field name="device_brand"/>
+                <field name="protocol"/>
+                <field name="ip_address"/>
+                <field name="port"/>
+                <field name="branch_id"/>
+                <field name="state"/>
+                <field name="punch_count"/>
+                <field name="last_sync_datetime"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="badge text-bg-light border text-dark fw-semibold">
+                                SN: <field name="serial_number"/>
+                            </span>
+                            <field name="state" widget="badge"
+                                   decoration-success="state == 'online'"
+                                   decoration-danger="state in ('offline', 'error')"
+                                   decoration-info="state == 'draft'"/>
+                        </div>
+                        <div class="fw-bold fs-6 mb-1">
+                            <i class="fa fa-hdd-o text-primary me-1" title="Biometric Terminal"/>
+                            <field name="name"/>
+                        </div>
+                        <div class="text-muted small mb-2">
+                            <field name="ip_address"/>:<field name="port"/>
+                            <t t-if="record.branch_id.raw_value">
+                                · <field name="branch_id"/>
+                            </t>
+                        </div>
+                        <footer class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <span class="text-muted small">
+                                <field name="punch_count"/> Punches
+                            </span>
+                            <div class="d-flex gap-1">
+                                <button name="action_test_connection" type="object" class="btn btn-sm btn-outline-secondary">
+                                    Ping
+                                </button>
+                                <button name="action_sync_device_punches" type="object" class="btn btn-sm btn-primary">
+                                    Sync Now
+                                </button>
+                            </div>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- 2. Biometric Device List View -->
+    <record id="view_dsl_biometric_device_list" model="ir.ui.view">
+        <field name="name">dsl.biometric.device.list</field>
+        <field name="model">dsl.biometric.device</field>
+        <field name="arch" type="xml">
+            <list string="Biometric Terminals">
+                <field name="sequence" widget="handle"/>
+                <field name="name" decoration-bf="1"/>
+                <field name="serial_number"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="branch_id"/>
+                <field name="device_brand"/>
+                <field name="protocol"/>
+                <field name="ip_address"/>
+                <field name="port"/>
+                <field name="last_ping_ms" optional="show"/>
+                <field name="last_sync_datetime"/>
+                <field name="punch_count"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'online'"
+                       decoration-danger="state in ('offline', 'error')"
+                       decoration-info="state == 'draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- 3. Biometric Device Full-Width Form with Mandatory Bottom Chatter -->
+    <record id="view_dsl_biometric_device_form" model="ir.ui.view">
+        <field name="name">dsl.biometric.device.form</field>
+        <field name="model">dsl.biometric.device</field>
+        <field name="arch" type="xml">
+            <form string="Biometric Attendance Terminal">
+                <header>
+                    <button name="action_test_connection"
+                            string="Test Connection / Ping"
+                            type="object"
+                            class="btn-secondary"/>
+                    <button name="action_sync_device_punches"
+                            string="Sync Device Punches"
+                            type="object"
+                            class="btn-primary"/>
+                    <button name="action_view_punch_logs"
+                            string="View Raw Punch Logs"
+                            type="object"
+                            class="btn-secondary"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,online,offline"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="ONLINE" bg_color="text-bg-success"
+                            invisible="state != 'online'"/>
+                    <widget name="web_ribbon" title="OFFLINE" bg_color="text-bg-danger"
+                            invisible="state != 'offline'"/>
+                    <div class="oe_title">
+                        <span class="badge text-bg-primary mb-1"><field name="serial_number" placeholder="e.g. ZKT-HQ-001"/></span>
+                        <h1><field name="name" placeholder="e.g. HQ Main Gate ZKTeco SpeedFace-V5L"/></h1>
+                    </div>
+                    <group>
+                        <group string="Hardware &amp; Duty Location">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="branch_id"/>
+                            <field name="device_brand"/>
+                            <field name="protocol"/>
+                            <field name="punch_direction"/>
+                            <field name="auto_consolidate_daily"/>
+                        </group>
+                        <group string="Network &amp; Timezone Configuration">
+                            <field name="ip_address"/>
+                            <field name="port"/>
+                            <field name="comm_key" password="True"/>
+                            <field name="timeout_seconds"/>
+                            <field name="timezone_offset"/>
+                            <field name="last_ping_ms"/>
+                            <field name="last_sync_datetime"/>
+                        </group>
+                    </group>
+                    <group string="Diagnostics &amp; ADMS Push Endpoint">
+                        <field name="last_status_message" readonly="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_biometric_device" model="ir.actions.act_window">
+        <field name="name">Biometric Devices &amp; Sync</field>
+        <field name="res_model">dsl.biometric.device</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+
+    <!-- 4. Raw Biometric Machine Punch Logs (List & Full-Width Form with Bottom Chatter) -->
+    <record id="view_dsl_biometric_punch_log_list" model="ir.ui.view">
+        <field name="name">dsl.biometric.punch.log.list</field>
+        <field name="model">dsl.biometric.punch.log</field>
+        <field name="arch" type="xml">
+            <list string="Raw Biometric Machine Punch Logs"
+                  decoration-warning="sync_state == 'unmapped'"
+                  decoration-success="sync_state == 'processed'">
+                <header>
+                    <button name="action_process_raw_punches"
+                            string="Re-Process &amp; Map Selected"
+                            type="object"
+                            class="btn-primary"/>
+                </header>
+                <field name="punch_datetime" decoration-bf="1"/>
+                <field name="device_id"/>
+                <field name="company_id" groups="base.group_multi_company" optional="show"/>
+                <field name="branch_id" optional="show"/>
+                <field name="enroll_id" decoration-bf="1"/>
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="verify_mode" widget="badge"/>
+                <field name="punch_type"/>
+                <field name="attendance_log_id" optional="show"/>
+                <field name="sync_state" widget="badge"
+                       decoration-success="sync_state == 'processed'"
+                       decoration-info="sync_state == 'pending'"
+                       decoration-danger="sync_state == 'unmapped'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_biometric_punch_log_form" model="ir.ui.view">
+        <field name="name">dsl.biometric.punch.log.form</field>
+        <field name="model">dsl.biometric.punch.log</field>
+        <field name="arch" type="xml">
+            <form string="Raw Biometric Punch Log">
+                <header>
+                    <button name="action_process_raw_punches"
+                            string="Process &amp; Sync to Daily Attendance"
+                            type="object"
+                            class="btn-primary"
+                            invisible="sync_state == 'processed'"/>
+                    <field name="sync_state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Terminal &amp; Identity">
+                            <field name="device_id"/>
+                            <field name="enroll_id"/>
+                            <field name="employee_id"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="branch_id" readonly="1"/>
+                        </group>
+                        <group string="Verification &amp; Consolidation">
+                            <field name="punch_datetime"/>
+                            <field name="verify_mode"/>
+                            <field name="punch_type"/>
+                            <field name="attendance_log_id"/>
+                            <field name="raw_payload"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_biometric_punch_log" model="ir.actions.act_window">
+        <field name="name">Raw Biometric Machine Logs</field>
+        <field name="res_model">dsl.biometric.punch.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- 5. Add Biometric Enroll ID & RFID Card to Employee Attendance Tab -->
+    <record id="view_employee_form_inherit_dsl_biometric" model="ir.ui.view">
+        <field name="name">hr.employee.form.dsl.biometric</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="DSL_HRMS_attendance.view_employee_form_inherit_dsl_attendance"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='dsl_emp_att_right_group']" position="inside">
+                <field name="biometric_id_no" placeholder="e.g. DSL-HQ-0001 or 101"/>
+                <field name="rfid_card_no" placeholder="Optional Proximity Card UID"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- 6. Menus -->
+    <menuitem id="menu_dsl_biometric_device"
+              name="Biometric Devices"
+              parent="DSL_HRMS_core.menu_dsl_hrms_attendance_root"
+              action="action_dsl_biometric_device"
+              sequence="30"/>
+
+    <menuitem id="menu_dsl_biometric_punch_log"
+              name="Raw Machine Logs"
+              parent="DSL_HRMS_core.menu_dsl_hrms_attendance_root"
+              action="action_dsl_biometric_punch_log"
+              sequence="35"/>
+</odoo>
+
