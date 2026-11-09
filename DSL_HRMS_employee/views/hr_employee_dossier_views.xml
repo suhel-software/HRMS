@@ -785,7 +785,7 @@
         </field>
     </record>
 
-    <!-- 3. Enhance Employee Kanban Card -->
+    <!-- 3. Enhance Employee Kanban Card (Executive Bento Directory Card) -->
     <record id="hr_kanban_view_employees_inherit_dsl_dossier" model="ir.ui.view">
         <field name="name">hr.employee.kanban.dsl.dossier</field>
         <field name="model">hr.employee</field>
@@ -793,20 +793,115 @@
         <field name="arch" type="xml">
             <xpath expr="//kanban" position="inside">
                 <field name="employee_code"/>
+                <field name="name_bn"/>
                 <field name="blood_group"/>
                 <field name="employment_status"/>
+                <field name="employment_category"/>
                 <field name="service_length_display"/>
+                <field name="joining_date"/>
+                <field name="department_id"/>
+                <field name="branch_id"/>
+                <field name="grade_id"/>
+                <field name="job_title"/>
+                <field name="work_email"/>
+                <field name="work_phone"/>
+                <field name="mobile_phone"/>
             </xpath>
-            <xpath expr="//field[@name='name']" position="before">
-                <div class="d-flex align-items-center gap-1 mb-1" t-if="record.employee_code.raw_value">
-                    <span class="badge rounded-pill text-bg-light border text-dark fw-semibold">
-                        <field name="employee_code"/>
-                    </span>
-                    <span t-if="record.blood_group.raw_value"
-                          class="badge rounded-pill text-bg-danger">
-                        <field name="blood_group"/>
-                    </span>
-                </div>
+            <xpath expr="//t[@t-name='card']" position="replace">
+                <t t-name="card" class="dsl-emp-dir-card">
+                    <!-- Top Header Row: ID + Blood Group | Status Pill + Presence (Never wraps!) -->
+                    <div class="dsl-dir-card-top">
+                        <div class="dsl-dir-badges-left">
+                            <span t-if="record.employee_code.raw_value" class="dsl-dir-code-pill">
+                                <i class="fa fa-id-badge me-1" title="Employee ID"/>
+                                <field name="employee_code"/>
+                            </span>
+                            <span t-if="record.blood_group.raw_value" class="dsl-dir-blood-pill">
+                                <field name="blood_group"/>
+                            </span>
+                        </div>
+                        <div class="dsl-dir-badges-right">
+                            <span t-if="record.employment_status.raw_value == 'confirmed'" class="dsl-dir-status-pill status-confirmed">
+                                Confirmed
+                            </span>
+                            <span t-elif="record.employment_status.raw_value == 'probation'" class="dsl-dir-status-pill status-probation">
+                                Probation
+                            </span>
+                            <span t-elif="record.employment_status.raw_value == 'notice_period'" class="dsl-dir-status-pill status-notice">
+                                Notice
+                            </span>
+                            <div t-if="record.show_hr_icon_display.raw_value" class="dsl-dir-presence">
+                                <field name="hr_icon_display" class="o_employee_availability" widget="hr_presence_status"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Identity Section: Avatar + Name (EN/BN) + Designation + Dept/Branch/Grade -->
+                    <div class="dsl-dir-identity">
+                        <div class="dsl-dir-avatar-wrap">
+                            <field name="avatar_128" widget="image" options="{'zoom': true, 'zoom_delay': 1000}" class="dsl-dir-avatar-img"/>
+                        </div>
+                        <div class="dsl-dir-identity-info">
+                            <div class="dsl-dir-emp-name text-truncate" t-att-title="record.name.raw_value">
+                                <field name="name"/>
+                            </div>
+                            <div t-if="record.name_bn.raw_value" class="dsl-dir-emp-name-bn text-truncate">
+                                <field name="name_bn"/>
+                            </div>
+                            <div t-if="record.job_title.raw_value" class="dsl-dir-job-title text-truncate" t-att-title="record.job_title.raw_value">
+                                <field name="job_title"/>
+                            </div>
+                            <div class="dsl-dir-org-chips">
+                                <span t-if="record.department_id.raw_value" class="dsl-dir-org-chip">
+                                    <i class="fa fa-sitemap" title="Department"/>
+                                    <field name="department_id"/>
+                                </span>
+                                <span t-if="record.grade_id.raw_value" class="dsl-dir-grade-pill">
+                                    <field name="grade_id"/>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact & Tenure Box -->
+                    <div class="dsl-dir-contact-box">
+                        <div t-if="record.work_email.raw_value" class="dsl-dir-contact-row">
+                            <i class="fa fa-envelope-o dsl-dir-c-icon icon-blue" title="Email"/>
+                            <field name="work_email" class="text-truncate"/>
+                        </div>
+                        <div t-if="record.work_phone.raw_value or record.mobile_phone.raw_value" class="dsl-dir-contact-row">
+                            <i class="fa fa-phone dsl-dir-c-icon icon-emerald" title="Phone"/>
+                            <t t-if="record.work_phone.raw_value">
+                                <field name="work_phone"/>
+                            </t>
+                            <t t-else="">
+                                <field name="mobile_phone"/>
+                            </t>
+                        </div>
+                        <div t-if="record.joining_date.raw_value or record.service_length_display.raw_value" class="dsl-dir-contact-row">
+                            <i class="fa fa-calendar-check-o dsl-dir-c-icon icon-purple" title="Tenure"/>
+                            <span t-if="record.joining_date.raw_value">Joined: <field name="joining_date"/></span>
+                            <span t-if="record.service_length_display.raw_value" class="dsl-dir-tenure-badge ms-auto">
+                                <field name="service_length_display"/>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Footer: Category / Tags + User Avatar & Activity -->
+                    <div class="dsl-dir-card-footer">
+                        <div class="dsl-dir-footer-left">
+                            <span t-if="record.employment_category.raw_value" class="dsl-dir-cat-text">
+                                <i class="fa fa-briefcase me-1" title="Category"/>
+                                <field name="employment_category"/>
+                            </span>
+                            <field class="hr_tags" name="category_ids" widget="many2many_tags" options="{'color_field': 'color'}" optional="hide"/>
+                        </div>
+                        <div class="dsl-dir-footer-right">
+                            <field name="user_id" widget="many2one_avatar_user" readonly="1"/>
+                            <field name="activity_ids" widget="kanban_activity"/>
+                        </div>
+                    </div>
+                </t>
             </xpath>
         </field>
     </record>
