@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================ -->
+    <!-- Journal Entry form: Bank / Cheque details                   -->
+    <!-- ============================================================ -->
+    <record id="view_move_form_dsl_bank_instrument" model="ir.ui.view">
+        <field name="name">account.move.form.dsl.bank.instrument</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_cheque_mark_deposited" type="object" string="Cheque Deposited" icon="fa-university"
+                        invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft') or cheque_status not in ('draft', 'received', 'issued')"/>
+                <button name="action_cheque_mark_bounced" type="object" string="Cheque Bounced" icon="fa-ban"
+                        invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft') or cheque_status in ('bounced', 'cancelled', 'draft', False)"
+                        confirm="Mark this cheque as bounced / dishonoured? (Reverse the entry afterwards if needed.)"/>
+                <button name="action_cheque_mark_cancelled" type="object" string="Void Cheque" icon="fa-times-circle"
+                        invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft') or cheque_status in ('cleared', 'cancelled', False)"/>
+            </xpath>
+            <xpath expr="//notebook" position="before">
+                <div invisible="move_type != 'entry'">
+                    <widget name="web_ribbon" title="Cleared" bg_color="text-bg-success" invisible="not is_bank_cleared"/>
+                    <widget name="web_ribbon" title="Bounced" bg_color="text-bg-danger" invisible="cheque_status != 'bounced'"/>
+                    <field name="is_bank_cleared" invisible="1"/>
+                    <field name="is_post_dated" invisible="1"/>
+                    <separator string="Bank / Cheque Details"/>
+                    <group>
+                        <group string="Voucher &amp; Instrument">
+                            <field name="dsl_voucher_type"/>
+                            <field name="instrument_type"/>
+                            <field name="cheque_number" invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft')"
+                                   placeholder="e.g. CHQ-458812"/>
+                            <label for="cheque_date" invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft')"/>
+                            <div class="o_row" invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft')">
+                                <field name="cheque_date"/>
+                                <span class="badge text-bg-warning" invisible="not is_post_dated">Post-dated</span>
+                            </div>
+                            <field name="cheque_type" invisible="instrument_type != 'cheque'"/>
+                            <field name="cheque_status" widget="badge" invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft')"
+                                   decoration-success="cheque_status == 'cleared'" decoration-info="cheque_status in ('issued', 'received')"
+                                   decoration-warning="cheque_status in ('deposited', 'draft', 'stale')" decoration-danger="cheque_status in ('bounced', 'cancelled')"/>
+                            <field name="cheque_book_ref" invisible="instrument_type != 'cheque'"/>
+                            <field name="transaction_reference" invisible="instrument_type not in ('beftn', 'rtgs', 'npsb', 'online', 'mfs', 'card', 'standing')"
+                                   placeholder="UTR / TrxID"/>
+                            <field name="mfs_provider" invisible="instrument_type != 'mfs'"/>
+                            <field name="mfs_wallet_number" invisible="instrument_type != 'mfs'" placeholder="01XXXXXXXXX"/>
+                            <field name="amount_in_words" invisible="not instrument_type"/>
+                        </group>
+                        <group string="Bank &amp; Party">
+                            <field name="payee_name" invisible="not instrument_type"/>
+                            <field name="bank_name" invisible="not instrument_type" placeholder="e.g. Dutch-Bangla Bank PLC"/>
+                            <field name="bank_branch" invisible="not instrument_type"/>
+                            <field name="routing_number" invisible="instrument_type not in ('cheque', 'beftn', 'rtgs', 'npsb', 'pay_order', 'demand_draft')"/>
+                            <field name="party_bank_account" invisible="instrument_type in ('cash_deposit', 'mfs', False)"/>
+                            <field name="deposit_slip_number" invisible="instrument_type not in ('cheque', 'cash_deposit', 'pay_order', 'demand_draft')"/>
+                            <field name="cheque_handover_date" invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft')"/>
+                            <field name="cheque_deposit_date" invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft')"/>
+                            <field name="bank_clearance_date" invisible="not instrument_type"/>
+                            <field name="bank_charge_amount" invisible="not instrument_type"/>
+                            <field name="bounce_reason" invisible="cheque_status != 'bounced'" required="cheque_status == 'bounced'"/>
+                        </group>
+                    </group>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Payment form                                                -->
+    <!-- ============================================================ -->
+    <record id="view_account_payment_form_dsl_bank_instrument" model="ir.ui.view">
+        <field name="name">account.payment.form.dsl.bank.instrument</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='main_group']" position="after">
+                <field name="is_post_dated" invisible="1"/>
+                <group string="Bank / Cheque Details" name="dsl_bank_instrument">
+                    <group>
+                        <field name="dsl_voucher_type"/>
+                        <field name="instrument_type"/>
+                        <field name="cheque_number" invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft')" placeholder="e.g. CHQ-458812"/>
+                        <label for="cheque_date" invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft')"/>
+                        <div class="o_row" invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft')">
+                            <field name="cheque_date"/>
+                            <span class="badge text-bg-warning" invisible="not is_post_dated">Post-dated</span>
+                        </div>
+                        <field name="cheque_type" invisible="instrument_type != 'cheque'"/>
+                        <field name="cheque_status" widget="badge" invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft')"
+                               decoration-success="cheque_status == 'cleared'" decoration-info="cheque_status in ('issued', 'received')"
+                               decoration-warning="cheque_status in ('deposited', 'draft', 'stale')" decoration-danger="cheque_status in ('bounced', 'cancelled')"/>
+                        <field name="cheque_book_ref" invisible="instrument_type != 'cheque'"/>
+                        <field name="transaction_reference" invisible="instrument_type not in ('beftn', 'rtgs', 'npsb', 'online', 'mfs', 'card', 'standing')" placeholder="UTR / TrxID"/>
+                        <field name="mfs_provider" invisible="instrument_type != 'mfs'"/>
+                        <field name="mfs_wallet_number" invisible="instrument_type != 'mfs'" placeholder="01XXXXXXXXX"/>
+                    </group>
+                    <group>
+                        <field name="payee_name" invisible="not instrument_type"/>
+                        <field name="bank_name" invisible="not instrument_type"/>
+                        <field name="bank_branch" invisible="not instrument_type"/>
+                        <field name="routing_number" invisible="instrument_type not in ('cheque', 'beftn', 'rtgs', 'npsb', 'pay_order', 'demand_draft')"/>
+                        <field name="party_bank_account" invisible="instrument_type in ('cash_deposit', 'mfs', False)"/>
+                        <field name="deposit_slip_number" invisible="instrument_type not in ('cheque', 'cash_deposit', 'pay_order', 'demand_draft')"/>
+                        <field name="cheque_handover_date" invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft')"/>
+                        <field name="cheque_deposit_date" invisible="instrument_type not in ('cheque', 'pay_order', 'demand_draft')"/>
+                        <field name="bank_charge_amount" invisible="not instrument_type"/>
+                        <field name="bounce_reason" invisible="cheque_status != 'bounced'"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- List views                                                  -->
+    <!-- ============================================================ -->
+    <record id="view_move_tree_dsl_bank_instrument" model="ir.ui.view">
+        <field name="name">account.move.list.dsl.bank.instrument</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='ref']" position="after">
+                <field name="dsl_voucher_type" optional="hide"/>
+                <field name="instrument_type" optional="hide"/>
+                <field name="cheque_number" optional="show"/>
+                <field name="cheque_date" optional="hide"/>
+                <field name="cheque_status" widget="badge" optional="show"
+                       decoration-success="cheque_status == 'cleared'" decoration-danger="cheque_status in ('bounced', 'cancelled')"
+                       decoration-warning="cheque_status == 'deposited'" decoration-info="cheque_status in ('issued', 'received')"/>
+                <field name="bank_clearance_date" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_account_payment_tree_dsl_bank_instrument" model="ir.ui.view">
+        <field name="name">account.payment.list.dsl.bank.instrument</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='journal_id']" position="after">
+                <field name="instrument_type" optional="show"/>
+                <field name="cheque_number" optional="show"/>
+                <field name="cheque_date" optional="hide"/>
+                <field name="transaction_reference" optional="hide"/>
+                <field name="cheque_status" widget="badge" optional="show"
+                       decoration-success="cheque_status == 'cleared'" decoration-danger="cheque_status in ('bounced', 'cancelled')"
+                       decoration-warning="cheque_status == 'deposited'" decoration-info="cheque_status in ('issued', 'received')"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_move_line_tree_dsl_cheque" model="ir.ui.view">
+        <field name="name">account.move.line.list.dsl.cheque</field>
+        <field name="model">account.move.line</field>
+        <field name="inherit_id" ref="account.view_move_line_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='date']" position="after">
+                <field name="cheque_number" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Search views                                                -->
+    <!-- ============================================================ -->
+    <record id="view_account_move_filter_dsl_cheque" model="ir.ui.view">
+        <field name="name">account.move.search.dsl.cheque</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_account_move_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="cheque_number"/>
+                <field name="transaction_reference"/>
+                <field name="payee_name"/>
+                <separator/>
+                <filter name="with_cheque" string="Cheques" domain="[('instrument_type', 'in', ('cheque', 'pay_order', 'demand_draft'))]"/>
+                <filter name="cheque_uncleared" string="Uncleared Cheques"
+                        domain="[('instrument_type', 'in', ('cheque', 'pay_order', 'demand_draft')), ('cheque_status', 'not in', ('cleared', 'cancelled', 'bounced'))]"/>
+                <filter name="cheque_bounced" string="Bounced Cheques" domain="[('cheque_status', '=', 'bounced')]"/>
+                <filter name="bank_cleared" string="Cleared in Bank" domain="[('is_bank_cleared', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="grp_cheque_status" string="Cheque Status" context="{'group_by': 'cheque_status'}"/>
+                    <filter name="grp_instrument" string="Payment Mode" context="{'group_by': 'instrument_type'}"/>
+                    <filter name="grp_voucher" string="Voucher Type" context="{'group_by': 'dsl_voucher_type'}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_account_payment_search_dsl_cheque" model="ir.ui.view">
+        <field name="name">account.payment.search.dsl.cheque</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="cheque_number"/>
+                <field name="transaction_reference"/>
+                <separator/>
+                <filter name="pay_cheques" string="Cheques" domain="[('instrument_type', 'in', ('cheque', 'pay_order', 'demand_draft'))]"/>
+                <filter name="pay_bounced" string="Bounced Cheques" domain="[('cheque_status', '=', 'bounced')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="pay_grp_cheque_status" string="Cheque Status" context="{'group_by': 'cheque_status'}"/>
+                    <filter name="pay_grp_instrument" string="Payment Mode" context="{'group_by': 'instrument_type'}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Cheque Register                                             -->
+    <!-- ============================================================ -->
+    <record id="view_dsl_cheque_register_list" model="ir.ui.view">
+        <field name="name">account.move.cheque.register</field>
+        <field name="model">account.move</field>
+        <field name="priority">90</field>
+        <field name="arch" type="xml">
+            <list string="Cheque Register" create="0"
+                  decoration-danger="cheque_status in ('bounced', 'cancelled')" decoration-success="cheque_status == 'cleared'">
+                <field name="cheque_date"/>
+                <field name="cheque_number"/>
+                <field name="dsl_voucher_type"/>
+                <field name="instrument_type"/>
+                <field name="name" string="Voucher"/>
+                <field name="date" string="Book Date"/>
+                <field name="partner_id"/>
+                <field name="payee_name" optional="show"/>
+                <field name="bank_name" optional="show"/>
+                <field name="journal_id"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="amount_total" sum="Total" string="Amount"/>
+                <field name="cheque_deposit_date" optional="hide"/>
+                <field name="bank_clearance_date"/>
+                <field name="cheque_status" widget="badge"
+                       decoration-success="cheque_status == 'cleared'" decoration-danger="cheque_status in ('bounced', 'cancelled')"
+                       decoration-warning="cheque_status == 'deposited'" decoration-info="cheque_status in ('issued', 'received')"/>
+                <field name="state" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_dsl_cheque_register" model="ir.actions.act_window">
+        <field name="name">Cheque Register</field>
+        <field name="res_model">account.move</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_dsl_cheque_register_list"/>
+        <field name="domain">[('instrument_type', 'in', ('cheque', 'pay_order', 'demand_draft')), ('state', '!=', 'cancel')]</field>
+        <field name="context">{'search_default_cheque_uncleared': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No cheques yet</p>
+            <p>Set Payment Mode = Cheque and a cheque number on a payment or journal entry to track it here.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_dsl_cheque_register" name="Cheque Register" parent="account.menu_finance_entries"
+              action="action_dsl_cheque_register" sequence="16"/>
+</odoo>
+

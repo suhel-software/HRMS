@@ -1,0 +1,804 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="DSL_HRMS_bank_reconciliation.Console">
+        <div class="dsl_brs_bank_rec_container">
+            <!-- Top Hero Banner & Navigation -->
+            <header class="dsl_brs_bank_rec_header">
+                <div class="dsl_brs_header_brand">
+                    <div class="dsl_brs_brand_icon">
+                        <i class="fa fa-university"/>
+                    </div>
+                    <div>
+                        <h1 class="dsl_brs_title">Bank Reconciliation <span class="dsl_brs_badge_pro">PRO</span></h1>
+                        <p class="dsl_brs_subtitle">Match bank statements and clear vouchers with clearing dates</p>
+                    </div>
+                </div>
+
+                <div class="dsl_brs_header_actions">
+                    <button class="btn dsl_brs_btn_control"
+                            t-att-class="{'active': state.showBankCards}"
+                            t-on-click="() => this.toggleBankCards()"
+                            title="Toggle Bank Accounts Cards">
+                        <i class="fa fa-university me-1"/>
+                        <t t-if="state.showBankCards">Hide Banks</t>
+                        <t t-else="">Show Banks</t>
+                    </button>
+                    <button class="btn dsl_brs_btn_control"
+                            t-att-class="{'active': state.showJournalSettings}"
+                            t-on-click="() => this.toggleJournalSettings()"
+                            title="Manage Which Journals Appear Here">
+                        <i class="fa fa-cog me-1"/> Manage Journals
+                    </button>
+                    <div class="dsl_brs_tab_group">
+                        <button class="dsl_brs_tab_btn"
+                                t-att-class="{'active': state.mainMode === 'bank_brs'}"
+                                t-on-click="() => this.switchMainMode('bank_brs')">
+                            <i class="fa fa-university me-1"/> Bank Reconciliation
+                        </button>
+                        <button class="dsl_brs_tab_btn"
+                                t-att-class="{'active': state.mainMode === 'party_settlement'}"
+                                t-on-click="() => this.switchMainMode('party_settlement')">
+                            <i class="fa fa-users me-1"/> Party Bill Matching
+                        </button>
+                    </div>
+                    <button class="btn dsl_brs_btn_refresh" t-on-click="() => this.loadBrsData()" title="Reload Data">
+                        <i class="fa fa-refresh" t-att-class="{'fa-spin': state.loading}"/>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Journal Settings Modal / Popover -->
+            <div t-if="state.showJournalSettings" class="dsl_brs_modal_backdrop" t-on-click="() => this.toggleJournalSettings()">
+                <div class="dsl_brs_journal_modal" t-on-click="(ev) => ev.stopPropagation()">
+                    <div class="dsl_brs_modal_header">
+                        <h4 class="m-0"><i class="fa fa-sliders text-primary me-2"/>Manage Bank Journals</h4>
+                        <button class="btn btn-sm btn-light" t-on-click="() => this.toggleJournalSettings()">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+                    <p class="text-muted small mt-2 mb-3">
+                        Turn journals on or off. Only enabled journals will appear in the Bank Reconciliation console.
+                    </p>
+                    <div class="dsl_brs_journal_list">
+                        <div t-foreach="state.allBankJournals" t-as="j" t-key="j.id" class="dsl_brs_journal_item">
+                            <div class="dsl_brs_journal_item_info">
+                                <i t-if="j.type === 'bank'" class="fa fa-university text-primary me-2"/>
+                                <i t-else="" class="fa fa-money text-success me-2"/>
+                                <strong><t t-esc="j.name"/></strong>
+                                <span class="badge bg-light text-dark ms-2"><t t-esc="j.code"/></span>
+                            </div>
+                            <button class="btn btn-sm"
+                                    t-att-class="j.show_in_tally_brs ? 'btn-success' : 'btn-outline-secondary'"
+                                    t-on-click="() => this.toggleJournalBrs(j.id)">
+                                <i t-if="j.show_in_tally_brs" class="fa fa-check me-1"/>
+                                <t t-if="j.show_in_tally_brs">Active</t>
+                                <t t-else="">Hidden</t>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="dsl_brs_modal_footer">
+                        <button class="btn btn-primary btn-sm px-4" t-on-click="() => this.toggleJournalSettings()">Done</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Bank Charge / Adjustment Modal -->
+            <div t-if="state.showQuickAdjModal" class="dsl_brs_modal_backdrop" t-on-click="() => this.closeQuickAdjModal()">
+                <div class="dsl_brs_adj_modal" t-on-click="(ev) => ev.stopPropagation()">
+                    <div class="dsl_brs_modal_header">
+                        <div>
+                            <h4 class="m-0"><i class="fa fa-bolt text-warning me-2"/>Record Bank Charge / Adjustment</h4>
+                            <p class="text-muted small m-0 mt-1">Post a standard journal voucher to reconcile bank statement differences</p>
+                        </div>
+                        <button class="btn btn-sm btn-light" t-on-click="() => this.closeQuickAdjModal()">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+                    <div class="dsl_brs_modal_body">
+                        <!-- Linked Voucher Info Banner -->
+                        <div t-if="state.quickAdj.sourceMoveName" class="dsl_brs_adj_source_banner">
+                            <i class="fa fa-link text-primary fs-5 me-2"/>
+                            <div>
+                                <span>Adjusting for voucher: </span>
+                                <strong class="text-primary"><t t-esc="state.quickAdj.sourceMoveName"/></strong>
+                                <span class="d-block text-muted small mt-1">An audit note will be logged in this voucher's chatter history.</span>
+                            </div>
+                        </div>
+
+                        <!-- Reconcile Original Voucher Checkbox / Switch (1 Combined Journal) -->
+                        <div t-if="state.quickAdj.sourceMoveName and !state.quickAdj.sourceIsCleared" class="dsl_brs_adj_source_banner bg-light border p-3 mt-2 mb-3 rounded">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <span class="d-block fw-bold text-dark">
+                                        <i class="fa fa-check-circle text-success me-1"/> Clear Voucher &amp; Record Fee in 1 Single Combined Journal Entry
+                                    </span>
+                                    <small class="text-muted d-block mt-1">
+                                        Voucher: <strong><t t-esc="state.quickAdj.sourceMoveName"/></strong> (Gross <t t-esc="state.currencySymbol"/> <t t-esc="state.quickAdj.sourceGrossAmountStr"/>)
+                                    </small>
+                                </div>
+                                <div class="form-check form-switch m-0 ms-3">
+                                    <input class="form-check-input fs-5" type="checkbox" id="reconcileSourceSwitch" t-model="state.quickAdj.reconcileSource"/>
+                                </div>
+                            </div>
+                            <!-- Dynamic Live Net Calculation Indicator -->
+                            <div t-if="quickAdjNetCalc and state.quickAdj.reconcileSource" class="mt-2 pt-2 border-top d-flex align-items-center justify-content-between bg-white p-2 rounded small">
+                                <span>
+                                    Gross: <strong><t t-esc="state.currencySymbol"/> <t t-esc="quickAdjNetCalc.gross"/></strong> 
+                                    <t t-if="quickAdjNetCalc.isReceipt"> - Charge: </t>
+                                    <t t-else=""> + Charge: </t>
+                                    <strong class="text-danger"><t t-esc="state.currencySymbol"/> <t t-esc="quickAdjNetCalc.fee"/></strong>
+                                </span>
+                                <span class="badge bg-success-subtle text-success fs-6 fw-bold">
+                                    <t t-esc="quickAdjNetCalc.label"/>: <t t-esc="state.currencySymbol"/> <t t-esc="quickAdjNetCalc.net"/>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="dsl_brs_form_grid">
+                            <div class="dsl_brs_form_group">
+                                <label class="dsl_brs_form_label">Bank Journal</label>
+                                <input type="text" class="dsl_brs_input bg-light" readonly="1" t-att-value="currentJournal ? currentJournal.name : ''"/>
+                            </div>
+                            <div class="dsl_brs_form_group">
+                                <label class="dsl_brs_form_label">Adjustment Type</label>
+                                <select class="dsl_brs_input" t-model="state.quickAdj.type" t-on-change="(ev) => this.onQuickAdjTypeChange(ev)">
+                                    <optgroup label="bKash / Nagad / MFS &amp; Online Payment Fees">
+                                        <option value="bkash_charge">bKash Payment / Cash Out Charge</option>
+                                        <option value="nagad_charge">Nagad Payment / Merchant Charge</option>
+                                        <option value="mfs_charge">Rocket / Upay / MFS Gateway Fee</option>
+                                        <option value="pgw_fee">Online Gateway Fee (SSLCommerz / Shurjopay)</option>
+                                        <option value="pos_card_fee">POS Card Swiping / MDR Charge</option>
+                                    </optgroup>
+                                    <optgroup label="Bank Charges &amp; Deductions (Money Out)">
+                                        <option value="bank_charge">Bank Charge &amp; Commission (General)</option>
+                                        <option value="excise_duty">Govt. Excise Duty &amp; Source Tax (AIT)</option>
+                                        <option value="cheque_bounce">Cheque Return / Dishonour Charges</option>
+                                        <option value="direct_debit">Direct Bank Debit / Loan EMI / Standing Order</option>
+                                        <option value="rounding_loss">Rounding Off Difference (Expense / Shortage)</option>
+                                    </optgroup>
+                                    <optgroup label="Money In / Credits (Income &amp; Commissions)">
+                                        <option value="mfs_commission">MFS Cash-in Commission / Cashback</option>
+                                        <option value="bank_interest">Bank Interest &amp; Profit Received</option>
+                                        <option value="direct_credit">Direct Customer Online Deposit / Transfer In</option>
+                                        <option value="rounding_gain">Rounding Off Difference (Income / Excess)</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="dsl_brs_form_group">
+                                <label class="dsl_brs_form_label">Amount (<t t-esc="state.currencySymbol"/>) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="dsl_brs_input" placeholder="e.g. 50.00" t-model="state.quickAdj.amount"/>
+                            </div>
+                            <div class="dsl_brs_form_group">
+                                <label class="dsl_brs_form_label">Voucher Date <span class="text-danger">*</span></label>
+                                <input type="date" class="dsl_brs_input" t-model="state.quickAdj.date" t-on-click="(ev) => this.openDatePicker(ev)"/>
+                            </div>
+                            <div class="dsl_brs_form_group dsl_brs_col_full">
+                                <label class="dsl_brs_form_label">Charge / Adjustment Account <span class="text-danger">*</span></label>
+                                <select class="dsl_brs_input" t-model="state.quickAdj.accountId">
+                                    <option value="">-- Select Expense / Adjustment Account --</option>
+                                    <t t-foreach="state.expenseAccounts" t-as="acc" t-key="acc.id">
+                                        <option t-att-value="acc.id">
+                                            [<t t-esc="acc.code"/>] <t t-esc="acc.name"/>
+                                        </option>
+                                    </t>
+                                </select>
+                            </div>
+                            <div class="dsl_brs_form_group">
+                                <label class="dsl_brs_form_label">Cheque / Reference No</label>
+                                <input type="text" class="dsl_brs_input" placeholder="Cheque # or Ref..." t-model="state.quickAdj.chequeNo"/>
+                            </div>
+                            <div class="dsl_brs_form_group">
+                                <label class="dsl_brs_form_label">Bank Clearing Date</label>
+                                <input type="date" class="dsl_brs_input" placeholder="Clearing Date in Statement..." t-model="state.quickAdj.bankDate" t-on-click="(ev) => this.openDatePicker(ev)"/>
+                                <small class="text-muted d-block mt-1">If set, clears in BRS automatically.</small>
+                            </div>
+                            <div class="dsl_brs_form_group dsl_brs_col_full">
+                                <label class="dsl_brs_form_label">Description / Particulars</label>
+                                <input type="text" class="dsl_brs_input" placeholder="e.g. Bank charge on Cheque / SMS Alert / Excise Duty" t-model="state.quickAdj.description"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dsl_brs_modal_footer">
+                        <button class="btn btn-secondary btn-sm px-3" t-on-click="() => this.closeQuickAdjModal()">Cancel</button>
+                        <button class="btn btn-primary btn-sm px-4" t-att-disabled="state.processing" t-on-click="() => this.submitQuickAdjustment()">
+                            <i t-if="state.processing" class="fa fa-spinner fa-spin me-1"/>
+                            <t t-else="">
+                                <i t-if="state.quickAdj.sourceMoveName and state.quickAdj.reconcileSource" class="fa fa-bolt me-1"/>
+                                <i t-else="" class="fa fa-check me-1"/>
+                                <t t-if="state.quickAdj.sourceMoveName and state.quickAdj.reconcileSource">Post Combined Entry</t>
+                                <t t-else="">Post Adjustment</t>
+                            </t>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirmation Modal for Bank Date -->
+            <div t-if="state.showConfirmDateModal" class="dsl_brs_modal_backdrop" t-on-click="() => this.cancelConfirmDate()">
+                <div class="dsl_brs_confirm_modal" t-on-click="(ev) => ev.stopPropagation()">
+                    <div class="dsl_brs_confirm_header">
+                        <div class="dsl_brs_confirm_icon">
+                            <i class="fa fa-calendar-check-o"/>
+                        </div>
+                        <div>
+                            <h4 class="m-0 text-white">Confirm Bank Clearing Date</h4>
+                            <p class="text-white-50 small m-0 mt-1">Please confirm the clearing date for this transaction</p>
+                        </div>
+                    </div>
+                    <div class="dsl_brs_confirm_body">
+                        <div class="dsl_brs_confirm_row">
+                            <span class="dsl_brs_confirm_lbl">Particulars / Party:</span>
+                            <strong class="dsl_brs_confirm_val" t-esc="state.pendingDateChange.particulars"/>
+                        </div>
+                        <div t-if="state.pendingDateChange.instrument_no" class="dsl_brs_confirm_row">
+                            <span class="dsl_brs_confirm_lbl">Cheque / Ref No:</span>
+                            <strong class="dsl_brs_confirm_val text-primary" t-esc="state.pendingDateChange.instrument_no"/>
+                        </div>
+                        <div class="dsl_brs_confirm_row">
+                            <span class="dsl_brs_confirm_lbl">Amount:</span>
+                            <strong class="dsl_brs_confirm_val" t-att-class="state.pendingDateChange.isDebit ? 'text-primary' : 'text-danger'">
+                                <t t-esc="formatMoney(state.pendingDateChange.amount)"/>
+                                <span class="badge ms-2" t-att-class="state.pendingDateChange.isDebit ? 'bg-primary' : 'bg-danger'">
+                                    <t t-if="state.pendingDateChange.isDebit">Deposit (Debit)</t>
+                                    <t t-else="">Payment (Credit)</t>
+                                </span>
+                            </strong>
+                        </div>
+                        <div class="dsl_brs_confirm_row dsl_brs_confirm_target">
+                            <span class="dsl_brs_confirm_lbl">Clearing Date:</span>
+                            <strong class="dsl_brs_confirm_val text-success fs-5">
+                                <t t-if="state.pendingDateChange.newDate">
+                                    <i class="fa fa-calendar me-1"/> <t t-esc="state.pendingDateChange.newDate"/>
+                                </t>
+                                <t t-else="">
+                                    <span class="text-danger"><i class="fa fa-times-circle me-1"/> Remove Date (Mark as Pending)</span>
+                                </t>
+                            </strong>
+                        </div>
+                    </div>
+                    <div class="dsl_brs_confirm_footer">
+                        <button class="btn btn-secondary btn-sm px-3" t-on-click="() => this.cancelConfirmDate()">
+                            Cancel
+                        </button>
+                        <button class="btn btn-success btn-sm px-4 fw-bold" t-att-disabled="state.processing" t-on-click="() => this.executeConfirmedDateChange()">
+                            <i t-if="state.processing" class="fa fa-spinner fa-spin me-1"/>
+                            <i t-else="" class="fa fa-check me-1"/> Apply
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- 1. MAIN FOCUS: BANK RECONCILIATION STATEMENT (BRS)            -->
+            <!-- ============================================================= -->
+            <div t-if="state.mainMode === 'bank_brs'" class="dsl_brs_view">
+                <!-- Bank Account Cards Selector (Expanded) -->
+                <section t-if="state.showBankCards" class="dsl_brs_bank_selector_grid">
+                    <div t-foreach="state.bankJournals" t-as="b" t-key="b.id"
+                         class="dsl_brs_bank_card"
+                         t-att-class="{'active': state.selectedJournalId === b.id}"
+                         t-on-click="() => this.selectBankJournal(b.id)">
+                        <div class="dsl_brs_bank_card_top">
+                            <div class="dsl_brs_bank_card_icon">
+                                <i t-if="b.type === 'bank'" class="fa fa-university"/>
+                                <i t-else="" class="fa fa-money"/>
+                            </div>
+                            <div class="dsl_brs_bank_card_info">
+                                <strong class="dsl_brs_bank_name" t-esc="b.name"/>
+                                <span class="dsl_brs_bank_code" t-esc="b.account_code"/>
+                            </div>
+                        </div>
+                        <div class="dsl_brs_bank_card_bottom">
+                            <div class="dsl_brs_bank_bal">
+                                <span class="dsl_brs_label_micro">Book Balance</span>
+                                <strong><t t-esc="formatMoney(b.book_balance)"/></strong>
+                            </div>
+                            <span t-if="b.uncleared_count &gt; 0" class="badge dsl_brs_badge_uncl_count">
+                                <t t-esc="b.uncleared_count"/> uncleared
+                            </span>
+                            <span t-else="" class="badge dsl_brs_badge_all_clear">
+                                <i class="fa fa-check"/> Cleared
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Compact Bank Bar (When bank cards are collapsed) -->
+                <section t-if="!state.showBankCards" class="dsl_brs_bank_compact_bar">
+                    <div class="dsl_brs_compact_info">
+                        <i class="fa fa-university text-primary fs-5 me-2"/>
+                        <span class="text-muted me-1">Active Account:</span>
+                        <strong class="dsl_brs_compact_title me-3" t-esc="currentJournal ? currentJournal.name : 'Select Account'"/>
+                        <span class="dsl_brs_compact_divider"/>
+                        <span class="text-muted ms-3 me-1">Book Balance:</span>
+                        <strong class="me-3 text-dark"><t t-esc="formatMoney(state.brsSummary.book_balance)"/></strong>
+                        <span class="dsl_brs_compact_divider"/>
+                        <span class="text-muted ms-3 me-1">Pending Cheques:</span>
+                        <span class="badge dsl_brs_badge_uncl_count ms-1">
+                            <t t-esc="state.brsSummary.uncleared_count"/> uncleared
+                        </span>
+                    </div>
+                    <button class="btn btn-sm dsl_brs_btn_compact_toggle" t-on-click="() => this.toggleBankCards()">
+                        <i class="fa fa-th-large me-1"/> Show All Bank Cards
+                    </button>
+                </section>
+
+                <!-- Tally BRS Formula KPI Bar -->
+                <section class="dsl_brs_kpi_bar">
+                    <!-- 1. Balance as per Company Books -->
+                    <div class="dsl_brs_stat_card dsl_brs_stat_books">
+                        <span class="dsl_brs_stat_title"><i class="fa fa-book me-1"/> Balance as per Company Books</span>
+                        <div class="dsl_brs_stat_amount">
+                            <t t-esc="formatMoney(state.brsSummary.book_balance)"/>
+                        </div>
+                        <span class="dsl_brs_stat_desc">Bank ledger book balance</span>
+                    </div>
+
+                    <!-- 2. Amounts not Reflected in Bank -->
+                    <div class="dsl_brs_stat_card dsl_brs_stat_uncl">
+                        <span class="dsl_brs_stat_title"><i class="fa fa-clock-o me-1"/> Amounts not reflected in Bank</span>
+                        <div class="dsl_brs_stat_amount text-warning">
+                            <t t-esc="formatMoney(state.brsSummary.amounts_not_in_bank)"/>
+                        </div>
+                        <span class="dsl_brs_stat_desc">
+                            <t t-if="state.brsDateFrom || state.brsDateTo">
+                                <strong><t t-esc="state.brsSummary.period_uncleared_count !== undefined ? state.brsSummary.period_uncleared_count : 0"/></strong> pending in period (<t t-esc="state.brsSummary.uncleared_count"/> total)
+                            </t>
+                            <t t-else="">
+                                <strong><t t-esc="state.brsSummary.uncleared_count"/></strong> cheques / deposits pending
+                            </t>
+                        </span>
+                    </div>
+
+                    <!-- 3. Balance as per Bank (Calculated) -->
+                    <div class="dsl_brs_stat_card dsl_brs_stat_calc">
+                        <span class="dsl_brs_stat_title"><i class="fa fa-calculator me-1"/> Balance as per Bank (Calculated)</span>
+                        <div class="dsl_brs_stat_amount text-primary">
+                            <t t-esc="formatMoney(state.brsSummary.calculated_bank_balance)"/>
+                        </div>
+                        <span class="dsl_brs_stat_desc">Expected balance on statement</span>
+                    </div>
+
+                    <!-- 4. Statement Balance Verification -->
+                    <div class="dsl_brs_stat_card dsl_brs_stat_verify">
+                        <span class="dsl_brs_stat_title"><i class="fa fa-file-text-o me-1"/> Actual Statement Closing Balance</span>
+                        <div class="dsl_brs_stmt_input_wrap">
+                            <span class="dsl_brs_curr_prefix"><t t-esc="state.currencySymbol"/></span>
+                            <input type="number"
+                                   step="0.01"
+                                   class="dsl_brs_stmt_input"
+                                   placeholder="Type Statement Balance..."
+                                   t-att-value="state.statementBalanceInput"
+                                   t-on-input="(ev) => this.onStatementBalanceInput(ev)"/>
+                        </div>
+                        <!-- BRS Status Indicator -->
+                        <div class="mt-2">
+                            <span t-if="isBrsBalanced" class="badge dsl_brs_badge_exact">
+                                <i class="fa fa-check-circle me-1"/> 100% Balanced with Bank!
+                            </span>
+                            <span t-elif="brsDifference !== null" class="badge dsl_brs_badge_partial">
+                                <i class="fa fa-exclamation-triangle me-1"/> Difference: <t t-esc="formatMoney(brsDifference)"/>
+                            </span>
+                            <span t-else="" class="text-muted dsl_brs_hint_text">Enter statement balance to verify difference</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- NEW: Date Range Filter & Period Statistics Bar -->
+                <section class="dsl_brs_date_period_bar">
+                    <div class="dsl_brs_date_controls">
+                        <span class="dsl_brs_control_label"><i class="fa fa-calendar me-1"/> Date Period:</span>
+                        <div class="dsl_brs_preset_pills">
+                            <button class="btn dsl_brs_pill_btn"
+                                    t-att-class="{'active': state.datePreset === 'today'}"
+                                    t-on-click="() => this.setDatePreset('today')">
+                                Today
+                            </button>
+                            <button class="btn dsl_brs_pill_btn"
+                                    t-att-class="{'active': state.datePreset === 'this_month'}"
+                                    t-on-click="() => this.setDatePreset('this_month')">
+                                This Month
+                            </button>
+                            <button class="btn dsl_brs_pill_btn"
+                                    t-att-class="{'active': state.datePreset === 'last_month'}"
+                                    t-on-click="() => this.setDatePreset('last_month')">
+                                Last Month
+                            </button>
+                            <button class="btn dsl_brs_pill_btn"
+                                    t-att-class="{'active': state.datePreset === 'this_quarter'}"
+                                    t-on-click="() => this.setDatePreset('this_quarter')">
+                                This Quarter
+                            </button>
+                            <button class="btn dsl_brs_pill_btn"
+                                    t-att-class="{'active': state.datePreset === 'this_year'}"
+                                    t-on-click="() => this.setDatePreset('this_year')">
+                                This Year
+                            </button>
+                            <button class="btn dsl_brs_pill_btn"
+                                    t-att-class="{'active': state.datePreset === 'all_time'}"
+                                    t-on-click="() => this.setDatePreset('all_time')">
+                                All Time
+                            </button>
+                        </div>
+
+                        <!-- Custom Date Pickers -->
+                        <div class="dsl_brs_custom_range_wrap">
+                            <input type="date"
+                                   class="dsl_brs_date_input"
+                                   t-att-value="state.brsDateFrom"
+                                   t-on-click="(ev) => this.openDatePicker(ev)"
+                                   t-on-change="(ev) => this.onDateFromInput(ev)"
+                                   title="From Date"/>
+                            <span class="text-muted small">to</span>
+                            <input type="date"
+                                   class="dsl_brs_date_input"
+                                   t-att-value="state.brsDateTo"
+                                   t-on-click="(ev) => this.openDatePicker(ev)"
+                                   t-on-change="(ev) => this.onDateToInput(ev)"
+                                   title="To Date"/>
+                            <button class="btn btn-sm dsl_brs_btn_apply_date" t-on-click="() => this.applyCustomDate()" title="Apply Filter">
+                                <i class="fa fa-filter me-1"/> Filter
+                            </button>
+                            <button t-if="state.brsDateFrom or state.brsDateTo"
+                                    class="btn btn-sm dsl_brs_btn_clear_dates"
+                                    t-on-click="() => this.clearDates()"
+                                    title="Reset Date Filter (Show All Time)">
+                                <i class="fa fa-undo me-1"/> Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right: Period Statistics Pills -->
+                    <div class="dsl_brs_period_stats_pills">
+                        <div class="dsl_brs_pstat_item dsl_brs_pstat_total" title="Total vouchers in selected period">
+                            <span class="dsl_brs_pstat_lbl">Total Vouchers</span>
+                            <strong class="dsl_brs_pstat_val"><t t-esc="state.brsSummary.period_total_count || 0"/></strong>
+                        </div>
+                        <div class="dsl_brs_pstat_item dsl_brs_pstat_cleared" title="Cleared vouchers in selected period">
+                            <span class="dsl_brs_pstat_lbl"><i class="fa fa-check-circle me-1 text-success"/> Cleared</span>
+                            <strong class="dsl_brs_pstat_val text-success"><t t-esc="state.brsSummary.period_cleared_count || 0"/></strong>
+                        </div>
+                        <div class="dsl_brs_pstat_item dsl_brs_pstat_pending" title="Pending uncleared vouchers in selected period">
+                            <span class="dsl_brs_pstat_lbl"><i class="fa fa-clock-o me-1 text-warning"/> Pending</span>
+                            <strong class="dsl_brs_pstat_val text-warning"><t t-esc="state.brsSummary.period_uncleared_count || 0"/></strong>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Filter & Search Toolbar -->
+                <section class="dsl_brs_toolbar">
+                    <div class="dsl_brs_filter_status_group">
+                        <button class="btn dsl_brs_filter_btn"
+                                t-att-class="{'active': state.brsFilterStatus === 'uncleared'}"
+                                t-on-click="() => this.setBrsFilterStatus('uncleared')">
+                            <i class="fa fa-clock-o me-1 text-warning"/> Uncleared Only (<t t-esc="state.brsSummary.period_uncleared_count !== undefined ? state.brsSummary.period_uncleared_count : 0"/>)
+                        </button>
+                        <button class="btn dsl_brs_filter_btn"
+                                t-att-class="{'active': state.brsFilterStatus === 'cleared'}"
+                                t-on-click="() => this.setBrsFilterStatus('cleared')">
+                            <i class="fa fa-check-circle me-1 text-success"/> Cleared Only (<t t-esc="state.brsSummary.period_cleared_count !== undefined ? state.brsSummary.period_cleared_count : 0"/>)
+                        </button>
+                        <button class="btn dsl_brs_filter_btn"
+                                t-att-class="{'active': state.brsFilterStatus === 'all'}"
+                                t-on-click="() => this.setBrsFilterStatus('all')">
+                            <i class="fa fa-list me-1"/> All Transactions (<t t-esc="state.brsSummary.period_total_count !== undefined ? state.brsSummary.period_total_count : 0"/>)
+                        </button>
+                    </div>
+
+                    <!-- Flow Filter Toggle (Money IN vs Money OUT) -->
+                    <div class="dsl_brs_filter_flow_group">
+                        <button class="btn dsl_brs_filter_btn"
+                                t-att-class="{'active': state.brsFlowFilter === 'all'}"
+                                t-on-click="() => this.setBrsFlowFilter('all')"
+                                title="Show all transactions">
+                            All Flows
+                        </button>
+                        <button class="btn dsl_brs_filter_btn dsl_brs_flow_btn_in"
+                                t-att-class="{'active': state.brsFlowFilter === 'in'}"
+                                t-on-click="() => this.setBrsFlowFilter('in')"
+                                title="Filter Deposits into bank">
+                            <i class="fa fa-arrow-down text-success me-1"/> IN (<t t-esc="countMoneyIn"/>)
+                        </button>
+                        <button class="btn dsl_brs_filter_btn dsl_brs_flow_btn_out"
+                                t-att-class="{'active': state.brsFlowFilter === 'out'}"
+                                t-on-click="() => this.setBrsFlowFilter('out')"
+                                title="Filter Payments from bank">
+                            <i class="fa fa-arrow-up text-danger me-1"/> OUT (<t t-esc="countMoneyOut"/>)
+                        </button>
+                    </div>
+
+                    <div class="dsl_brs_toolbar_right">
+                        <button class="btn dsl_brs_btn_add_adj" t-on-click="() => this.openQuickAdjModal()" title="Record Bank Charge, Interest, or Difference Adjustment">
+                            <i class="fa fa-bolt text-warning me-1"/> + Bank Charge / Adjustment
+                        </button>
+                        <div class="dsl_brs_search_wrap">
+                            <input type="text"
+                                   class="dsl_brs_input"
+                                   placeholder="Search Cheque #, Particulars, Memo, Amount..."
+                                   t-att-value="state.brsSearch"
+                                   t-on-input="(ev) => this.onBrsSearchInput(ev)"
+                                   t-on-keyup="(ev) => this.onBrsSearchKeyup(ev)"/>
+                            <button class="btn btn-sm dsl_brs_btn_apply" t-on-click="() => this.loadBrsData()">
+                                <i class="fa fa-search"/>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Loading Spinner -->
+                <div t-if="state.loading" class="dsl_brs_loading_overlay">
+                    <div class="dsl_brs_spinner"/>
+                    <span>Loading bank vouchers...</span>
+                </div>
+
+                <!-- BANK RECONCILIATION TABLE -->
+                <div t-if="!state.loading" class="dsl_brs_table_wrapper">
+                    <table class="dsl_brs_table dsl_brs_table_brs">
+                        <thead>
+                            <tr>
+                                <th class="dsl_brs_th_chk">
+                                    <input type="checkbox" t-on-change="(ev) => this.toggleAllBrsSelect(ev)"/>
+                                </th>
+                                <th class="dsl_brs_th_date">Date</th>
+                                <th class="dsl_brs_th_status">Status</th>
+                                <th class="dsl_brs_th_particulars">Particulars / Party</th>
+                                <th class="dsl_brs_th_vch">Voucher &amp; Flow</th>
+                                <th class="dsl_brs_th_cheque">Instrument / Cheque No</th>
+                                <th class="text-end dsl_brs_th_amount dsl_brs_th_deposit">
+                                    <div class="dsl_brs_th_flow_pill dsl_brs_th_pill_in" title="Debit / Deposit (IN)">
+                                        <i class="fa fa-arrow-circle-down text-success me-1"/>
+                                        <span>Debit / Deposit (IN)</span>
+                                    </div>
+                                </th>
+                                <th class="text-end dsl_brs_th_amount dsl_brs_th_withdrawal">
+                                    <div class="dsl_brs_th_flow_pill dsl_brs_th_pill_out" title="Credit / Withdrawal (OUT)">
+                                        <i class="fa fa-arrow-circle-up text-danger me-1"/>
+                                        <span>Credit / Withdrawal (OUT)</span>
+                                    </div>
+                                </th>
+                                <th class="dsl_brs_th_bankdate">
+                                    <i class="fa fa-calendar-check-o text-primary me-1"/> Bank Clearing Date
+                                </th>
+                                <th class="text-center dsl_brs_th_adj">Adjustment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-if="displayedBrsItems.length === 0" class="dsl_brs_empty_row">
+                                <td colspan="10">
+                                    <div class="dsl_brs_empty_msg">
+                                        <i class="fa fa-check-circle text-success fa-2x"/>
+                                        <span>No transactions matching this filter.</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr t-foreach="displayedBrsItems" t-as="row" t-key="row.id"
+                                t-att-class="{
+                                    'dsl_brs_row_cleared': row.is_cleared, 
+                                    'dsl_brs_row_selected': state.selectedBrsIds[row.id],
+                                    'dsl_brs_row_flow_in': row.debit &gt; 0,
+                                    'dsl_brs_row_flow_out': row.credit &gt; 0
+                                }">
+                                <td class="dsl_brs_td_chk">
+                                    <input type="checkbox"
+                                           t-att-checked="state.selectedBrsIds[row.id] ? 'checked' : undefined"
+                                           t-on-change="() => this.toggleBrsSelect(row.id)"/>
+                                </td>
+                                <td class="dsl_brs_td_date">
+                                    <span class="dsl_brs_date_badge" t-esc="row.date"/>
+                                </td>
+                                <td class="dsl_brs_td_status">
+                                    <span t-if="row.is_cleared" class="badge dsl_brs_status_badge_cleared">
+                                        <i class="fa fa-check me-1"/> Cleared
+                                    </span>
+                                    <span t-else="" class="badge dsl_brs_status_badge_pending">
+                                        <i class="fa fa-clock-o me-1"/> Pending
+                                    </span>
+                                </td>
+                                <td class="dsl_brs_td_particulars">
+                                    <div class="dsl_brs_partic_header">
+                                        <strong class="dsl_brs_partic_title" t-esc="row.particulars"/>
+                                        <span t-if="row.is_adjustment" class="badge dsl_brs_badge_adj_entry">
+                                            <i class="fa fa-sliders me-1"/>Adjustment
+                                        </span>
+                                        <a t-if="row.move_name and row.move_name !== '/'"
+                                           href="javascript:void(0)"
+                                           class="dsl_brs_move_link"
+                                           t-on-click="() => this.openMove(row.move_id)"
+                                           title="Open original journal voucher in Odoo">
+                                            <i class="fa fa-external-link me-1"/><t t-esc="row.move_name"/>
+                                        </a>
+                                        <a t-if="row.clearing_move_name"
+                                           href="javascript:void(0)"
+                                           class="badge bg-primary text-white text-decoration-none ms-1"
+                                           t-on-click="() => this.openMove(row.clearing_move_id)"
+                                           title="Open generated Clearing Journal Entry">
+                                            <i class="fa fa-book me-1"/><t t-esc="row.clearing_move_name"/>
+                                        </a>
+                                    </div>
+                                    <span t-if="row.label and row.label !== row.particulars" class="dsl_brs_partic_sub" t-esc="row.label"/>
+                                </td>
+                                <td class="dsl_brs_td_vch">
+                                    <div class="dsl_brs_vch_cell_wrap">
+                                        <span class="badge dsl_brs_badge_vch" t-esc="row.vch_type"/>
+                                        <span t-if="row.debit &gt; 0" class="badge dsl_brs_flow_pill dsl_brs_flow_pill_in" title="Deposit (IN)">
+                                            <i class="fa fa-arrow-down me-1"/> IN
+                                        </span>
+                                        <span t-if="row.credit &gt; 0" class="badge dsl_brs_flow_pill dsl_brs_flow_pill_out" title="Withdrawal (OUT)">
+                                            <i class="fa fa-arrow-up me-1"/> OUT
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="dsl_brs_td_cheque">
+                                    <strong t-if="row.instrument_no" class="dsl_brs_cheque_no" t-att-title="row.instrument_no" t-esc="row.instrument_no"/>
+                                    <span t-else="" class="text-muted">—</span>
+                                </td>
+                                <td class="text-end dsl_brs_td_amount dsl_brs_td_money_in">
+                                    <div t-if="row.debit &gt; 0" class="dsl_brs_amount_badge dsl_brs_amount_in" title="Deposit (IN)">
+                                        <i class="fa fa-plus text-success me-1"/>
+                                        <strong><t t-esc="formatMoney(row.debit)"/></strong>
+                                    </div>
+                                    <span t-else="" class="text-muted opacity-25">—</span>
+                                </td>
+                                <td class="text-end dsl_brs_td_amount dsl_brs_td_money_out">
+                                    <div t-if="row.credit &gt; 0" class="dsl_brs_amount_badge dsl_brs_amount_out" title="Withdrawal (OUT)">
+                                        <i class="fa fa-minus text-danger me-1"/>
+                                        <strong><t t-esc="formatMoney(row.credit)"/></strong>
+                                    </div>
+                                    <span t-else="" class="text-muted opacity-25">—</span>
+                                </td>
+                                <!-- BANK CLEARING DATE INPUT -->
+                                <td class="dsl_brs_td_bankdate">
+                                    <div class="dsl_brs_bankdate_cell">
+                                        <input type="date"
+                                               class="dsl_brs_bank_date_input"
+                                               t-att-class="{'dsl_brs_input_cleared': row.is_cleared}"
+                                               t-att-value="row.bank_date"
+                                               t-on-click="(ev) => this.openDatePicker(ev)"
+                                               t-on-change="(ev) => this.onBankDateChange(row.id, ev)"/>
+                                        <button t-if="!row.is_cleared"
+                                                class="btn btn-sm dsl_brs_btn_today"
+                                                t-on-click="() => this.setRowTodayDate(row.id)"
+                                                title="Set Today's Date">
+                                            <i class="fa fa-calendar-check-o me-1"/> Today
+                                        </button>
+                                        <button t-if="row.is_cleared"
+                                                class="btn btn-sm dsl_brs_btn_clear_date"
+                                                t-on-click="() => this.clearBankDate(row.id)"
+                                                title="Clear Bank Date (Mark as Pending)">
+                                            <i class="fa fa-undo me-1"/> Clear
+                                        </button>
+                                    </div>
+                                </td>
+                                <!-- DEDICATED ADJUSTMENT ACTION CELL -->
+                                <td class="text-center dsl_brs_td_adj">
+                                    <button class="btn btn-sm dsl_brs_btn_adj_pill"
+                                            t-on-click="() => this.openQuickAdjModalForRow(row)"
+                                            title="Add Bank Charge or Difference Adjustment for this entry">
+                                        <i class="fa fa-sliders me-1 text-warning"/> Adjust
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- STICKY BOTTOM BULK BAR (SPEED CLEARING) -->
+                <div t-if="selectedBrsCount &gt; 0" class="dsl_brs_matching_bar dsl_brs_bar_active">
+                    <div class="dsl_brs_match_summary">
+                        <span class="badge bg-primary fs-6 me-2">
+                            <t t-esc="selectedBrsCount"/> selected
+                        </span>
+                        <span class="text-light">Apply Bank Clearing Date to all selected:</span>
+                        <input type="date"
+                               class="dsl_brs_input dsl_brs_input_bulk_date"
+                               t-att-value="state.bulkBankDate"
+                               t-on-click="(ev) => this.openDatePicker(ev)"
+                               t-on-input="(ev) => this.onBulkBankDateInput(ev)"/>
+                    </div>
+                    <div class="dsl_brs_match_actions">
+                        <button class="btn dsl_brs_btn_clear" t-on-click="() => this.clearBulkBrsDate()" title="Clear Bank Date for selected">
+                            <i class="fa fa-undo me-1"/> Clear Bank Date
+                        </button>
+                        <button class="btn dsl_brs_btn_reconcile"
+                                t-att-disabled="!state.bulkBankDate or state.processing"
+                                t-on-click="() => this.applyBulkBankDate()">
+                            <i class="fa fa-check me-1"/> Apply Bank Date
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- 2. PARTY BILL SETTLEMENT VIEW (AGAINST REF)                   -->
+            <!-- ============================================================= -->
+            <div t-if="state.mainMode === 'party_settlement'" class="dsl_brs_party_view">
+                <section class="dsl_brs_filter_bar">
+                    <div class="dsl_brs_filter_col dsl_brs_partner_filter">
+                        <label class="dsl_brs_filter_label"><i class="fa fa-user me-1"/> Select Specific Partner / Party</label>
+                        <div class="dsl_brs_input_wrap">
+                            <input type="text"
+                                   class="dsl_brs_input"
+                                   placeholder="Type name to filter party bills &amp; payments..."
+                                   t-att-value="state.partnerSearch"
+                                   t-on-input="(ev) => this.searchPartners(ev.target.value)"
+                                   t-on-focus="() => this.onPartnerFocus()"/>
+                            <button t-if="state.selectedPartner" class="dsl_brs_btn_input_clear" t-on-click="() => this.clearPartner()">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </div>
+                        <div t-if="state.showPartnerDropdown and state.partnerResults.length" class="dsl_brs_dropdown_menu">
+                            <div t-foreach="state.partnerResults" t-as="p" t-key="p.id"
+                                 class="dsl_brs_dropdown_item"
+                                 t-on-click="() => this.selectPartner(p)">
+                                <strong t-esc="p.name"/>
+                                <span t-if="p.ref" class="text-muted ms-2">(<t t-esc="p.ref"/>)</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="dsl_brs_split_grid">
+                    <!-- LEFT COLUMN: DEBITS -->
+                    <div class="dsl_brs_pane dsl_brs_pane_debit">
+                        <div class="dsl_brs_pane_header">
+                            <h3><span class="dsl_brs_pane_tag dsl_brs_tag_debit">DEBIT</span> Pending Bills &amp; Invoices (<t t-esc="state.partyDebits.length"/>)</h3>
+                        </div>
+                        <div class="dsl_brs_table_wrapper">
+                            <table class="dsl_brs_table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Doc No</th>
+                                        <th>Partner</th>
+                                        <th class="text-end">Due Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-if="state.partyDebits.length === 0" class="dsl_brs_empty_row">
+                                        <td colspan="4">No pending bills.</td>
+                                    </tr>
+                                    <tr t-foreach="state.partyDebits" t-as="d" t-key="d.id">
+                                        <td t-esc="d.date"/>
+                                        <td><strong t-esc="d.move_name"/></td>
+                                        <td t-esc="d.partner_name"/>
+                                        <td class="text-end text-primary"><strong><t t-esc="formatMoney(d.amount_residual)"/></strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: CREDITS -->
+                    <div class="dsl_brs_pane dsl_brs_pane_credit">
+                        <div class="dsl_brs_pane_header">
+                            <h3><span class="dsl_brs_pane_tag dsl_brs_tag_credit">CREDIT</span> Available Payments (<t t-esc="state.partyCredits.length"/>)</h3>
+                        </div>
+                        <div class="dsl_brs_table_wrapper">
+                            <table class="dsl_brs_table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Payment No</th>
+                                        <th>Partner</th>
+                                        <th class="text-end">Unallocated Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-if="state.partyCredits.length === 0" class="dsl_brs_empty_row">
+                                        <td colspan="4">No unallocated payments.</td>
+                                    </tr>
+                                    <tr t-foreach="state.partyCredits" t-as="c" t-key="c.id">
+                                        <td t-esc="c.date"/>
+                                        <td><strong t-esc="c.move_name"/></td>
+                                        <td t-esc="c.partner_name"/>
+                                        <td class="text-end text-success"><strong><t t-esc="formatMoney(c.amount_residual)"/></strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>
