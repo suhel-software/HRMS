@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Standalone "Fixed Assets" application -->
+    <menuitem id="menu_dsl_fixed_asset_root"
+              name="Fixed Assets"
+              web_icon="DSL_HRMS_fixed_asset,static/description/icon.png"
+              groups="DSL_HRMS_fixed_asset.group_fixed_asset_user"
+              sequence="42"/>
+
+    <menuitem id="menu_dsl_fa_dashboard" name="Dashboard" parent="menu_dsl_fixed_asset_root"
+              action="action_dsl_fixed_asset_dashboard" sequence="1"/>
+
+    <menuitem id="menu_dsl_fa_assets" name="Assets" parent="menu_dsl_fixed_asset_root" sequence="10"/>
+    <menuitem id="menu_dsl_fa_register" name="Asset Register" parent="menu_dsl_fa_assets"
+              action="action_dsl_fixed_asset_register" sequence="1"/>
+    <menuitem id="menu_dsl_fa_disposed" name="Disposed &amp; Sold" parent="menu_dsl_fa_assets"
+              action="action_dsl_fixed_asset_disposed" sequence="5"/>
+
+    <menuitem id="menu_dsl_fa_operations" name="Operations" parent="menu_dsl_fixed_asset_root" sequence="20"/>
+    <menuitem id="menu_dsl_fa_assignment" name="Custody &amp; Handover" parent="menu_dsl_fa_operations"
+              action="action_dsl_asset_assignment" sequence="1"/>
+    <menuitem id="menu_dsl_fa_transfer" name="Transfers" parent="menu_dsl_fa_operations"
+              action="action_dsl_asset_transfer" sequence="2"/>
+    <menuitem id="menu_dsl_fa_maintenance" name="Maintenance" parent="menu_dsl_fa_operations"
+              action="action_dsl_asset_maintenance" sequence="3"/>
+    <menuitem id="menu_dsl_fa_verification" name="Physical Verification" parent="menu_dsl_fa_operations"
+              action="action_dsl_asset_verification" sequence="4"/>
+
+    <menuitem id="menu_dsl_fa_reporting" name="Reporting" parent="menu_dsl_fixed_asset_root" sequence="30"/>
+    <menuitem id="menu_dsl_fa_depr_schedule" name="Depreciation Schedule" parent="menu_dsl_fa_reporting"
+              action="DSL_HRMS_fixed_asset.action_account_report_assets" sequence="1"/>
+
+    <menuitem id="menu_dsl_fa_config" name="Configuration" parent="menu_dsl_fixed_asset_root" sequence="90"
+              groups="DSL_HRMS_fixed_asset.group_fixed_asset_manager"/>
+    <menuitem id="menu_dsl_fa_models" name="Asset Models (Categories)" parent="menu_dsl_fa_config"
+              action="DSL_HRMS_fixed_asset.action_account_asset_model_form" sequence="1"/>
+    <record id="action_dsl_asset_group" model="ir.actions.act_window">
+        <field name="name">Asset Groups</field>
+        <field name="res_model">account.asset.group</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_dsl_fa_groups" name="Asset Groups" parent="menu_dsl_fa_config"
+              action="action_dsl_asset_group" sequence="2"/>
+    <menuitem id="menu_dsl_fa_locations" name="Locations" parent="menu_dsl_fa_config"
+              action="action_dsl_asset_location" sequence="3"/>
+</odoo>

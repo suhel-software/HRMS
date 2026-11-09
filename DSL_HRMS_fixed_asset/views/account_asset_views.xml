@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================ -->
+    <!-- Asset FORM: enterprise asset profile                         -->
+    <!-- ============================================================ -->
+    <record id="view_account_asset_form_dsl_fixed_asset" model="ir.ui.view">
+        <field name="name">account.asset.form.dsl.fixed.asset</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="view_account_asset_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes">
+                <attribute name="class">o_dsl_fa_form</attribute>
+            </xpath>
+
+            <xpath expr="//header/button[@name='set_to_cancelled']" position="after">
+                <button name="action_sell_dispose" string="Sell / Dispose" type="object" icon="fa-gavel"
+                        invisible="state not in ('open', 'paused')" groups="DSL_HRMS_fixed_asset.group_fixed_asset_manager"/>
+                <button name="action_assign_custodian" string="Assign" type="object" icon="fa-user-plus"
+                        invisible="state in ('model', 'close', 'cancelled') or dsl_employee_id"/>
+                <button name="action_return_custody" string="Return Custody" type="object" icon="fa-undo"
+                        invisible="not dsl_employee_id or state == 'model'"/>
+                <button name="action_new_transfer" string="Transfer" type="object" icon="fa-exchange"
+                        invisible="state in ('model', 'close', 'cancelled')"/>
+                <button name="action_new_maintenance" string="Maintenance" type="object" icon="fa-wrench"
+                        invisible="state in ('model', 'cancelled')"/>
+                <button name="action_print_asset_tag" string="Print Tag" type="object" icon="fa-qrcode"
+                        invisible="state == 'model'"/>
+            </xpath>
+
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_assignments" type="object" class="oe_stat_button" icon="fa-user">
+                    <field name="assignment_count" widget="statinfo" string="Custody"/>
+                </button>
+                <button name="action_view_transfers" type="object" class="oe_stat_button" icon="fa-exchange">
+                    <field name="transfer_count" widget="statinfo" string="Transfers"/>
+                </button>
+                <button name="action_view_maintenance" type="object" class="oe_stat_button" icon="fa-wrench">
+                    <field name="maintenance_count" widget="statinfo" string="Maintenance"/>
+                </button>
+            </xpath>
+
+            <xpath expr="//div[hasclass('oe_title')]" position="before">
+                <field name="asset_image" widget="image" class="oe_avatar" invisible="state == 'model'"
+                       options="{'preview_image': 'asset_image', 'size': [128, 128]}"/>
+            </xpath>
+
+            <xpath expr="//div[hasclass('oe_title')]" position="inside">
+                <div class="o_dsl_fa_badges" invisible="state == 'model'">
+                    <span class="o_dsl_fa_code" invisible="not asset_code"><i class="fa fa-qrcode me-1" title="Asset Code"/><field name="asset_code" class="d-inline"/></span>
+                    <field name="custody_state" widget="badge"
+                           decoration-success="custody_state == 'available'"
+                           decoration-info="custody_state == 'assigned'"
+                           decoration-warning="custody_state == 'maintenance'"
+                           decoration-muted="custody_state == 'disposed'"/>
+                    <field name="asset_condition" widget="badge"
+                           decoration-success="asset_condition in ('new', 'good')"
+                           decoration-warning="asset_condition in ('fair', 'poor')"
+                           decoration-danger="asset_condition in ('damaged', 'scrap')"/>
+                    <field name="warranty_status" widget="badge" invisible="warranty_status == 'none'"
+                           decoration-success="warranty_status == 'active'"
+                           decoration-warning="warranty_status == 'expiring'"
+                           decoration-danger="warranty_status == 'expired'"/>
+                </div>
+            </xpath>
+
+            <xpath expr="//notebook" position="before">
+                <div class="o_dsl_fa_kpi_strip" invisible="state == 'model'">
+                    <div class="o_dsl_fa_kpi">
+                        <span class="o_dsl_fa_kpi_label">Original Value</span>
+                        <field name="original_value" widget="monetary" readonly="1" class="o_dsl_fa_kpi_value"/>
+                    </div>
+                    <div class="o_dsl_fa_kpi o_dsl_fa_kpi_warn">
+                        <span class="o_dsl_fa_kpi_label">Accumulated Depreciation</span>
+                        <field name="accumulated_depreciation" widget="monetary" class="o_dsl_fa_kpi_value"/>
+                    </div>
+                    <div class="o_dsl_fa_kpi o_dsl_fa_kpi_ok">
+                        <span class="o_dsl_fa_kpi_label">Net Book Value</span>
+                        <field name="book_value" widget="monetary" class="o_dsl_fa_kpi_value"/>
+                    </div>
+                    <div class="o_dsl_fa_kpi">
+                        <span class="o_dsl_fa_kpi_label">Next Depreciation</span>
+                        <div class="o_dsl_fa_kpi_value">
+                            <field name="next_depreciation_amount" widget="monetary"/>
+                        </div>
+                        <small class="text-muted"><field name="next_depreciation_date"/></small>
+                    </div>
+                    <div class="o_dsl_fa_kpi o_dsl_fa_kpi_wide">
+                        <span class="o_dsl_fa_kpi_label">Depreciated · Age <field name="asset_age_display" class="d-inline"/></span>
+                        <field name="depreciation_progress" widget="progressbar"/>
+                    </div>
+                </div>
+            </xpath>
+
+            <xpath expr="//page[@name='main_page']" position="after">
+                <page string="Identification &amp; Custody" name="dsl_identification">
+                    <group>
+                        <group string="Identification">
+                            <field name="asset_code" readonly="1"/>
+                            <field name="asset_category_type"/>
+                            <field name="asset_group_id"/>
+                            <field name="asset_barcode"/>
+                            <field name="serial_number"/>
+                            <field name="brand"/>
+                            <field name="model_number"/>
+                            <field name="manufacturer"/>
+                        </group>
+                        <group string="Custody &amp; Location">
+                            <field name="dsl_location_id"/>
+                            <field name="dsl_department_id"/>
+                            <field name="dsl_employee_id" readonly="1"/>
+                            <field name="dsl_responsible_user_id" widget="many2one_avatar_user"/>
+                            <field name="asset_condition"/>
+                            <field name="asset_criticality" widget="radio" options="{'horizontal': true}"/>
+                            <field name="last_verified_date"/>
+                        </group>
+                        <group string="Purchase">
+                            <field name="vendor_id"/>
+                            <field name="purchase_reference"/>
+                            <field name="purchase_date"/>
+                            <field name="in_service_date"/>
+                        </group>
+                        <group string="Maintenance Summary">
+                            <field name="next_maintenance_date"/>
+                            <field name="maintenance_cost_total" widget="monetary"/>
+                        </group>
+                    </group>
+                </page>
+                <page string="Warranty &amp; Insurance" name="dsl_warranty">
+                    <group>
+                        <group string="Warranty">
+                            <field name="warranty_status" widget="badge"/>
+                            <field name="warranty_provider_id"/>
+                            <field name="warranty_start_date"/>
+                            <field name="warranty_end_date"/>
+                            <field name="warranty_terms" placeholder="Coverage, exclusions, service contact..."/>
+                        </group>
+                        <group string="Insurance">
+                            <field name="insurance_status" widget="badge"/>
+                            <field name="insurer_id"/>
+                            <field name="insurance_policy_no"/>
+                            <field name="insured_value" widget="monetary"/>
+                            <field name="insurance_premium" widget="monetary"/>
+                            <field name="insurance_start_date"/>
+                            <field name="insurance_end_date"/>
+                        </group>
+                    </group>
+                </page>
+                <page string="Lifecycle History" name="dsl_history">
+                    <separator string="Custody / Handover"/>
+                    <field name="assignment_ids" readonly="1">
+                        <list decoration-success="state == 'assigned'" decoration-muted="state in ('returned', 'cancel')">
+                            <field name="name"/>
+                            <field name="employee_id" widget="many2one_avatar_employee"/>
+                            <field name="department_id"/>
+                            <field name="date_assigned"/>
+                            <field name="date_returned"/>
+                            <field name="condition_out"/>
+                            <field name="condition_in"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                    <separator string="Transfers"/>
+                    <field name="transfer_ids" readonly="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="transfer_date"/>
+                            <field name="transfer_type"/>
+                            <field name="from_location_id"/>
+                            <field name="to_location_id"/>
+                            <field name="to_employee_id"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                    <separator string="Maintenance"/>
+                    <field name="maintenance_ids" readonly="1">
+                        <list decoration-success="state == 'done'">
+                            <field name="name"/>
+                            <field name="title"/>
+                            <field name="maintenance_type"/>
+                            <field name="scheduled_date"/>
+                            <field name="completion_date"/>
+                            <field name="currency_id" column_invisible="True"/>
+                            <field name="cost" sum="Total"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                    <separator string="Physical Verification"/>
+                    <field name="verification_line_ids" readonly="1">
+                        <list>
+                            <field name="date"/>
+                            <field name="verification_id"/>
+                            <field name="found_location_id"/>
+                            <field name="result" widget="badge"/>
+                            <field name="condition"/>
+                            <field name="remarks"/>
+                        </list>
+                    </field>
+                </page>
+                <page string="Notes" name="dsl_notes">
+                    <field name="asset_notes" placeholder="Internal notes about this asset..."/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Asset LIST                                                   -->
+    <!-- ============================================================ -->
+    <record id="view_account_asset_tree_dsl_fixed_asset" model="ir.ui.view">
+        <field name="name">account.asset.list.dsl.fixed.asset</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="view_account_asset_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="before">
+                <field name="asset_code"/>
+            </xpath>
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="asset_group_id" optional="show"/>
+                <field name="dsl_location_id" optional="show"/>
+                <field name="dsl_department_id" optional="hide"/>
+                <field name="dsl_employee_id" widget="many2one_avatar_employee" optional="show"/>
+                <field name="serial_number" optional="hide"/>
+            </xpath>
+            <xpath expr="//field[@name='original_value']" position="attributes">
+                <attribute name="sum">Total Original Value</attribute>
+            </xpath>
+            <xpath expr="//field[@name='book_value']" position="before">
+                <field name="accumulated_depreciation" sum="Total Accumulated" optional="show"/>
+            </xpath>
+            <xpath expr="//field[@name='book_value']" position="attributes">
+                <attribute name="sum">Total Book Value</attribute>
+            </xpath>
+            <xpath expr="//field[@name='book_value']" position="after">
+                <field name="depreciation_progress" widget="progressbar" optional="show"/>
+                <field name="asset_condition" widget="badge" optional="hide"
+                       decoration-success="asset_condition in ('new', 'good')"
+                       decoration-warning="asset_condition in ('fair', 'poor')"
+                       decoration-danger="asset_condition in ('damaged', 'scrap')"/>
+                <field name="custody_state" widget="badge" optional="show"
+                       decoration-success="custody_state == 'available'"
+                       decoration-info="custody_state == 'assigned'"
+                       decoration-warning="custody_state == 'maintenance'"
+                       decoration-muted="custody_state == 'disposed'"/>
+            </xpath>
+            <xpath expr="//field[@name='state']" position="attributes">
+                <attribute name="widget">badge</attribute>
+                <attribute name="decoration-info">state == 'draft'</attribute>
+                <attribute name="decoration-success">state == 'open'</attribute>
+                <attribute name="decoration-warning">state == 'paused'</attribute>
+                <attribute name="decoration-muted">state in ('close', 'cancelled')</attribute>
+            </xpath>
+            <xpath expr="//field[@name='asset_properties']" position="attributes">
+                <attribute name="optional">hide</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Asset KANBAN (rich cards with photo)                         -->
+    <!-- ============================================================ -->
+    <record id="view_account_asset_kanban_dsl_fixed_asset" model="ir.ui.view">
+        <field name="name">account.asset.kanban.dsl.fixed.asset</field>
+        <field name="model">account.asset</field>
+        <field name="priority">10</field>
+        <field name="arch" type="xml">
+            <kanban class="o_dsl_fa_kanban o_dsl_fa_asset_kanban" sample="1">
+                <field name="id"/>
+                <field name="currency_id"/>
+                <field name="state"/>
+                <field name="asset_image"/>
+                <field name="depreciation_progress"/>
+                <templates>
+                    <t t-name="card" class="flex-row p-0">
+                        <aside class="o_dsl_fa_card_img">
+                            <img t-if="record.asset_image.raw_value" t-att-src="'/web/image/account.asset/' + record.id.raw_value + '/asset_image/256x256'" alt="Asset"/>
+                            <span t-else="" class="o_dsl_fa_card_placeholder"><i class="fa fa-cube" title="No photo"/></span>
+                        </aside>
+                        <main class="o_dsl_fa_card_body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="text-truncate">
+                                    <div class="o_dsl_fa_card_code"><field name="asset_code"/></div>
+                                    <field name="name" class="fw-bold fs-6 text-truncate d-block"/>
+                                </div>
+                                <field name="state" widget="label_selection"
+                                       options="{'classes': {'draft': 'info', 'open': 'success', 'paused': 'warning', 'close': 'default', 'cancelled': 'danger'}}"/>
+                            </div>
+                            <div class="text-muted small text-truncate">
+                                <i class="fa fa-map-marker me-1" title="Location"/><field name="dsl_location_id"/>
+                            </div>
+                            <div class="d-flex justify-content-between small mt-1">
+                                <span class="text-muted">Cost</span>
+                                <field name="original_value" widget="monetary"/>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-muted">Book Value</span>
+                                <field name="book_value" widget="monetary" class="fw-bold"/>
+                            </div>
+                            <div class="o_dsl_fa_card_bar mt-2">
+                                <span t-att-style="'width:' + (record.depreciation_progress.raw_value or 0) + '%'"/>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <field name="custody_state" widget="badge"
+                                       decoration-success="custody_state == 'available'"
+                                       decoration-info="custody_state == 'assigned'"
+                                       decoration-warning="custody_state == 'maintenance'"
+                                       decoration-muted="custody_state == 'disposed'"/>
+                                <field name="dsl_employee_id" widget="many2one_avatar_employee"/>
+                            </div>
+                        </main>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Asset PIVOT / GRAPH                                          -->
+    <!-- ============================================================ -->
+    <record id="view_account_asset_pivot_dsl_fixed_asset" model="ir.ui.view">
+        <field name="name">account.asset.pivot.dsl.fixed.asset</field>
+        <field name="model">account.asset</field>
+        <field name="arch" type="xml">
+            <pivot string="Asset Analysis" sample="1">
+                <field name="asset_group_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="original_value" type="measure"/>
+                <field name="accumulated_depreciation" type="measure"/>
+                <field name="book_value" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_account_asset_graph_dsl_fixed_asset" model="ir.ui.view">
+        <field name="name">account.asset.graph.dsl.fixed.asset</field>
+        <field name="model">account.asset</field>
+        <field name="arch" type="xml">
+            <graph string="Asset Value by Class" type="bar" sample="1">
+                <field name="asset_category_type"/>
+                <field name="original_value" type="measure"/>
+                <field name="book_value" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Asset SEARCH                                                 -->
+    <!-- ============================================================ -->
+    <record id="view_account_asset_search_dsl_fixed_asset" model="ir.ui.view">
+        <field name="name">account.asset.search.dsl.fixed.asset</field>
+        <field name="model">account.asset</field>
+        <field name="inherit_id" ref="view_account_asset_search"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="replace">
+                <field name="name" string="Asset" filter_domain="['|', '|', '|', ('name', 'ilike', self), ('asset_code', 'ilike', self), ('serial_number', 'ilike', self), ('asset_barcode', 'ilike', self)]"/>
+                <field name="asset_code"/>
+                <field name="dsl_location_id" operator="child_of"/>
+                <field name="dsl_department_id"/>
+                <field name="dsl_employee_id"/>
+                <field name="asset_group_id"/>
+                <field name="vendor_id"/>
+            </xpath>
+            <xpath expr="//filter[@name='closed']" position="after">
+                <filter string="Running" name="running" domain="[('state', '=', 'open')]"/>
+                <separator/>
+                <filter string="Assigned" name="assigned" domain="[('custody_state', '=', 'assigned')]"/>
+                <filter string="Available" name="available" domain="[('custody_state', '=', 'available')]"/>
+                <filter string="Under Maintenance" name="under_maintenance" domain="[('custody_state', '=', 'maintenance')]"/>
+                <filter string="No Location" name="no_location" domain="[('dsl_location_id', '=', False), ('state', 'in', ('draft', 'open', 'paused'))]"/>
+                <separator/>
+                <filter string="Warranty Expiring (30d)" name="warranty_soon"
+                        domain="[('warranty_end_date', '&gt;=', context_today().strftime('%Y-%m-%d')), ('warranty_end_date', '&lt;=', (context_today() + relativedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Insurance Expiring (30d)" name="insurance_soon"
+                        domain="[('insurance_end_date', '&gt;=', context_today().strftime('%Y-%m-%d')), ('insurance_end_date', '&lt;=', (context_today() + relativedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Damaged / Poor" name="damaged" domain="[('asset_condition', 'in', ('poor', 'damaged', 'scrap'))]"/>
+            </xpath>
+            <xpath expr="//filter[@name='model']" position="after">
+                <filter string="Asset Group" name="grp_asset_group" context="{'group_by': 'asset_group_id'}"/>
+                <filter string="Asset Class" name="grp_class" context="{'group_by': 'asset_category_type'}"/>
+                <filter string="Location" name="grp_location" context="{'group_by': 'dsl_location_id'}"/>
+                <filter string="Department" name="grp_department" context="{'group_by': 'dsl_department_id'}"/>
+                <filter string="Custodian" name="grp_employee" context="{'group_by': 'dsl_employee_id'}"/>
+                <filter string="Condition" name="grp_condition" context="{'group_by': 'asset_condition'}"/>
+                <filter string="Status" name="grp_state" context="{'group_by': 'state'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Actions                                                      -->
+    <!-- ============================================================ -->
+    <record id="action_dsl_fixed_asset_register" model="ir.actions.act_window">
+        <field name="name">Fixed Asset Register</field>
+        <field name="res_model">account.asset</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_account_asset_kanban_dsl_fixed_asset')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_account_asset_tree')}),
+            (0, 0, {'view_mode': 'pivot', 'view_id': ref('view_account_asset_pivot_dsl_fixed_asset')}),
+            (0, 0, {'view_mode': 'graph', 'view_id': ref('view_account_asset_graph_dsl_fixed_asset')}),
+            (0, 0, {'view_mode': 'activity'}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_account_asset_form')})]"/>
+        <field name="search_view_id" ref="view_account_asset_search"/>
+        <field name="domain">[('state', '!=', 'model'), ('parent_id', '=', False)]</field>
+        <field name="context">{'search_default_current': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Register your first fixed asset</p>
+            <p>Every asset gets an automatic code and QR tag. Track its value, depreciation, location, custodian, warranty and maintenance in one place.</p>
+        </field>
+    </record>
+
+    <record id="action_dsl_fixed_asset_disposed" model="ir.actions.act_window">
+        <field name="name">Disposed &amp; Sold Assets</field>
+        <field name="res_model">account.asset</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', '=', 'close'), ('parent_id', '=', False)]</field>
+    </record>
+
+    <!-- Make the accounting "Fixed Assets" entry open the new register -->
+    <record id="action_account_asset_form" model="ir.actions.act_window">
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_account_asset_tree')}),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_account_asset_kanban_dsl_fixed_asset')}),
+            (0, 0, {'view_mode': 'pivot', 'view_id': ref('view_account_asset_pivot_dsl_fixed_asset')}),
+            (0, 0, {'view_mode': 'graph', 'view_id': ref('view_account_asset_graph_dsl_fixed_asset')}),
+            (0, 0, {'view_mode': 'activity'}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_account_asset_form')})]"/>
+    </record>
+</odoo>
+

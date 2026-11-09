@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="DSL_HRMS_fixed_asset.DepreciationScheduleFilters" t-inherit="DSL_HRMS_account_reports.AccountReportFiltersCustomizable">
+        <xpath expr="//div[@id='filter_extra_options']" position="before">
+            <t t-call="DSL_HRMS_fixed_asset.DepreciationScheduleGroupBy"/>
+        </xpath>
+    </t>
+</templates>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="loc_group_hq" model="dsl.asset.location">
+            <field name="name">Group Head Office</field>
+            <field name="code">HQ</field>
+            <field name="location_type">site</field>
+        </record>
+        <record id="loc_hq_admin" model="dsl.asset.location">
+            <field name="name">Admin &amp; Finance Floor</field>
+            <field name="code">HQ-ADM</field>
+            <field name="location_type">floor</field>
+            <field name="parent_id" ref="loc_group_hq"/>
+        </record>
+        <record id="loc_hq_it" model="dsl.asset.location">
+            <field name="name">IT &amp; Server Room</field>
+            <field name="code">HQ-IT</field>
+            <field name="location_type">room</field>
+            <field name="parent_id" ref="loc_group_hq"/>
+        </record>
+        <record id="loc_gazipur_factory" model="dsl.asset.location">
+            <field name="name">Gazipur Factory</field>
+            <field name="code">GZP</field>
+            <field name="location_type">site</field>
+        </record>
+        <record id="loc_gazipur_unit1" model="dsl.asset.location">
+            <field name="name">Unit 1 - Production Floor</field>
+            <field name="code">GZP-U1</field>
+            <field name="location_type">factory</field>
+            <field name="parent_id" ref="loc_gazipur_factory"/>
+        </record>
+        <record id="loc_gazipur_unit2" model="dsl.asset.location">
+            <field name="name">Unit 2 - Production Floor</field>
+            <field name="code">GZP-U2</field>
+            <field name="location_type">factory</field>
+            <field name="parent_id" ref="loc_gazipur_factory"/>
+        </record>
+        <record id="loc_central_store" model="dsl.asset.location">
+            <field name="name">Central Store / Warehouse</field>
+            <field name="code">WH</field>
+            <field name="location_type">warehouse</field>
+        </record>
+    </data>
+</odoo>
+

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Assign asset codes to all existing assets -->
+    <function model="account.asset" name="_dsl_backfill_asset_codes"/>
+
+    <!-- Register "Fixed Assets" as a hideable main sidebar menu (per-user Force-Hide) -->
+    <record id="main_menu_fixed_assets" model="dsl.hrms.main.menu" forcecreate="1">
+        <field name="sequence">95</field>
+        <field name="code">fixed_assets</field>
+        <field name="name">09A · Fixed Asset Management</field>
+        <field name="color">9</field>
+    </record>
+</odoo>
+

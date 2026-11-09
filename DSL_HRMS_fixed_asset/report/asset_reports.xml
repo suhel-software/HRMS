@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================ -->
+    <!-- Paper format for asset tag labels                            -->
+    <!-- ============================================================ -->
+    <record id="paperformat_asset_tag" model="report.paperformat">
+        <field name="name">Asset Tag Labels (A4)</field>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">8</field>
+        <field name="margin_bottom">8</field>
+        <field name="margin_left">6</field>
+        <field name="margin_right">6</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">96</field>
+    </record>
+
+    <record id="action_report_asset_tag" model="ir.actions.report">
+        <field name="name">Asset Tag Labels (QR)</field>
+        <field name="model">account.asset</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">DSL_HRMS_fixed_asset.report_asset_tag</field>
+        <field name="report_file">DSL_HRMS_fixed_asset.report_asset_tag</field>
+        <field name="print_report_name">'Asset Tags'</field>
+        <field name="paperformat_id" ref="paperformat_asset_tag"/>
+        <field name="binding_model_id" ref="model_account_asset"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_asset_card" model="ir.actions.report">
+        <field name="name">Asset Card</field>
+        <field name="model">account.asset</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">DSL_HRMS_fixed_asset.report_asset_card</field>
+        <field name="report_file">DSL_HRMS_fixed_asset.report_asset_card</field>
+        <field name="print_report_name">'Asset Card - %s' % (object.asset_code or object.name)</field>
+        <field name="binding_model_id" ref="model_account_asset"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_asset_register" model="ir.actions.report">
+        <field name="name">Fixed Asset Register</field>
+        <field name="model">account.asset</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">DSL_HRMS_fixed_asset.report_asset_register</field>
+        <field name="report_file">DSL_HRMS_fixed_asset.report_asset_register</field>
+        <field name="print_report_name">'Fixed Asset Register'</field>
+        <field name="paperformat_id" ref="base.paperformat_euro"/>
+        <field name="binding_model_id" ref="model_account_asset"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_asset_handover" model="ir.actions.report">
+        <field name="name">Asset Handover Form</field>
+        <field name="model">dsl.asset.assignment</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">DSL_HRMS_fixed_asset.report_asset_handover</field>
+        <field name="report_file">DSL_HRMS_fixed_asset.report_asset_handover</field>
+        <field name="print_report_name">'Handover - %s' % object.name</field>
+        <field name="binding_model_id" ref="model_dsl_asset_assignment"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Asset Tag Labels                                             -->
+    <!-- ============================================================ -->
+    <template id="report_asset_tag">
+        <t t-call="web.basic_layout">
+            <div class="page">
+                <style>
+                    .dsl-tag { display: inline-block; width: 48%; margin: 0 0.8% 8px 0.8%; border: 1.5px solid #1e293b; border-radius: 8px; padding: 6px 8px; height: 118px; vertical-align: top; page-break-inside: avoid; box-sizing: border-box; }
+                    .dsl-tag-head { background: #1e3a8a; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; letter-spacing: .5px; }
+                    .dsl-tag-code { font-size: 15px; font-weight: bold; color: #0f172a; margin-top: 4px; }
+                    .dsl-tag-name { font-size: 11px; color: #334155; }
+                    .dsl-tag-meta { font-size: 9px; color: #64748b; }
+                </style>
+                <t t-foreach="docs" t-as="o">
+                    <div class="dsl-tag">
+                        <table style="width:100%;">
+                            <tr>
+                                <td style="vertical-align:top;">
+                                    <div class="dsl-tag-head"><t t-out="o.company_id.name"/> · PROPERTY</div>
+                                    <div class="dsl-tag-code"><t t-out="o.asset_code or 'N/A'"/></div>
+                                    <div class="dsl-tag-name"><t t-out="(o.name or '')[:40]"/></div>
+                                    <div class="dsl-tag-meta">
+                                        <t t-if="o.serial_number">S/N: <t t-out="o.serial_number"/><br/></t>
+                                        <t t-if="o.dsl_location_id"><t t-out="o.dsl_location_id.complete_name"/><br/></t>
+                                        Acq: <t t-out="o.acquisition_date" t-options="{'widget': 'date'}"/>
+                                    </div>
+                                </td>
+                                <td style="width:92px; text-align:right; vertical-align:middle;">
+                                    <img t-att-src="'/report/barcode/?barcode_type=QR&amp;value=%s&amp;width=180&amp;height=180' % (o.asset_code or o.name)"
+                                         style="width:88px;height:88px;"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </template>
+
+    <!-- ============================================================ -->
+    <!-- Asset Card                                                   -->
+    <!-- ============================================================ -->
+    <template id="report_asset_card">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <div class="row mb-3">
+                            <div class="col-8">
+                                <h3 style="color:#1e3a8a;margin-bottom:0;">FIXED ASSET CARD</h3>
+                                <h4 class="mt-1"><t t-out="o.asset_code"/> — <t t-out="o.name"/></h4>
+                                <span class="badge text-bg-primary"><t t-out="dict(o._fields['state'].selection).get(o.state)"/></span>
+                            </div>
+                            <div class="col-4 text-end">
+                                <img t-att-src="'/report/barcode/?barcode_type=QR&amp;value=%s&amp;width=200&amp;height=200' % (o.asset_code or o.name)"
+                                     style="width:110px;height:110px;"/>
+                            </div>
+                        </div>
+                        <table class="table table-sm table-bordered">
+                            <tr>
+                                <th style="width:22%;">Asset Group</th><td style="width:28%;"><t t-out="o.asset_group_id.name or o.model_id.name"/></td>
+                                <th style="width:22%;">Asset Class</th><td><t t-out="dict(o._fields['asset_category_type'].selection).get(o.asset_category_type)"/></td>
+                            </tr>
+                            <tr>
+                                <th>Serial No.</th><td><t t-out="o.serial_number"/></td>
+                                <th>Brand / Model</th><td><t t-out="o.brand"/> <t t-out="o.model_number"/></td>
+                            </tr>
+                            <tr>
+                                <th>Vendor</th><td><t t-out="o.vendor_id.name"/></td>
+                                <th>Purchase Ref.</th><td><t t-out="o.purchase_reference"/></td>
+                            </tr>
+                            <tr>
+                                <th>Location</th><td><t t-out="o.dsl_location_id.complete_name"/></td>
+                                <th>Department</th><td><t t-out="o.dsl_department_id.name"/></td>
+                            </tr>
+                            <tr>
+                                <th>Custodian</th><td><t t-out="o.dsl_employee_id.name"/></td>
+                                <th>Condition</th><td><t t-out="dict(o._fields['asset_condition'].selection).get(o.asset_condition)"/></td>
+                            </tr>
+                            <tr>
+                                <th>Warranty Until</th><td><t t-out="o.warranty_end_date" t-options="{'widget': 'date'}"/></td>
+                                <th>Insurance Until</th><td><t t-out="o.insurance_end_date" t-options="{'widget': 'date'}"/></td>
+                            </tr>
+                        </table>
+
+                        <h5 class="mt-3" style="color:#1e3a8a;">Financial Summary</h5>
+                        <table class="table table-sm table-bordered">
+                            <tr>
+                                <th>Acquisition Date</th><td><t t-out="o.acquisition_date" t-options="{'widget': 'date'}"/></td>
+                                <th>Method</th><td><t t-out="dict(o._fields['method'].selection).get(o.method)"/> · <t t-out="o.method_number"/> Ã— <t t-out="dict(o._fields['method_period'].selection).get(o.method_period)"/></td>
+                            </tr>
+                            <tr>
+                                <th>Original Value</th><td class="text-end"><t t-out="o.original_value" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                                <th>Salvage Value</th><td class="text-end"><t t-out="o.salvage_value" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                            </tr>
+                            <tr>
+                                <th>Accumulated Depreciation</th><td class="text-end"><t t-out="o.accumulated_depreciation" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                                <th>Net Book Value</th><td class="text-end"><strong><t t-out="o.book_value" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></strong></td>
+                            </tr>
+                        </table>
+
+                        <h5 class="mt-3" style="color:#1e3a8a;">Depreciation Schedule</h5>
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr><th>Date</th><th>Reference</th><th class="text-end">Depreciation</th><th class="text-end">Cumulative</th><th class="text-end">Book Value</th><th>Status</th></tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="o.depreciation_move_ids.sorted('date')" t-as="m">
+                                    <tr>
+                                        <td><t t-out="m.date" t-options="{'widget': 'date'}"/></td>
+                                        <td><t t-out="m.name if m.state == 'posted' else m.ref"/></td>
+                                        <td class="text-end"><t t-out="m.depreciation_value" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                                        <td class="text-end"><t t-out="m.asset_depreciated_value" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                                        <td class="text-end"><t t-out="m.asset_remaining_value" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                                        <td><t t-out="'Posted' if m.state == 'posted' else 'Planned'"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- ============================================================ -->
+    <!-- Fixed Asset Register                                         -->
+    <!-- ============================================================ -->
+    <template id="report_asset_register">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-set="o" t-value="docs[:1]"/>
+                <div class="page">
+                    <h3 style="color:#1e3a8a;">FIXED ASSET REGISTER</h3>
+                    <p class="text-muted">As on <t t-out="context_timestamp(datetime.datetime.now())" t-options="{'widget': 'date'}"/> · <t t-out="len(docs)"/> asset(s)</p>
+                    <table class="table table-sm table-bordered" style="font-size:11px;">
+                        <thead style="background:#1e3a8a;color:#fff;">
+                            <tr>
+                                <th>#</th><th>Asset Code</th><th>Asset Name</th><th>Group</th><th>Location</th><th>Custodian</th>
+                                <th>Acq. Date</th><th class="text-end">Original Value</th><th class="text-end">Accum. Depr.</th><th class="text-end">Net Book Value</th><th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="docs" t-as="a">
+                                <tr>
+                                    <td><t t-out="a_index + 1"/></td>
+                                    <td><t t-out="a.asset_code"/></td>
+                                    <td><t t-out="a.name"/></td>
+                                    <td><t t-out="a.asset_group_id.name or a.model_id.name"/></td>
+                                    <td><t t-out="a.dsl_location_id.complete_name"/></td>
+                                    <td><t t-out="a.dsl_employee_id.name"/></td>
+                                    <td><t t-out="a.acquisition_date" t-options="{'widget': 'date'}"/></td>
+                                    <td class="text-end"><t t-out="a.original_value" t-options="{'widget': 'monetary', 'display_currency': a.currency_id}"/></td>
+                                    <td class="text-end"><t t-out="a.accumulated_depreciation" t-options="{'widget': 'monetary', 'display_currency': a.currency_id}"/></td>
+                                    <td class="text-end"><t t-out="a.book_value" t-options="{'widget': 'monetary', 'display_currency': a.currency_id}"/></td>
+                                    <td><t t-out="dict(a._fields['state'].selection).get(a.state)"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                        <tfoot>
+                            <tr style="font-weight:bold;background:#f1f5f9;">
+                                <td colspan="7" class="text-end">TOTAL</td>
+                                <td class="text-end"><t t-out="sum(docs.mapped('original_value'))" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                                <td class="text-end"><t t-out="sum(docs.mapped('accumulated_depreciation'))" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                                <td class="text-end"><t t-out="sum(docs.mapped('book_value'))" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                                <td/>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- ============================================================ -->
+    <!-- Asset Handover Form                                          -->
+    <!-- ============================================================ -->
+    <template id="report_asset_handover">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h3 class="text-center" style="color:#1e3a8a;">ASSET HANDOVER / CUSTODY ACKNOWLEDGEMENT</h3>
+                        <p class="text-center text-muted">Ref: <t t-out="o.name"/></p>
+                        <table class="table table-bordered mt-4">
+                            <tr><th style="width:30%;">Asset</th><td><t t-out="o.asset_id.display_name"/></td></tr>
+                            <tr><th>Serial Number</th><td><t t-out="o.asset_id.serial_number"/></td></tr>
+                            <tr><th>Assigned To</th><td><t t-out="o.employee_id.name"/> <t t-if="o.employee_id.job_title">(<t t-out="o.employee_id.job_title"/>)</t></td></tr>
+                            <tr><th>Department</th><td><t t-out="o.department_id.name"/></td></tr>
+                            <tr><th>Location</th><td><t t-out="o.location_id.complete_name"/></td></tr>
+                            <tr><th>Handover Date</th><td><t t-out="o.date_assigned" t-options="{'widget': 'date'}"/></td></tr>
+                            <tr><th>Expected Return</th><td><t t-out="o.expected_return_date" t-options="{'widget': 'date'}"/></td></tr>
+                            <tr><th>Condition</th><td><t t-out="dict(o._fields['condition_out'].selection).get(o.condition_out)"/></td></tr>
+                            <tr><th>Purpose</th><td><t t-out="o.purpose"/></td></tr>
+                        </table>
+                        <p class="mt-4" style="font-size:12px;">
+                            I hereby acknowledge receipt of the above company asset in the stated condition. I will use it solely for official purposes,
+                            take reasonable care of it, and return it on demand or upon separation from the company. Any loss or damage due to negligence
+                            may be recovered as per company policy.
+                        </p>
+                        <div class="row" style="margin-top:80px;">
+                            <div class="col-4 text-center"><div style="border-top:1px solid #000;">Received By (Employee)</div></div>
+                            <div class="col-4 text-center"><div style="border-top:1px solid #000;">Handed Over By</div></div>
+                            <div class="col-4 text-center"><div style="border-top:1px solid #000;">Approved By (Admin)</div></div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

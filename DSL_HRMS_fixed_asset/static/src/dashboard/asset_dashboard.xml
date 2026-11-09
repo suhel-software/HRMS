@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="DSL_HRMS_fixed_asset.Dashboard">
+        <div class="o_dsl_fa_dashboard o_action">
+            <t t-if="state.loading">
+                <div class="o_dsl_fa_loading"><i class="fa fa-circle-o-notch fa-spin fa-2x"/></div>
+            </t>
+            <t t-else="">
+                <t t-set="d" t-value="state.data"/>
+                <t t-set="k" t-value="d.kpi"/>
+
+                <!-- HERO -->
+                <div class="o_dsl_fa_hero">
+                    <div>
+                        <div class="o_dsl_fa_hero_eyebrow"><i class="fa fa-cubes me-2"/>FIXED ASSET MANAGEMENT</div>
+                        <h1 class="o_dsl_fa_hero_title">Asset Portfolio Overview</h1>
+                        <div class="o_dsl_fa_hero_sub">
+                            <t t-esc="k.total_assets"/> assets · <t t-esc="k.locations"/> locations · Net book value
+                            <strong t-esc="fmtFull(k.nbv)"/>
+                        </div>
+                    </div>
+                    <div class="o_dsl_fa_hero_actions">
+                        <button class="btn o_dsl_fa_btn_light" t-on-click="() => this.load()"><i class="fa fa-refresh me-1"/>Refresh</button>
+                        <button class="btn o_dsl_fa_btn_light" t-on-click="() => this.openXml('DSL_HRMS_fixed_asset.action_account_report_assets')"><i class="fa fa-table me-1"/>Depreciation Schedule</button>
+                        <button class="btn o_dsl_fa_btn_primary" t-on-click="() => this.newAsset()"><i class="fa fa-plus me-1"/>New Asset</button>
+                    </div>
+                </div>
+
+                <!-- FINANCIAL KPI CARDS -->
+                <div class="o_dsl_fa_kpis">
+                    <div class="o_dsl_fa_card o_dsl_fa_kpi_card c-blue" t-on-click="() => this.openAssets([], 'All Assets')">
+                        <div class="o_dsl_fa_kpi_icon"><i class="fa fa-database"/></div>
+                        <div class="o_dsl_fa_kpi_body">
+                            <div class="o_dsl_fa_kpi_cap">Gross Asset Value</div>
+                            <div class="o_dsl_fa_kpi_num" t-esc="fmt(k.gross)"/>
+                            <div class="o_dsl_fa_kpi_foot"><t t-esc="k.running"/> running · <t t-esc="k.draft"/> draft</div>
+                        </div>
+                    </div>
+                    <div class="o_dsl_fa_card o_dsl_fa_kpi_card c-amber">
+                        <div class="o_dsl_fa_kpi_icon"><i class="fa fa-line-chart"/></div>
+                        <div class="o_dsl_fa_kpi_body">
+                            <div class="o_dsl_fa_kpi_cap">Accumulated Depreciation</div>
+                            <div class="o_dsl_fa_kpi_num" t-esc="fmt(k.accumulated)"/>
+                            <div class="o_dsl_fa_mini_bar"><span t-attf-style="width: {{k.dep_pct}}%"/></div>
+                            <div class="o_dsl_fa_kpi_foot"><t t-esc="k.dep_pct"/>% of cost depreciated</div>
+                        </div>
+                    </div>
+                    <div class="o_dsl_fa_card o_dsl_fa_kpi_card c-green">
+                        <div class="o_dsl_fa_kpi_icon"><i class="fa fa-balance-scale"/></div>
+                        <div class="o_dsl_fa_kpi_body">
+                            <div class="o_dsl_fa_kpi_cap">Net Book Value</div>
+                            <div class="o_dsl_fa_kpi_num" t-esc="fmt(k.nbv)"/>
+                            <div class="o_dsl_fa_kpi_foot">Carrying amount on balance sheet</div>
+                        </div>
+                    </div>
+                    <div class="o_dsl_fa_card o_dsl_fa_kpi_card c-violet">
+                        <div class="o_dsl_fa_kpi_icon"><i class="fa fa-calendar-check-o"/></div>
+                        <div class="o_dsl_fa_kpi_body">
+                            <div class="o_dsl_fa_kpi_cap">Depreciation This Month</div>
+                            <div class="o_dsl_fa_kpi_num" t-esc="fmt(k.month_depr)"/>
+                            <div class="o_dsl_fa_kpi_foot">YTD posted: <t t-esc="fmt(k.ytd_depr)"/></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OPERATIONAL PILLS -->
+                <div class="o_dsl_fa_pills">
+                    <div class="o_dsl_fa_pill" t-on-click="() => this.openAssets([['custody_state','=','assigned']], 'Assigned Assets')">
+                        <i class="fa fa-user-circle text-info"/><span class="o_dsl_fa_pill_num" t-esc="k.assigned"/><span>Assigned</span>
+                    </div>
+                    <div class="o_dsl_fa_pill" t-on-click="() => this.openAssets([['custody_state','=','available'], ['state','in',['draft','open','paused']]], 'Available Assets')">
+                        <i class="fa fa-check-circle text-success"/><span class="o_dsl_fa_pill_num" t-esc="k.available"/><span>Available</span>
+                    </div>
+                    <div class="o_dsl_fa_pill" t-on-click="() => this.openXml('DSL_HRMS_fixed_asset.action_dsl_asset_maintenance')">
+                        <i class="fa fa-wrench text-warning"/><span class="o_dsl_fa_pill_num" t-esc="k.maintenance"/><span>In Maintenance</span>
+                    </div>
+                    <div class="o_dsl_fa_pill" t-on-click="() => this.openAssets([], 'Warranty Expiring', {search_default_warranty_soon: 1})">
+                        <i class="fa fa-shield text-danger"/><span class="o_dsl_fa_pill_num" t-esc="k.warranty_soon"/><span>Warranty Expiring</span>
+                    </div>
+                    <div class="o_dsl_fa_pill" t-on-click="() => this.openAssets([], 'Insurance Expiring', {search_default_insurance_soon: 1})">
+                        <i class="fa fa-umbrella text-danger"/><span class="o_dsl_fa_pill_num" t-esc="k.insurance_soon"/><span>Insurance Expiring</span>
+                    </div>
+                    <div class="o_dsl_fa_pill" t-on-click="() => this.openAssets([['dsl_location_id','=',false], ['state','in',['draft','open','paused']]], 'Assets without Location')">
+                        <i class="fa fa-map-marker text-secondary"/><span class="o_dsl_fa_pill_num" t-esc="k.no_location"/><span>No Location</span>
+                    </div>
+                    <div class="o_dsl_fa_pill">
+                        <i class="fa fa-money text-primary"/><span class="o_dsl_fa_pill_num" t-esc="fmt(k.maint_cost_ytd)"/><span>Maint. Cost YTD</span>
+                    </div>
+                </div>
+
+                <div class="o_dsl_fa_grid">
+                    <!-- DEPRECIATION TREND -->
+                    <div class="o_dsl_fa_card o_dsl_fa_span2">
+                        <div class="o_dsl_fa_card_head">
+                            <div><h3>Depreciation Trend</h3><span>Last 6 months posted &amp; next 6 months planned</span></div>
+                            <div class="o_dsl_fa_legend">
+                                <span><i class="dot posted"/>Posted</span>
+                                <span><i class="dot planned"/>Planned</span>
+                            </div>
+                        </div>
+                        <div class="o_dsl_fa_trend">
+                            <t t-foreach="d.trend" t-as="t" t-key="t_index">
+                                <div t-attf-class="o_dsl_fa_trend_col {{t.current ? 'is-current' : ''}}"
+                                     t-att-title="t.label + ': ' + fmtFull(t.posted + t.planned)">
+                                    <div class="o_dsl_fa_trend_stack">
+                                        <span class="planned" t-attf-style="height: {{t.pct_planned}}%"/>
+                                        <span class="posted" t-attf-style="height: {{t.pct_posted}}%"/>
+                                    </div>
+                                    <div class="o_dsl_fa_trend_lbl" t-esc="t.label"/>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- STATUS DONUT -->
+                    <div class="o_dsl_fa_card">
+                        <div class="o_dsl_fa_card_head"><div><h3>Asset Status</h3><span>Lifecycle distribution</span></div></div>
+                        <div class="o_dsl_fa_donut_wrap">
+                            <div class="o_dsl_fa_donut" t-att-style="donutStyle">
+                                <div class="o_dsl_fa_donut_hole">
+                                    <div class="o_dsl_fa_donut_num" t-esc="statusTotal"/>
+                                    <div class="o_dsl_fa_donut_cap">Assets</div>
+                                </div>
+                            </div>
+                            <div class="o_dsl_fa_donut_legend">
+                                <t t-foreach="d.status" t-as="s" t-key="s.key">
+                                    <div class="o_dsl_fa_legend_row" t-on-click="() => this.openState(s.key)">
+                                        <i class="dot" t-attf-style="background: {{s.color}}"/>
+                                        <span class="flex-grow-1" t-esc="s.label"/>
+                                        <strong t-esc="s.count"/>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BREAKDOWN -->
+                    <div class="o_dsl_fa_card o_dsl_fa_span2">
+                        <div class="o_dsl_fa_card_head">
+                            <div><h3>Asset Value Breakdown</h3><span>Gross value vs net book value</span></div>
+                            <div class="o_dsl_fa_tabs">
+                                <button t-attf-class="{{state.breakdown == 'by_group' ? 'active' : ''}}" t-on-click="() => this.setBreakdown('by_group')">Group</button>
+                                <button t-attf-class="{{state.breakdown == 'by_class' ? 'active' : ''}}" t-on-click="() => this.setBreakdown('by_class')">Class</button>
+                                <button t-attf-class="{{state.breakdown == 'by_location' ? 'active' : ''}}" t-on-click="() => this.setBreakdown('by_location')">Location</button>
+                                <button t-attf-class="{{state.breakdown == 'by_department' ? 'active' : ''}}" t-on-click="() => this.setBreakdown('by_department')">Department</button>
+                            </div>
+                        </div>
+                        <div class="o_dsl_fa_bars">
+                            <t t-if="!breakdownRows.length">
+                                <div class="o_dsl_fa_empty">No running assets yet.</div>
+                            </t>
+                            <t t-foreach="breakdownRows" t-as="r" t-key="r_index">
+                                <div class="o_dsl_fa_bar_row">
+                                    <div class="o_dsl_fa_bar_lbl">
+                                        <span class="text-truncate" t-esc="r.label"/>
+                                        <small class="text-muted"><t t-esc="r.count"/> assets</small>
+                                    </div>
+                                    <div class="o_dsl_fa_bar_track">
+                                        <span class="gross" t-attf-style="width: {{r.pct}}%"/>
+                                        <span class="nbv" t-attf-style="width: {{r.value ? (r.nbv / r.value * r.pct) : 0}}%"/>
+                                    </div>
+                                    <div class="o_dsl_fa_bar_val">
+                                        <strong t-esc="fmt(r.value)"/>
+                                        <small class="text-success">NBV <t t-esc="fmt(r.nbv)"/></small>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- UPCOMING MAINTENANCE -->
+                    <div class="o_dsl_fa_card">
+                        <div class="o_dsl_fa_card_head">
+                            <div><h3>Upcoming Maintenance</h3><span>Scheduled service</span></div>
+                            <a href="#" class="o_dsl_fa_link" t-on-click.prevent="() => this.openXml('DSL_HRMS_fixed_asset.action_dsl_asset_maintenance')">View all</a>
+                        </div>
+                        <t t-if="!d.upcoming_maintenance.length"><div class="o_dsl_fa_empty"><i class="fa fa-check-circle-o me-1"/>Nothing scheduled.</div></t>
+                        <t t-foreach="d.upcoming_maintenance" t-as="m" t-key="m.id">
+                            <div class="o_dsl_fa_list_row" t-on-click="() => this.openMaintenance(m.id)">
+                                <span t-attf-class="o_dsl_fa_list_icon {{m.overdue ? 'bad' : 'warn'}}"><i class="fa fa-wrench"/></span>
+                                <div class="flex-grow-1 text-truncate">
+                                    <div class="fw-semibold text-truncate" t-esc="m.asset"/>
+                                    <small class="text-muted"><t t-esc="m.type"/> · <t t-esc="m.name"/></small>
+                                </div>
+                                <span t-attf-class="o_dsl_fa_date {{m.overdue ? 'bad' : ''}}" t-esc="m.date"/>
+                            </div>
+                        </t>
+                    </div>
+
+                    <!-- RECENT ASSETS -->
+                    <div class="o_dsl_fa_card o_dsl_fa_span2">
+                        <div class="o_dsl_fa_card_head">
+                            <div><h3>Recently Registered Assets</h3><span>Latest additions to the register</span></div>
+                            <a href="#" class="o_dsl_fa_link" t-on-click.prevent="() => this.openXml('DSL_HRMS_fixed_asset.action_dsl_fixed_asset_register')">Open register</a>
+                        </div>
+                        <table class="o_dsl_fa_table">
+                            <thead><tr><th>Code</th><th>Asset</th><th class="text-end">Cost</th><th class="text-end">Book Value</th><th>Depreciated</th><th>Status</th></tr></thead>
+                            <tbody>
+                                <t t-foreach="d.recent" t-as="a" t-key="a.id">
+                                    <tr t-on-click="() => this.openAsset(a.id)">
+                                        <td><span class="o_dsl_fa_code_chip" t-esc="a.code or '—'"/></td>
+                                        <td class="fw-semibold" t-esc="a.name"/>
+                                        <td class="text-end" t-esc="fmtFull(a.value)"/>
+                                        <td class="text-end fw-semibold" t-esc="fmtFull(a.nbv)"/>
+                                        <td style="min-width:120px;">
+                                            <div class="o_dsl_fa_mini_bar"><span t-attf-style="width: {{a.progress}}%"/></div>
+                                            <small class="text-muted"><t t-esc="a.progress"/>%</small>
+                                        </td>
+                                        <td><span t-attf-class="o_dsl_fa_state st-{{a.state}}" t-esc="a.state_label"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- EXPIRING -->
+                    <div class="o_dsl_fa_card">
+                        <div class="o_dsl_fa_card_head"><div><h3>Expiring in 30 Days</h3><span>Warranty &amp; insurance</span></div></div>
+                        <t t-if="!d.expiring.length"><div class="o_dsl_fa_empty"><i class="fa fa-shield me-1"/>All covers are healthy.</div></t>
+                        <t t-foreach="d.expiring" t-as="e" t-key="e_index">
+                            <div class="o_dsl_fa_list_row" t-on-click="() => this.openAsset(e.id)">
+                                <span class="o_dsl_fa_list_icon bad"><i class="fa fa-shield"/></span>
+                                <div class="flex-grow-1 text-truncate">
+                                    <div class="fw-semibold text-truncate" t-esc="e.asset"/>
+                                    <small class="text-muted" t-esc="e.kind"/>
+                                </div>
+                                <span class="o_dsl_fa_date bad" t-esc="e.date"/>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- QUICK LINKS -->
+                <div class="o_dsl_fa_quick">
+                    <div class="o_dsl_fa_quick_item" t-on-click="() => this.openXml('DSL_HRMS_fixed_asset.action_dsl_asset_assignment')"><i class="fa fa-handshake-o"/>Custody &amp; Handover</div>
+                    <div class="o_dsl_fa_quick_item" t-on-click="() => this.openXml('DSL_HRMS_fixed_asset.action_dsl_asset_transfer')"><i class="fa fa-exchange"/>Transfers</div>
+                    <div class="o_dsl_fa_quick_item" t-on-click="() => this.openXml('DSL_HRMS_fixed_asset.action_dsl_asset_verification')"><i class="fa fa-check-square-o"/>Physical Verification</div>
+                    <div class="o_dsl_fa_quick_item" t-on-click="() => this.openXml('DSL_HRMS_fixed_asset.action_dsl_asset_location')"><i class="fa fa-sitemap"/>Locations</div>
+                    <div class="o_dsl_fa_quick_item" t-on-click="() => this.openXml('DSL_HRMS_fixed_asset.action_account_asset_model_form')"><i class="fa fa-th-large"/>Asset Models</div>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>
+

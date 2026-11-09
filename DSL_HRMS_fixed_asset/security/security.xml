@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="module_category_dsl_fixed_asset" model="ir.module.category">
+        <field name="name">Fixed Asset Management</field>
+        <field name="sequence">12</field>
+    </record>
+
+    <record id="group_fixed_asset_user" model="res.groups">
+        <field name="name">Asset User</field>
+        <field name="category_id" ref="module_category_dsl_fixed_asset"/>
+        <field name="implied_ids" eval="[(4, ref('account.group_account_readonly'))]"/>
+    </record>
+
+    <record id="group_fixed_asset_manager" model="res.groups">
+        <field name="name">Asset Manager</field>
+        <field name="category_id" ref="module_category_dsl_fixed_asset"/>
+        <field name="implied_ids" eval="[(4, ref('group_fixed_asset_user'))]"/>
+        <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+    </record>
+
+    <!-- Accounting managers are automatically Asset Managers -->
+    <record id="account.group_account_manager" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_fixed_asset_manager'))]"/>
+    </record>
+
+    <record id="rule_dsl_asset_location_company" model="ir.rule">
+        <field name="name">Asset Location: multi-company</field>
+        <field name="model_id" ref="model_dsl_asset_location"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_dsl_asset_assignment_company" model="ir.rule">
+        <field name="name">Asset Assignment: multi-company</field>
+        <field name="model_id" ref="model_dsl_asset_assignment"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_dsl_asset_transfer_company" model="ir.rule">
+        <field name="name">Asset Transfer: multi-company</field>
+        <field name="model_id" ref="model_dsl_asset_transfer"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_dsl_asset_maintenance_company" model="ir.rule">
+        <field name="name">Asset Maintenance: multi-company</field>
+        <field name="model_id" ref="model_dsl_asset_maintenance"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+    </record>
+    <record id="rule_dsl_asset_verification_company" model="ir.rule">
+        <field name="name">Asset Verification: multi-company</field>
+        <field name="model_id" ref="model_dsl_asset_verification"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <data noupdate="1">
+        <record id="account_asset_multi_company_rule" model="ir.rule">
+            <field name="name">Account Asset multi-company</field>
+            <field name="model_id" ref="model_account_asset"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">[('company_id', 'parent_of', company_ids)]</field>
+        </record>
+        <record id="account_asset_group_multi_company_rule" model="ir.rule">
+            <field name="name">Account Asset Group multi-company</field>
+            <field name="model_id" ref="model_account_asset_group"/>
+            <field name="global" eval="True"/>
+            <field name="domain_force">[('company_id', 'parent_of', company_ids)]</field>
+        </record>
+    </data>
+</odoo>
+

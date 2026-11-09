@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_dsl_asset_verification_list" model="ir.ui.view">
+        <field name="name">dsl.asset.verification.list</field>
+        <field name="model">dsl.asset.verification</field>
+        <field name="arch" type="xml">
+            <list string="Physical Verification">
+                <field name="name"/>
+                <field name="title"/>
+                <field name="date"/>
+                <field name="location_id"/>
+                <field name="responsible_user_id" widget="many2one_avatar_user"/>
+                <field name="total_count"/>
+                <field name="found_count"/>
+                <field name="missing_count" decoration-danger="missing_count &gt; 0"/>
+                <field name="completion_rate" widget="progressbar"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-warning="state == 'in_progress'" decoration-success="state == 'done'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dsl_asset_verification_form" model="ir.ui.view">
+        <field name="name">dsl.asset.verification.form</field>
+        <field name="model">dsl.asset.verification</field>
+        <field name="arch" type="xml">
+            <form string="Physical Verification">
+                <header>
+                    <button name="action_load_assets" string="Load Assets" type="object" icon="fa-download" invisible="state != 'draft'"/>
+                    <button name="action_start" string="Start Verification" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_mark_all_found" string="Mark Pending as Found" type="object" invisible="state != 'in_progress'"/>
+                    <button name="action_done" string="Complete Audit" type="object" class="oe_highlight" invisible="state != 'in_progress'"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="state in ('done', 'cancel')"/>
+                    <button name="action_draft" string="Reset to Draft" type="object" invisible="state != 'cancel'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label"><field name="name" readonly="1"/></span>
+                        <h1><field name="title" readonly="state == 'done'"/></h1>
+                    </div>
+                    <div class="o_dsl_fa_stat_strip" invisible="total_count == 0">
+                        <div class="o_dsl_fa_stat"><span class="o_dsl_fa_stat_label">Total</span><field name="total_count" class="o_dsl_fa_stat_value"/></div>
+                        <div class="o_dsl_fa_stat o_dsl_ok"><span class="o_dsl_fa_stat_label">Found</span><field name="found_count" class="o_dsl_fa_stat_value"/></div>
+                        <div class="o_dsl_fa_stat o_dsl_info"><span class="o_dsl_fa_stat_label">Relocated</span><field name="relocated_count" class="o_dsl_fa_stat_value"/></div>
+                        <div class="o_dsl_fa_stat o_dsl_warn"><span class="o_dsl_fa_stat_label">Damaged</span><field name="damaged_count" class="o_dsl_fa_stat_value"/></div>
+                        <div class="o_dsl_fa_stat o_dsl_bad"><span class="o_dsl_fa_stat_label">Missing</span><field name="missing_count" class="o_dsl_fa_stat_value"/></div>
+                        <div class="o_dsl_fa_stat"><span class="o_dsl_fa_stat_label">Pending</span><field name="pending_count" class="o_dsl_fa_stat_value"/></div>
+                        <div class="o_dsl_fa_stat flex-grow-1"><span class="o_dsl_fa_stat_label">Progress</span><field name="completion_rate" widget="progressbar"/></div>
+                    </div>
+                    <group>
+                        <group string="Scope">
+                            <field name="date" readonly="state == 'done'"/>
+                            <field name="location_id" readonly="state != 'draft'"/>
+                            <field name="department_id" readonly="state != 'draft'"/>
+                            <field name="asset_group_id" readonly="state != 'draft'"/>
+                        </group>
+                        <group string="Audit Team">
+                            <field name="responsible_user_id" widget="many2one_avatar_user"/>
+                            <field name="auditor_ids" widget="many2many_tags"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Assets to Verify" name="lines">
+                            <field name="line_ids" readonly="state == 'done'">
+                                <list editable="bottom" decoration-danger="result == 'missing'" decoration-warning="result == 'damaged'"
+                                      decoration-info="result == 'relocated'" decoration-success="result == 'found'">
+                                    <field name="asset_id" options="{'no_create': True}"/>
+                                    <field name="asset_code" optional="show"/>
+                                    <field name="serial_number" optional="hide"/>
+                                    <field name="expected_location_id"/>
+                                    <field name="expected_employee_id" optional="show"/>
+                                    <field name="found_location_id"/>
+                                    <field name="result" widget="badge"/>
+                                    <field name="condition"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <field name="book_value" sum="Total NBV" optional="show"/>
+                                    <field name="remarks"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Observations" name="notes">
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dsl_asset_verification_search" model="ir.ui.view">
+        <field name="name">dsl.asset.verification.search</field>
+        <field name="model">dsl.asset.verification</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="title"/>
+                <field name="location_id"/>
+                <filter name="in_progress" string="In Progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter name="done" string="Completed" domain="[('state', '=', 'done')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="grp_loc" string="Location" context="{'group_by': 'location_id'}"/>
+                    <filter name="grp_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_dsl_asset_verification" model="ir.actions.act_window">
+        <field name="name">Physical Verification</field>
+        <field name="res_model">dsl.asset.verification</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Start a physical asset audit</p>
+            <p>Load assets by location / department / group, mark each one as found, relocated, damaged or missing, and update the register automatically.</p>
+        </field>
+    </record>
+
+    <!-- Verification results analysis -->
+    <record id="view_dsl_asset_verification_line_list" model="ir.ui.view">
+        <field name="name">dsl.asset.verification.line.list</field>
+        <field name="model">dsl.asset.verification.line</field>
+        <field name="arch" type="xml">
+            <list string="Verification History" create="0">
+                <field name="date"/>
+                <field name="verification_id"/>
+                <field name="asset_id"/>
+                <field name="expected_location_id"/>
+                <field name="found_location_id"/>
+                <field name="result" widget="badge" decoration-danger="result == 'missing'" decoration-warning="result == 'damaged'"
+                       decoration-info="result == 'relocated'" decoration-success="result == 'found'"/>
+                <field name="condition"/>
+                <field name="remarks"/>
+            </list>
+        </field>
+    </record>
+</odoo>
+
