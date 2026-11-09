@@ -548,30 +548,172 @@
                                 <span>Payments &amp; Transfers</span>
                             </a>
                         </li>
+                        <li t-if="hasModule('DSL_HRMS_contra')"
+                            t-att-class="{'active': isCurrentSection('acc_contra')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccContra()" title="Contra Voucher (Bank &amp; Cash Transfer)">
+                                <i class="fa fa-random dsl_sub_icon" title="Contra (Bank/Cash Transfer)"/>
+                                <span>Contra (Bank/Cash Transfer)</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_bank_reconciliation')"
+                            t-att-class="{'active': isCurrentSection('acc_bank_brs')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccBankBrs()" title="Bank Reconciliation Statement (BRS)">
+                                <i class="fa fa-university dsl_sub_icon" title="Bank Reconciliation (BRS)"/>
+                                <span>Bank Reconciliation (BRS)</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_bank_reconciliation')"
+                            t-att-class="{'active': isCurrentSection('acc_cheque_register')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccChequeRegister()" title="Cheque Register">
+                                <i class="fa fa-list-alt dsl_sub_icon" title="Cheque Register"/>
+                                <span>Cheque Register</span>
+                            </a>
+                        </li>
                         <li t-att-class="{'active': isCurrentSection('acc_reconcile')}">
                             <a href="#" t-on-click.prevent="() => this.openAccReconcile()" title="Account &amp; Bank Reconciliation">
                                 <i class="fa fa-check-square-o dsl_sub_icon" title="Reconciliation"/>
                                 <span>Account Reconciliation</span>
                             </a>
                         </li>
-                        <li t-att-class="{'active': isCurrentSection('acc_assets')}">
-                            <a href="#" t-on-click.prevent="() => this.openAccAssets()" title="Fixed Assets &amp; Depreciation">
-                                <i class="fa fa-building-o dsl_sub_icon" title="Fixed Assets"/>
-                                <span>Fixed Assets</span>
-                            </a>
+                        <li class="dsl_sub_section_title">
+                            <span>BUDGET &amp; COST CONTROL</span>
                         </li>
                         <li t-att-class="{'active': isCurrentSection('acc_budgets')}">
-                            <a href="#" t-on-click.prevent="() => this.openAccBudgets()" title="Financial Budgets">
+                            <a href="#" t-on-click.prevent="() => this.openAccBudgets()" title="Corporate Financial Budgets">
                                 <i class="fa fa-pie-chart dsl_sub_icon" title="Financial Budgets"/>
                                 <span>Financial Budgets</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_budget')"
+                            t-att-class="{'active': isCurrentSection('acc_budget_analysis')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccBudgetAnalysis()" title="Budgets Analysis (Planned vs Practical vs Theoretical)">
+                                <i class="fa fa-bar-chart-o dsl_sub_icon" title="Budgets Analysis"/>
+                                <span>Budgets Analysis</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_budget')"
+                            t-att-class="{'active': isCurrentSection('acc_budget_positions')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccBudgetPositions()" title="Budgetary Positions (GL Account Grouping)">
+                                <i class="fa fa-sitemap dsl_sub_icon" title="Budgetary Positions"/>
+                                <span>Budgetary Positions</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_budget')"
+                            t-att-class="{'active': isCurrentSection('acc_job_budgets')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccJobBudgets()" title="Cost Center &amp; Project Job Budgets + Re-Budgeting">
+                                <i class="fa fa-calculator dsl_sub_icon" title="Cost Center &amp; Job Budgets"/>
+                                <span>Cost Center &amp; Job Budgets</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_budget')"
+                            t-att-class="{'active': isCurrentSection('acc_cost_advances')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccCostAdvances()" title="Budget Cost Advance Requests">
+                                <i class="fa fa-money dsl_sub_icon" title="Cost Advances"/>
+                                <span>Cost Advance Requests</span>
+                            </a>
+                        </li>
+                        <li t-if="hasModule('DSL_HRMS_budget')"
+                            t-att-class="{'active': isCurrentSection('acc_bill_adjustments')}">
+                            <a href="#" t-on-click.prevent="() => this.openAccBillAdjustments()" title="Bill &amp; Budget Adjustments with Vendor Bill Creation">
+                                <i class="fa fa-check-circle-o dsl_sub_icon" title="Bill &amp; Budget Adjustments"/>
+                                <span>Bill &amp; Budget Adjustments</span>
                             </a>
                         </li>
                     </ul>
                 </div>
 
-                <!-- 10. Collapsible Group: Financial Reports (All 16 at_accounting Statements & Ledgers) -->
+                <!-- 9A. Collapsible Group: Fixed Asset Management (DSL_HRMS_fixed_asset) -->
                 <div class="dsl_accordion_group"
-                     t-if="canAccess('financial_reports') &amp;&amp; hasModule('DSL_HRMS_accounting')"
+                     t-if="canAccess('accounting') &amp;&amp; canAccess('fixed_assets') &amp;&amp; hasModule('DSL_HRMS_fixed_asset')"
+                     t-att-class="{'is-open': isGroupOpen('fixed_assets'), 'has-active': isGroupActive('fixed_assets')}">
+                    <button type="button"
+                            class="dsl_group_header"
+                            t-on-click="() => this.toggleGroup('fixed_assets')"
+                            title="Fixed Asset Management">
+                        <span class="dsl_group_left">
+                            <i class="fa fa-cubes dsl_nav_icon" title="Fixed Assets"/>
+                            <span class="dsl_nav_label" t-if="!props.isCollapsed">Fixed Assets</span>
+                        </span>
+                        <i t-if="!props.isCollapsed"
+                           t-att-class="isGroupOpen('fixed_assets') ? 'fa fa-angle-up dsl_group_chevron' : 'fa fa-angle-right dsl_group_chevron'"
+                           title="Expand"/>
+                    </button>
+                    <ul class="dsl_sub_list" t-if="isGroupOpen('fixed_assets')">
+                        <li t-att-class="{'active': isCurrentSection('fa_dashboard')}">
+                            <a href="#" t-on-click.prevent="() => this.openFaDashboard()" title="Asset Dashboard">
+                                <i class="fa fa-tachometer dsl_sub_icon" title="Asset Dashboard"/>
+                                <span>Asset Dashboard</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('fa_register')}">
+                            <a href="#" t-on-click.prevent="() => this.openFaRegister()" title="Fixed Asset Register">
+                                <i class="fa fa-building-o dsl_sub_icon" title="Asset Register"/>
+                                <span>Asset Register</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('fa_assignment')}">
+                            <a href="#" t-on-click.prevent="() => this.openFaAssignment()" title="Custody &amp; Handover">
+                                <i class="fa fa-handshake-o dsl_sub_icon" title="Custody &amp; Handover"/>
+                                <span>Custody &amp; Handover</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('fa_transfer')}">
+                            <a href="#" t-on-click.prevent="() => this.openFaTransfer()" title="Asset Transfers">
+                                <i class="fa fa-exchange dsl_sub_icon" title="Asset Transfers"/>
+                                <span>Asset Transfers</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('fa_maintenance')}">
+                            <a href="#" t-on-click.prevent="() => this.openFaMaintenance()" title="Maintenance">
+                                <i class="fa fa-wrench dsl_sub_icon" title="Maintenance"/>
+                                <span>Maintenance</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('fa_verification')}">
+                            <a href="#" t-on-click.prevent="() => this.openFaVerification()" title="Physical Verification">
+                                <i class="fa fa-check-square-o dsl_sub_icon" title="Physical Verification"/>
+                                <span>Physical Verification</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('fa_disposed')}">
+                            <a href="#" t-on-click.prevent="() => this.openFaDisposed()" title="Disposed &amp; Sold Assets">
+                                <i class="fa fa-gavel dsl_sub_icon" title="Disposed &amp; Sold"/>
+                                <span>Disposed &amp; Sold</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('fa_depr_schedule')}">
+                            <a href="#" t-on-click.prevent="() => this.openFaDeprSchedule()" title="Depreciation Schedule">
+                                <i class="fa fa-table dsl_sub_icon" title="Depreciation Schedule"/>
+                                <span>Depreciation Schedule</span>
+                            </a>
+                        </li>
+                        <li class="dsl_sub_section_title">
+                            <span>CONFIGURATION</span>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('fa_models')}">
+                            <a href="#" t-on-click.prevent="() => this.openFaModels()" title="Asset Models (Categories)">
+                                <i class="fa fa-th-large dsl_sub_icon" title="Asset Models"/>
+                                <span>Asset Models</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('fa_groups')}">
+                            <a href="#" t-on-click.prevent="() => this.openFaGroups()" title="Asset Groups">
+                                <i class="fa fa-object-group dsl_sub_icon" title="Asset Groups"/>
+                                <span>Asset Groups</span>
+                            </a>
+                        </li>
+                        <li t-att-class="{'active': isCurrentSection('fa_locations')}">
+                            <a href="#" t-on-click.prevent="() => this.openFaLocations()" title="Asset Locations">
+                                <i class="fa fa-sitemap dsl_sub_icon" title="Asset Locations"/>
+                                <span>Locations</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 10. Collapsible Group: Financial Reports (All 16 at_accounting Statements &amp; Ledgers) -->
+                <div class="dsl_accordion_group"
+                     t-if="canAccess('financial_reports') &amp;&amp; hasModule('DSL_HRMS_account_reports')"
                      t-att-class="{'is-open': isGroupOpen('financial_reports'), 'has-active': isGroupActive('financial_reports')}">
                     <button type="button"
                             class="dsl_group_header"
@@ -665,7 +807,7 @@
                                 <span>Bank Rec Report</span>
                             </a>
                         </li>
-                        <li t-att-class="{'active': isCurrentSection('rep_depreciation')}">
+                        <li t-if="hasModule('DSL_HRMS_fixed_asset')" t-att-class="{'active': isCurrentSection('rep_depreciation')}">
                             <a href="#" t-on-click.prevent="() => this.openRepDepreciation()" title="Asset Depreciation Schedule">
                                 <i class="fa fa-calendar-check-o dsl_sub_icon" title="Depreciation Schedule"/>
                                 <span>Depreciation Schedule</span>
@@ -1062,7 +1204,7 @@
                                 <span>Fiscal Years</span>
                             </a>
                         </li>
-                        <li t-if="canAccess('accounting_settings') &amp;&amp; hasModule('DSL_HRMS_accounting')"
+                        <li t-if="canAccess('accounting_settings') &amp;&amp; hasModule('DSL_HRMS_fixed_asset')"
                             t-att-class="{'active': isCurrentSection('acc_asset_models_cfg')}">
                             <a href="#" t-on-click.prevent="() => this.openAccAssetModelsCfg()" title="Asset Models">
                                 <i class="fa fa-cubes dsl_sub_icon" title="Asset Models"/>

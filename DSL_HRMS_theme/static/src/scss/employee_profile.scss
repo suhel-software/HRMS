@@ -1400,3 +1400,514 @@ body.dsl_dark_mode {
         color: #f8fafc !important;
     }
 }
+
+
+// ==========================================================================
+// 9. EXECUTIVE 4-CARD RESPONSIVE EMPLOYEE DIRECTORY & GLOBAL RESPONSIVE ENGINE
+// ==========================================================================
+.o_hr_employee_kanban {
+    padding: 0 !important;
+}
+
+.o_hr_employee_kanban .o_kanban_renderer {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    padding: 16px 18px !important;
+    background: #f8fafc !important;
+    align-content: start !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+
+    @media (max-width: 1440px) {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+    @media (max-width: 1100px) {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    @media (max-width: 680px) {
+        grid-template-columns: 1fr !important;
+    }
+
+    // Hide empty ghost placeholder rectangles below cards!
+    .o_kanban_record.o_kanban_ghost,
+    .o_kanban_ghost {
+        display: none !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+    }
+
+    .o_kanban_record {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 14px !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04) !important;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+
+        &:hover {
+            transform: translateY(-3px) !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 12px 26px rgba(16, 185, 129, 0.12), 0 4px 10px rgba(15, 23, 42, 0.05) !important;
+        }
+    }
+
+    .dsl-emp-dir-card {
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 14px 15px 12px 15px !important;
+        gap: 10px !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.06) 0%, transparent 48%), #ffffff;
+
+        // 1. Top Badge Row (Single-Line Guaranteed — Never wraps!)
+        .dsl-dir-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            flex-wrap: nowrap;
+
+            .dsl-dir-badges-left,
+            .dsl-dir-badges-right {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                flex-wrap: nowrap;
+                min-width: 0;
+            }
+
+            .dsl-dir-code-pill {
+                display: inline-flex;
+                align-items: center;
+                background: #f1f5f9;
+                border: 1px solid #cbd5e1;
+                color: #0f172a;
+                font-size: 11px;
+                font-weight: 700;
+                padding: 2px 8px;
+                border-radius: 999px;
+                white-space: nowrap !important;
+                i { color: #3b82f6; }
+            }
+
+            .dsl-dir-blood-pill {
+                display: inline-flex;
+                align-items: center;
+                background: #fff1f2;
+                border: 1px solid #fecdd3;
+                color: #e11d48;
+                font-size: 10.5px;
+                font-weight: 800;
+                padding: 2px 7px;
+                border-radius: 999px;
+                white-space: nowrap !important;
+            }
+
+            .dsl-dir-status-pill {
+                font-size: 10.5px;
+                font-weight: 700;
+                padding: 2px 8px;
+                border-radius: 999px;
+                white-space: nowrap !important;
+                flex-shrink: 0;
+
+                &.status-confirmed {
+                    background: #ecfdf5;
+                    border: 1px solid #a7f3d0;
+                    color: #059669;
+                }
+                &.status-probation {
+                    background: #eff6ff;
+                    border: 1px solid #bfdbfe;
+                    color: #2563eb;
+                }
+                &.status-notice {
+                    background: #fffbeb;
+                    border: 1px solid #fde68a;
+                    color: #d97706;
+                }
+            }
+        }
+
+        // 2. Identity Block (Avatar + Name + Job + Org Chips)
+        .dsl-dir-identity {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+
+            .dsl-dir-avatar-wrap {
+                flex: 0 0 60px;
+                width: 60px;
+                height: 60px;
+                border-radius: 14px;
+                overflow: hidden;
+                border: 2px solid #a7f3d0;
+                box-shadow: 0 4px 10px rgba(16, 185, 129, 0.14);
+                background: #f1f5f9;
+
+                .o_field_image,
+                img {
+                    width: 100% !important;
+                    height: 100% !important;
+                    object-fit: cover !important;
+                    border-radius: 12px !important;
+                }
+            }
+
+            .dsl-dir-identity-info {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 1px;
+
+                .dsl-dir-emp-name {
+                    font-size: 14.5px;
+                    font-weight: 800;
+                    color: #0f172a;
+                    line-height: 1.25;
+                    letter-spacing: -0.2px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .dsl-dir-emp-name-bn {
+                    font-size: 11.5px;
+                    font-weight: 600;
+                    color: #64748b;
+                    line-height: 1.2;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .dsl-dir-job-title {
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #059669;
+                    margin-top: 1px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .dsl-dir-org-chips {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 4px;
+                    margin-top: 4px;
+
+                    .dsl-dir-org-chip,
+                    .dsl-dir-grade-pill {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 4px;
+                        font-size: 10.5px;
+                        font-weight: 600;
+                        color: #475569;
+                        background: #f8fafc;
+                        border: 1px solid #e2e8f0;
+                        border-radius: 6px;
+                        padding: 1px 6px;
+                        max-width: 100%;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+
+                        i {
+                            font-size: 10px;
+                            color: #64748b;
+                        }
+                    }
+
+                    .dsl-dir-grade-pill {
+                        background: #f5f3ff;
+                        border-color: #ddd6fe;
+                        color: #6d28d9;
+                    }
+                }
+            }
+        }
+
+        // 3. Contact & Tenure Info Box
+        .dsl-dir-contact-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 7px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+
+            .dsl-dir-contact-row {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+                font-size: 11.5px;
+                font-weight: 500;
+                color: #334155;
+                min-width: 0;
+
+                .dsl-dir-c-icon {
+                    width: 19px;
+                    height: 19px;
+                    border-radius: 5px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 10.5px;
+                    flex: 0 0 19px;
+
+                    &.icon-blue { background: #eff6ff; color: #2563eb; }
+                    &.icon-emerald { background: #ecfdf5; color: #059669; }
+                    &.icon-purple { background: #f5f3ff; color: #7c3aed; }
+                }
+
+                .dsl-dir-tenure-badge {
+                    background: #eef2ff;
+                    color: #4f46e5;
+                    border: 1px solid #c7d2fe;
+                    border-radius: 999px;
+                    padding: 1px 7px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    white-space: nowrap !important;
+                }
+            }
+        }
+
+        // 4. Footer Row
+        .dsl-dir-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 7px;
+            border-top: 1px dashed #e2e8f0;
+            margin-top: auto;
+
+            .dsl-dir-footer-left {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                min-width: 0;
+
+                .dsl-dir-cat-text {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #64748b;
+                    text-transform: capitalize;
+                    white-space: nowrap;
+                    i { color: #94a3b8; }
+                }
+            }
+
+            .dsl-dir-footer-right {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                flex-shrink: 0;
+            }
+        }
+    }
+}
+
+// ==========================================================================
+// 10. GLOBAL RESPONSIVE ENGINE FOR ALL VIEWS (KANBAN, LIST, FORM, SEARCHPANEL)
+// ==========================================================================
+
+// 10A. All Ungrouped Kanban Views across Odoo (4 Cards per row, responsive down to 1)
+.o_kanban_renderer.o_kanban_ungrouped {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    padding: 16px 18px !important;
+    align-content: start !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+
+    @media (max-width: 1440px) {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+    @media (max-width: 1080px) {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    @media (max-width: 640px) {
+        grid-template-columns: 1fr !important;
+    }
+
+    .o_kanban_record.o_kanban_ghost,
+    .o_kanban_ghost {
+        display: none !important;
+    }
+
+    .o_kanban_record {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+}
+
+// 10B. SearchPanel Left Filter Sidebar (Compact & Responsive)
+.o_search_panel {
+    background: #ffffff !important;
+    border-right: 1px solid #e2e8f0 !important;
+    padding: 12px 10px !important;
+    flex: 0 0 205px !important;
+    max-width: 205px !important;
+
+    @media (max-width: 1366px) {
+        flex: 0 0 180px !important;
+        max-width: 180px !important;
+    }
+
+    .o_search_panel_section_header {
+        font-size: 10.5px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px !important;
+        color: #475569 !important;
+        margin-bottom: 5px !important;
+    }
+
+    .list-group-item {
+        border-radius: 8px !important;
+        margin-bottom: 2px !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        padding: 5px 8px !important;
+
+        &.active,
+        .o_search_panel_label.active {
+            background: #ecfdf5 !important;
+            color: #059669 !important;
+            font-weight: 700 !important;
+        }
+    }
+}
+
+// 10C. Global Responsive List / Tree Tables, Forms, Notebooks & Control Panel
+.o_list_view {
+    .o_list_renderer {
+        overflow-x: auto !important;
+        width: 100% !important;
+    }
+
+    .o_list_table {
+        width: 100% !important;
+        th, td {
+            vertical-align: middle !important;
+        }
+    }
+}
+
+.o_form_view {
+    @media (max-width: 1280px) {
+        .o_form_sheet_bg {
+            padding: 12px 14px !important;
+            .o_form_sheet {
+                padding: 18px 20px !important;
+            }
+        }
+        .o-mail-Form-chatter,
+        .o-mail-ChatterContainer {
+            width: calc(100% - 28px) !important;
+            max-width: calc(100% - 28px) !important;
+            margin: 8px 14px 24px 14px !important;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .o_group {
+            display: flex !important;
+            flex-direction: column !important;
+            .o_inner_group {
+                width: 100% !important;
+            }
+        }
+    }
+
+    .o_notebook .o_notebook_headers .nav.nav-tabs {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        scrollbar-width: thin;
+
+        .nav-link {
+            white-space: nowrap !important;
+        }
+    }
+}
+
+.o_control_panel {
+    @media (max-width: 1280px) {
+        padding: 8px 14px !important;
+        .o_searchview {
+            min-width: 180px !important;
+        }
+    }
+}
+
+// Dark Mode Support for Employee Directory Kanban & SearchPanel
+body.dsl_dark_mode {
+    .o_hr_employee_kanban .o_kanban_renderer,
+    .o_kanban_renderer.o_kanban_ungrouped {
+        background: #0b1120 !important;
+
+        .o_kanban_record {
+            background: #111a2b !important;
+            border-color: #1f2d46 !important;
+        }
+
+        .dsl-emp-dir-card {
+            background: radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.12) 0%, transparent 48%), #111a2b !important;
+
+            .dsl-dir-code-pill {
+                background: #182338 !important;
+                border-color: #263854 !important;
+                color: #f8fafc !important;
+            }
+
+            .dsl-dir-emp-name { color: #f8fafc !important; }
+            .dsl-dir-emp-name-bn { color: #94a3b8 !important; }
+            .dsl-dir-job-title { color: #34d399 !important; }
+
+            .dsl-dir-org-chip {
+                background: #182338 !important;
+                border-color: #253551 !important;
+                color: #cbd5e1 !important;
+            }
+
+            .dsl-dir-contact-box {
+                background: #162136 !important;
+                border-color: #22324d !important;
+                .dsl-dir-contact-row { color: #e2e8f0 !important; }
+            }
+
+            .dsl-dir-card-footer {
+                border-top-color: #1f2d46 !important;
+            }
+        }
+    }
+
+    .o_search_panel {
+        background: #0f172a !important;
+        border-right-color: #1e293b !important;
+        color: #cbd5e1 !important;
+
+        .o_search_panel_section_header { color: #94a3b8 !important; }
+    }
+}

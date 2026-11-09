@@ -68,9 +68,30 @@ const GROUP_ITEMS = {
         "acc_invoices",
         "acc_bills",
         "acc_payments",
+        "acc_contra",
         "acc_reconcile",
+        "acc_bank_brs",
+        "acc_cheque_register",
         "acc_assets",
         "acc_budgets",
+        "acc_budget_analysis",
+        "acc_budget_positions",
+        "acc_job_budgets",
+        "acc_cost_advances",
+        "acc_bill_adjustments",
+    ],
+    fixed_assets: [
+        "fa_dashboard",
+        "fa_register",
+        "fa_assignment",
+        "fa_transfer",
+        "fa_maintenance",
+        "fa_verification",
+        "fa_disposed",
+        "fa_depr_schedule",
+        "fa_models",
+        "fa_groups",
+        "fa_locations",
     ],
     financial_reports: [
         "rep_balance_sheet",
@@ -615,6 +636,21 @@ export class DslSidebar extends Component {
         await this.action.doAction("account.action_account_payments");
     }
 
+    async openAccContra() {
+        this.setSection("acc_contra", "accounting");
+        await this.action.doAction("DSL_HRMS_contra.action_dsl_contra_voucher");
+    }
+
+    async openAccChequeRegister() {
+        this.setSection("acc_cheque_register", "accounting");
+        await this.action.doAction("DSL_HRMS_bank_reconciliation.action_dsl_cheque_register");
+    }
+
+    async openAccBankBrs() {
+        this.setSection("acc_bank_brs", "accounting");
+        await this.action.doAction("DSL_HRMS_bank_reconciliation.action_dsl_bank_reconciliation");
+    }
+
     async openAccReconcile() {
         this.setSection("acc_reconcile", "accounting");
         await this.action.doAction("DSL_HRMS_accounting.action_move_line_posted_unreconciled");
@@ -622,94 +658,141 @@ export class DslSidebar extends Component {
 
     async openAccAssets() {
         this.setSection("acc_assets", "accounting");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_asset_form");
+        await this.action.doAction("DSL_HRMS_fixed_asset.action_account_asset_form");
     }
+
+    // 6B. Fixed Asset Management (DSL_HRMS_fixed_asset)
+    async _openFa(section, xmlid) {
+        this.setSection(section, "fixed_assets");
+        await this.action.doAction(xmlid);
+    }
+
+    openFaDashboard() { return this._openFa("fa_dashboard", "DSL_HRMS_fixed_asset.action_dsl_fixed_asset_dashboard"); }
+    openFaRegister() { return this._openFa("fa_register", "DSL_HRMS_fixed_asset.action_dsl_fixed_asset_register"); }
+    openFaAssignment() { return this._openFa("fa_assignment", "DSL_HRMS_fixed_asset.action_dsl_asset_assignment"); }
+    openFaTransfer() { return this._openFa("fa_transfer", "DSL_HRMS_fixed_asset.action_dsl_asset_transfer"); }
+    openFaMaintenance() { return this._openFa("fa_maintenance", "DSL_HRMS_fixed_asset.action_dsl_asset_maintenance"); }
+    openFaVerification() { return this._openFa("fa_verification", "DSL_HRMS_fixed_asset.action_dsl_asset_verification"); }
+    openFaDisposed() { return this._openFa("fa_disposed", "DSL_HRMS_fixed_asset.action_dsl_fixed_asset_disposed"); }
+    openFaDeprSchedule() { return this._openFa("fa_depr_schedule", "DSL_HRMS_fixed_asset.action_account_report_assets"); }
+    openFaModels() { return this._openFa("fa_models", "DSL_HRMS_fixed_asset.action_account_asset_model_form"); }
+    openFaGroups() { return this._openFa("fa_groups", "DSL_HRMS_fixed_asset.action_dsl_asset_group"); }
+    openFaLocations() { return this._openFa("fa_locations", "DSL_HRMS_fixed_asset.action_dsl_asset_location"); }
 
     async openAccBudgets() {
         this.setSection("acc_budgets", "accounting");
+        if (this.hasModule("DSL_HRMS_budget")) {
+            await this.action.doAction("DSL_HRMS_budget.act_crossovered_budget_view");
+            return;
+        }
         await this.action.doAction("DSL_HRMS_accounting.action_account_report_budget_tree");
+    }
+
+    async openAccBudgetAnalysis() {
+        this.setSection("acc_budget_analysis", "accounting");
+        await this.action.doAction("DSL_HRMS_budget.act_crossovered_budget_lines_view");
+    }
+
+    async openAccBudgetPositions() {
+        this.setSection("acc_budget_positions", "accounting");
+        await this.action.doAction("DSL_HRMS_budget.open_budget_post_form");
+    }
+
+    async openAccJobBudgets() {
+        this.setSection("acc_job_budgets", "accounting");
+        await this.action.doAction("DSL_HRMS_budget.action_dsl_job_summary");
+    }
+
+    async openAccCostAdvances() {
+        this.setSection("acc_cost_advances", "accounting");
+        await this.action.doAction("DSL_HRMS_budget.action_dsl_cost_advance");
+    }
+
+    async openAccBillAdjustments() {
+        this.setSection("acc_bill_adjustments", "accounting");
+        await this.action.doAction("DSL_HRMS_budget.action_dsl_bill_adjustment");
     }
 
     // Financial Statements (at_accounting)
     async openRepBalanceSheet() {
         this.setSection("rep_balance_sheet", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_bs");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_bs");
     }
 
     async openRepProfitLoss() {
         this.setSection("rep_profit_loss", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_pl");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_pl");
     }
 
     async openRepCashFlow() {
         this.setSection("rep_cash_flow", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_cs");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_cs");
     }
 
     async openRepExecSummary() {
         this.setSection("rep_exec_summary", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_exec_summary");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_exec_summary");
     }
 
     async openRepTaxReturn() {
         this.setSection("rep_tax_return", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_gt");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_gt");
     }
 
     // Ledger, Audit & Aged Reports (at_accounting)
     async openRepGeneralLedger() {
         this.setSection("rep_general_ledger", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_general_ledger");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_general_ledger");
     }
 
     async openRepTrialBalance() {
         this.setSection("rep_trial_balance", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_coa");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_coa");
     }
 
     async openRepJournalAudit() {
         this.setSection("rep_journal_audit", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_ja");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_ja");
     }
 
     async openRepPartnerLedger() {
         this.setSection("rep_partner_ledger", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_partner_ledger");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_partner_ledger");
     }
 
     async openRepAgedReceivable() {
         this.setSection("rep_aged_receivable", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_ar");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_ar");
     }
 
     async openRepAgedPayable() {
         this.setSection("rep_aged_payable", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_ap");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_ap");
     }
 
     async openRepBankReconciliation() {
         this.setSection("rep_bank_reconciliation", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_bank_reconciliation");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_bank_reconciliation");
     }
 
     async openRepDepreciation() {
         this.setSection("rep_depreciation", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_assets");
+        await this.action.doAction("DSL_HRMS_fixed_asset.action_account_report_assets");
     }
 
     async openRepDeferredExpense() {
         this.setSection("rep_deferred_expense", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_deferred_expense");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_deferred_expense");
     }
 
     async openRepDeferredRevenue() {
         this.setSection("rep_deferred_revenue", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_deferred_revenue");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_deferred_revenue");
     }
 
     async openRepMulticurrency() {
         this.setSection("rep_multicurrency", "financial_reports");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_report_multicurrency_revaluation");
+        await this.action.doAction("DSL_HRMS_account_reports.action_account_report_multicurrency_revaluation");
     }
 
     // Accounting Config
@@ -735,7 +818,7 @@ export class DslSidebar extends Component {
 
     async openAccAssetModelsMod() {
         this.setSection("acc_asset_models_mod", "accounting");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_asset_model_form");
+        await this.action.doAction("DSL_HRMS_fixed_asset.action_account_asset_model_form");
     }
 
     // 6B. Self-Service & HR Desk Group
@@ -1005,7 +1088,7 @@ export class DslSidebar extends Component {
 
     async openAccAssetModelsCfg() {
         this.setSection("acc_asset_models_cfg", "settings");
-        await this.action.doAction("DSL_HRMS_accounting.action_account_asset_model_form");
+        await this.action.doAction("DSL_HRMS_fixed_asset.action_account_asset_model_form");
     }
 
     async openUsersAccess() {

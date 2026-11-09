@@ -431,3 +431,16 @@ $dsl-sidebar-collapsed-width: 72px !default;
         }
     }
 }
+
+
+// Responsive Sidebar Width Adjustments for Laptops & Tablets
+@media (max-width: 1536px) {
+    .dsl_sidebar:not(.collapsed) {
+        width: 242px;
+    }
+}
+@media (max-width: 1200px) {
+    .dsl_sidebar:not(.collapsed) {
+        width: 224px;
+    }
+}

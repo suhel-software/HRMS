@@ -370,7 +370,11 @@ body {
 // ============================================================================
 .o_kanban_view {
     background-color: #f8fafc !important;
-    padding: 20px 24px !important;
+    padding: 0 !important;
+
+    .o_kanban_renderer {
+        padding: 16px 20px !important;
+    }
 
     .o_kanban_record {
         border-radius: 12px !important;
