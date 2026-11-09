@@ -189,7 +189,15 @@ export class DslSidebar extends Component {
     };
 
     setup() {
-        this.action = useService("action");
+        const rawAction = useService("action");
+        this.action = {
+            ...rawAction,
+            doAction: (actionRequest, options = {}) =>
+                rawAction.doAction(actionRequest, {
+                    clearBreadcrumbs: true,
+                    ...options,
+                }),
+        };
         this.menu = useService("menu");
         this.orm = useService("orm");
         this.user = user;
