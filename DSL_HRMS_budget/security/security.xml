@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Enable Analytic Accounting & Budget Management for Internal Users by default -->
+        <record id="base.group_user" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('analytic.group_analytic_accounting'))]"/>
+        </record>
+
+        <record id="comp_rule_budget_post" model="ir.rule">
+            <field name="name">Budgetary Position Multi-Company</field>
+            <field name="model_id" ref="model_account_budget_post"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="comp_rule_crossovered_budget" model="ir.rule">
+            <field name="name">Financial Budget Multi-Company</field>
+            <field name="model_id" ref="model_crossovered_budget"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+
+        <record id="comp_rule_crossovered_budget_lines" model="ir.rule">
+            <field name="name">Budget Lines Multi-Company</field>
+            <field name="model_id" ref="model_crossovered_budget_lines"/>
+            <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        </record>
+    </data>
+</odoo>
+

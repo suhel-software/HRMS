@@ -1,0 +1,594 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ========================================================== -->
+    <!-- 1. COST CENTERS (job.center) & APPROVAL LIMITS             -->
+    <!-- ========================================================== -->
+    <record id="view_job_center_list" model="ir.ui.view">
+        <field name="name">job.center.list</field>
+        <field name="model">job.center</field>
+        <field name="arch" type="xml">
+            <list string="Cost Centers" editable="bottom">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="department_id"/>
+                <field name="manager_id" widget="many2one_avatar_user"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_dsl_job_center" model="ir.actions.act_window">
+        <field name="name">Cost Centers</field>
+        <field name="res_model">job.center</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_amount_approval_list" model="ir.ui.view">
+        <field name="name">amount.approval.list</field>
+        <field name="model">amount.approval</field>
+        <field name="arch" type="xml">
+            <list string="Budget &amp; Bill Approval Authority Limits" editable="bottom">
+                <field name="user" widget="many2one_avatar_user"/>
+                <field name="amount"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_dsl_amount_approval" model="ir.actions.act_window">
+        <field name="name">Approval Authority Limits</field>
+        <field name="res_model">amount.approval</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ========================================================== -->
+    <!-- 2. BUDGET JOBS / PROJECTS (job.create)                     -->
+    <!-- ========================================================== -->
+    <record id="view_job_create_list" model="ir.ui.view">
+        <field name="name">job.create.list</field>
+        <field name="model">job.create</field>
+        <field name="arch" type="xml">
+            <list string="Budget Jobs &amp; Projects">
+                <field name="job_no"/>
+                <field name="job_description"/>
+                <field name="cost_center_id"/>
+                <field name="department_id"/>
+                <field name="crossovered_budget_id"/>
+                <field name="budget_count" string="Job Budgets"/>
+                <field name="advance_count" string="Advances"/>
+                <field name="bill_count" string="Bill Adjustments"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-info="state == 'draft'"
+                       decoration-muted="state == 'closed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_job_create_form" model="ir.ui.view">
+        <field name="name">job.create.form</field>
+        <field name="model">job.create</field>
+        <field name="arch" type="xml">
+            <form string="Budget Job / Project">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,closed" options="{'clickable': '1'}"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_job_budgets" type="object" class="oe_stat_button" icon="fa-calculator">
+                            <field name="budget_count" widget="statinfo" string="Job Budgets"/>
+                        </button>
+                        <button name="action_open_work_orders" type="object" class="oe_stat_button" icon="fa-briefcase">
+                            <field name="work_order_count" widget="statinfo" string="Work Orders"/>
+                        </button>
+                        <button name="action_open_job_advances" type="object" class="oe_stat_button" icon="fa-money">
+                            <field name="advance_count" widget="statinfo" string="Advances"/>
+                        </button>
+                        <button name="action_open_job_bills" type="object" class="oe_stat_button" icon="fa-file-text-o">
+                            <field name="bill_count" widget="statinfo" string="Bill Adjustments"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <span class="o_form_label"><field name="job_no" readonly="1"/></span>
+                        <h1><field name="job_description" placeholder="e.g. Gazipur Unit-2 Factory Expansion &amp; Machinery Setup"/></h1>
+                    </div>
+                    <group col="4">
+                        <field name="cost_center_id"/>
+                        <field name="department_id"/>
+                        <field name="crossovered_budget_id"/>
+                        <field name="company_id" groups="base.group_multi_company"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_job_create" model="ir.actions.act_window">
+        <field name="name">Budget Jobs &amp; Projects</field>
+        <field name="res_model">job.create</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ========================================================== -->
+    <!-- 3. JOB BUDGETS & RE-BUDGETING (job.summary)                -->
+    <!-- ========================================================== -->
+    <record id="view_job_summary_list" model="ir.ui.view">
+        <field name="name">job.summary.list</field>
+        <field name="model">job.summary</field>
+        <field name="arch" type="xml">
+            <list string="Job Budgets &amp; Re-Budgets">
+                <field name="code"/>
+                <field name="job_id"/>
+                <field name="job_description"/>
+                <field name="cost_center"/>
+                <field name="department_id"/>
+                <field name="Date"/>
+                <field name="total" sum="Total Initial"/>
+                <field name="additional_total" sum="Total Re-Budget"/>
+                <field name="grand_total" sum="Total Approved" decoration-bf="1"/>
+                <field name="remaining_budget" sum="Total Remaining" decoration-success="remaining_budget &gt; 0" decoration-danger="remaining_budget &lt;= 0"/>
+                <field name="state" widget="badge"
+                       decoration-info="state in ('draft', 're_budget')"
+                       decoration-warning="state in ('submit', 're_budget_submit')"
+                       decoration-success="state == 'approve'"
+                       decoration-danger="state == 'cancel'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_job_summary_form" model="ir.ui.view">
+        <field name="name">job.summary.form</field>
+        <field name="model">job.summary</field>
+        <field name="arch" type="xml">
+            <form string="Job Budget &amp; Re-Budget">
+                <header>
+                    <button name="action_submit" string="Submit Budget" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_approve" string="Approve Budget" type="object" class="oe_highlight" invisible="state != 'submit'"/>
+                    <button name="action_re_budget" string="Request Re-Budget / Supplementary" type="object" class="btn-secondary" invisible="state != 'approve'"/>
+                    <button name="action_re_budget_submit" string="Submit Re-Budget" type="object" class="oe_highlight" invisible="state != 're_budget'"/>
+                    <button name="action_re_budget_approve" string="Approve Re-Budget" type="object" class="oe_highlight" invisible="state != 're_budget_submit'"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object" invisible="state != 'cancel'"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="state in ('cancel', 'approve')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submit,approve,re_budget,re_budget_submit"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Job Budget Reference</span>
+                        <h1><field name="code" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Job &amp; Cost Center Details">
+                            <field name="job_id" readonly="state != 'draft'"/>
+                            <field name="job_description"/>
+                            <field name="cost_center" readonly="state != 'draft'"/>
+                            <field name="department_id" readonly="state != 'draft'"/>
+                            <field name="crossovered_budget_id"/>
+                        </group>
+                        <group string="Schedule &amp; Financial Summary">
+                            <field name="Date" readonly="state != 'draft'"/>
+                            <label for="start_date" string="Execution Period"/>
+                            <div>
+                                <field name="start_date" class="oe_inline"/> to <field name="end_date" class="oe_inline"/>
+                            </div>
+                            <field name="total" decoration-bf="1"/>
+                            <field name="additional_total"/>
+                            <field name="grand_total" decoration-bf="1" decoration-info="1"/>
+                            <field name="remaining_budget" decoration-bf="1" decoration-success="remaining_budget &gt; 0"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Budget Line Items" name="items">
+                            <field name="item_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="account_id" optional="show"/>
+                                    <field name="description"/>
+                                    <field name="unit_price"/>
+                                    <field name="quantity"/>
+                                    <field name="total" sum="Initial Total"/>
+                                    <field name="additional_quantity" optional="show"/>
+                                    <field name="additional_total" sum="Re-Budget Total" optional="show"/>
+                                    <field name="effective_total" sum="Effective Total" decoration-bf="1"/>
+                                    <field name="spent_amount" sum="Billed / Adjusted"/>
+                                    <field name="remaining_amount" sum="Remaining Balance" decoration-bf="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Re-Budget / Supplementary Items" name="re_budget_items" invisible="state == 'draft'">
+                            <field name="additional_item_ids" readonly="state not in ('re_budget', 'draft')">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="description"/>
+                                    <field name="unit_price"/>
+                                    <field name="additional_quantity"/>
+                                    <field name="additional_total" sum="Total Supplementary"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'approve'" decoration-warning="state == 'draft'"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Approval History" name="approvers">
+                            <group>
+                                <group string="Initial Budget Approvals">
+                                    <field name="approver_ids" nolabel="1">
+                                        <list>
+                                            <field name="approver"/>
+                                            <field name="approval_status" widget="badge" decoration-success="approval_status == 'approved'"/>
+                                            <field name="date_time"/>
+                                        </list>
+                                    </field>
+                                </group>
+                                <group string="Re-Budget Approvals">
+                                    <field name="additional_approver_ids" nolabel="1">
+                                        <list>
+                                            <field name="approver"/>
+                                            <field name="approval_status" widget="badge" decoration-success="approval_status == 'approved'"/>
+                                            <field name="date_time"/>
+                                        </list>
+                                    </field>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_job_summary" model="ir.actions.act_window">
+        <field name="name">Cost Center &amp; Job Budgets</field>
+        <field name="res_model">job.summary</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ========================================================== -->
+    <!-- 4. WORK ORDERS (work.order)                                -->
+    <!-- ========================================================== -->
+    <record id="view_work_order_list" model="ir.ui.view">
+        <field name="name">work.order.list</field>
+        <field name="model">work.order</field>
+        <field name="arch" type="xml">
+            <list string="Budget Work Orders">
+                <field name="work_order"/>
+                <field name="budget_id"/>
+                <field name="job_id"/>
+                <field name="vendor_id"/>
+                <field name="subject"/>
+                <field name="date"/>
+                <field name="total_amount" sum="Total Value" decoration-bf="1"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-primary="state == 'confirm'"
+                       decoration-success="state == 'done'"
+                       decoration-danger="state == 'cancel'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_work_order_form" model="ir.ui.view">
+        <field name="name">work.order.form</field>
+        <field name="model">work.order</field>
+        <field name="arch" type="xml">
+            <form string="Budget Work Order">
+                <header>
+                    <button name="action_confirm" string="Issue Work Order" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_done" string="Mark Completed" type="object" class="oe_highlight" invisible="state != 'confirm'"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="state in ('done', 'cancel')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirm,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="work_order" readonly="1"/></h1>
+                    </div>
+                    <group col="4">
+                        <field name="budget_id" readonly="state != 'draft'"/>
+                        <field name="job_id"/>
+                        <field name="vendor_id" readonly="state != 'draft'"/>
+                        <field name="date" readonly="state != 'draft'"/>
+                        <field name="subject" colspan="4" readonly="state != 'draft'"/>
+                        <field name="total_amount" decoration-bf="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Work Order Items">
+                            <field name="item_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="description"/>
+                                    <field name="unit_price"/>
+                                    <field name="quantity"/>
+                                    <field name="total" sum="Total"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Terms &amp; Conditions">
+                            <field name="terms_conditions"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_work_order" model="ir.actions.act_window">
+        <field name="name">Budget Work Orders</field>
+        <field name="res_model">work.order</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ========================================================== -->
+    <!-- 5. COST ADVANCE REQUESTS (cost.advance)                    -->
+    <!-- ========================================================== -->
+    <record id="view_cost_advance_list" model="ir.ui.view">
+        <field name="name">cost.advance.list</field>
+        <field name="model">cost.advance</field>
+        <field name="arch" type="xml">
+            <list string="Budget Advance Requests">
+                <field name="advance_code"/>
+                <field name="advance_type"/>
+                <field name="budget_id"/>
+                <field name="job_id"/>
+                <field name="cost_center"/>
+                <field name="employee_id"/>
+                <field name="date"/>
+                <field name="total" sum="Total Advance" decoration-bf="1"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'submit'"
+                       decoration-success="state == 'approve'"
+                       decoration-danger="state == 'cancel'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_cost_advance_form" model="ir.ui.view">
+        <field name="name">cost.advance.form</field>
+        <field name="model">cost.advance</field>
+        <field name="arch" type="xml">
+            <form string="Budget Cost Advance Request">
+                <header>
+                    <button name="action_submit" string="Submit Request" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_approve" string="Approve Advance" type="object" class="oe_highlight" invisible="state != 'submit'"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="state in ('approve', 'cancel')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submit,approve"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="advance_code" readonly="1"/></h1>
+                    </div>
+                    <group col="4">
+                        <field name="advance_type" readonly="state != 'draft'"/>
+                        <field name="budget_id" invisible="advance_type != 'job'" required="advance_type == 'job'" readonly="state != 'draft'"/>
+                        <field name="job_id" readonly="state != 'draft'"/>
+                        <field name="cost_center" readonly="state != 'draft'"/>
+                        <field name="employee_id" readonly="state != 'draft'"/>
+                        <field name="payee_name" readonly="state != 'draft'"/>
+                        <field name="date" readonly="state != 'draft'"/>
+                        <field name="total" decoration-bf="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Advance Breakdown">
+                            <field name="item_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="description"/>
+                                    <field name="budget_balance"/>
+                                    <field name="advance_amount" sum="Total Advance"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Approval History">
+                            <field name="approver_ids" readonly="1">
+                                <list>
+                                    <field name="approver"/>
+                                    <field name="approval_status" widget="badge" decoration-success="approval_status == 'approved'"/>
+                                    <field name="date_time"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_cost_advance" model="ir.actions.act_window">
+        <field name="name">Cost Advance Requests</field>
+        <field name="res_model">cost.advance</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_approve_advance_summary_list" model="ir.ui.view">
+        <field name="name">approve.advance.summary.list</field>
+        <field name="model">approve.advance.summary</field>
+        <field name="arch" type="xml">
+            <list string="Approved Advances Register" create="0">
+                <field name="advance_id"/>
+                <field name="budget_id"/>
+                <field name="job_id"/>
+                <field name="cost_center"/>
+                <field name="approve_date"/>
+                <field name="total" sum="Total Approved"/>
+                <field name="adjusted_amount" sum="Total Adjusted"/>
+                <field name="unadjusted_balance" sum="Unadjusted Balance" decoration-bf="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_dsl_approve_advance_summary" model="ir.actions.act_window">
+        <field name="name">Approved Advances Register</field>
+        <field name="res_model">approve.advance.summary</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ========================================================== -->
+    <!-- 6. BILL & BUDGET ADJUSTMENT (bill.adjustment)              -->
+    <!-- ========================================================== -->
+    <record id="view_bill_adjustment_list" model="ir.ui.view">
+        <field name="name">bill.adjustment.list</field>
+        <field name="model">bill.adjustment</field>
+        <field name="arch" type="xml">
+            <list string="Bill &amp; Budget Adjustments">
+                <field name="bill"/>
+                <field name="bill_type"/>
+                <field name="budget_id"/>
+                <field name="job_id"/>
+                <field name="cost_center"/>
+                <field name="partner_id"/>
+                <field name="date"/>
+                <field name="total_amount" sum="Total Bill" decoration-bf="1"/>
+                <field name="advance_adjusted" sum="Advance Adjusted"/>
+                <field name="net_payable" sum="Net Payable" decoration-bf="1"/>
+                <field name="vendor_bill_id"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'submit'"
+                       decoration-primary="state == 'approve'"
+                       decoration-success="state == 'billed'"
+                       decoration-danger="state == 'cancel'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_bill_adjustment_form" model="ir.ui.view">
+        <field name="name">bill.adjustment.form</field>
+        <field name="model">bill.adjustment</field>
+        <field name="arch" type="xml">
+            <form string="Bill &amp; Budget Adjustment">
+                <header>
+                    <button name="action_submit" string="Submit Bill Adjustment" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_approve" string="Approve Adjustment" type="object" class="oe_highlight" invisible="state != 'submit'"/>
+                    <button name="action_create_vendor_bill" string="Create Accounting Vendor Bill" type="object" class="oe_highlight" icon="fa-file-text" invisible="state not in ('approve', 'billed')"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="state in ('approve', 'billed', 'cancel')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submit,approve,billed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Bill &amp; Budget Adjustment Reference</span>
+                        <h1><field name="bill" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Budget &amp; Vendor Information">
+                            <field name="bill_type" readonly="state != 'draft'"/>
+                            <field name="budget_id" invisible="bill_type != 'with_budget'" required="bill_type == 'with_budget'" readonly="state != 'draft'"/>
+                            <field name="job_id" readonly="state != 'draft'"/>
+                            <field name="cost_center" readonly="state != 'draft'"/>
+                            <field name="partner_id" readonly="state != 'draft'"/>
+                            <field name="date" readonly="state != 'draft'"/>
+                        </group>
+                        <group string="Advance Settlement &amp; GL Vendor Bill">
+                            <field name="advance_summary_id" readonly="state != 'draft'"/>
+                            <field name="total_amount" decoration-bf="1"/>
+                            <field name="advance_adjusted" readonly="state != 'draft'"/>
+                            <field name="net_payable" decoration-bf="1" decoration-info="1"/>
+                            <field name="vendor_bill_id" invisible="not vendor_bill_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Bill Line Items">
+                            <field name="item_ids" readonly="state != 'draft'">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="account_id"/>
+                                    <field name="description"/>
+                                    <field name="unit_price"/>
+                                    <field name="quantity"/>
+                                    <field name="total" sum="Total Bill Amount"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Approval Log">
+                            <field name="approver_ids" readonly="1">
+                                <list>
+                                    <field name="approver"/>
+                                    <field name="approval_status" widget="badge" decoration-success="approval_status == 'approved'"/>
+                                    <field name="date_time"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dsl_bill_adjustment" model="ir.actions.act_window">
+        <field name="name">Bill &amp; Budget Adjustments</field>
+        <field name="res_model">bill.adjustment</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ========================================================== -->
+    <!-- 7. STANDARD ODOO ACCOUNTING MENUS                          -->
+    <!-- ========================================================== -->
+    <menuitem id="menu_dsl_budget_root"
+              name="Budget &amp; Cost Control"
+              parent="account.menu_finance"
+              sequence="5"/>
+
+    <menuitem id="menu_act_crossovered_budget_view"
+              name="Financial Budgets"
+              parent="menu_dsl_budget_root"
+              action="act_crossovered_budget_view"
+              sequence="10"/>
+
+    <menuitem id="menu_act_crossovered_budget_lines_view"
+              name="Budgets Analysis (Pivot/Graph)"
+              parent="menu_dsl_budget_root"
+              action="act_crossovered_budget_lines_view"
+              sequence="20"/>
+
+    <menuitem id="menu_open_budget_post_form"
+              name="Budgetary Positions"
+              parent="menu_dsl_budget_root"
+              action="open_budget_post_form"
+              sequence="30"/>
+
+    <menuitem id="menu_dsl_job_summary"
+              name="Cost Center &amp; Job Budgets"
+              parent="menu_dsl_budget_root"
+              action="action_dsl_job_summary"
+              sequence="40"/>
+
+    <menuitem id="menu_dsl_job_create"
+              name="Budget Jobs &amp; Projects"
+              parent="menu_dsl_budget_root"
+              action="action_dsl_job_create"
+              sequence="50"/>
+
+    <menuitem id="menu_dsl_work_order"
+              name="Budget Work Orders"
+              parent="menu_dsl_budget_root"
+              action="action_dsl_work_order"
+              sequence="60"/>
+
+    <menuitem id="menu_dsl_cost_advance"
+              name="Cost Advance Requests"
+              parent="menu_dsl_budget_root"
+              action="action_dsl_cost_advance"
+              sequence="70"/>
+
+    <menuitem id="menu_dsl_bill_adjustment"
+              name="Bill &amp; Budget Adjustments"
+              parent="menu_dsl_budget_root"
+              action="action_dsl_bill_adjustment"
+              sequence="80"/>
+
+    <menuitem id="menu_dsl_job_center"
+              name="Cost Centers"
+              parent="menu_dsl_budget_root"
+              action="action_dsl_job_center"
+              sequence="90"/>
+
+    <menuitem id="menu_dsl_amount_approval"
+              name="Approval Authority Limits"
+              parent="menu_dsl_budget_root"
+              action="action_dsl_amount_approval"
+              sequence="100"/>
+</odoo>
+
