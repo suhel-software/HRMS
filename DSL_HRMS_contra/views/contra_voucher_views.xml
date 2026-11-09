@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =========================================================
+         1. CONTRA VOUCHER FORM VIEW
+         ========================================================= -->
+    <record id="view_dsl_contra_voucher_form" model="ir.ui.view">
+        <field name="name">dsl.contra.voucher.form</field>
+        <field name="model">dsl.contra.voucher</field>
+        <field name="arch" type="xml">
+            <form string="Contra Voucher (Bank &amp; Cash Transfer)">
+                <header>
+                    <button name="action_post"
+                            string="Post Contra Voucher"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="state not in ('draft', 'submitted', 'approved')"/>
+                    <button name="action_submit"
+                            string="Submit for Verification"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve"
+                            string="Approve"
+                            type="object"
+                            class="btn-success"
+                            invisible="state != 'submitted'"/>
+                    <button name="action_draft"
+                            string="Reset to Draft"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state not in ('submitted', 'approved', 'posted', 'cancelled')"/>
+                    <button name="action_cancel"
+                            string="Cancel Voucher"
+                            type="object"
+                            class="btn-danger"
+                            invisible="state not in ('draft', 'submitted', 'approved', 'posted')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,approved,posted"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_journal_entry"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-book"
+                                invisible="not move_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="move_id" readonly="1" nolabel="1"/>
+                                </span>
+                                <span class="o_stat_text">Journal Entry</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <widget name="web_ribbon" title="Cleared in BRS" bg_color="text-bg-success"
+                            invisible="not is_bank_cleared"/>
+                    <widget name="web_ribbon" title="Posted in GL" bg_color="text-bg-primary"
+                            invisible="state != 'posted' or is_bank_cleared"/>
+                    <widget name="web_ribbon" title="Cancelled" bg_color="text-bg-danger"
+                            invisible="state != 'cancelled'"/>
+
+                    <div class="oe_title">
+                        <label for="name" string="Contra Voucher No."/>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Transfer Classification">
+                            <field name="contra_type" readonly="state == 'posted'"/>
+                            <field name="date" readonly="state == 'posted'"/>
+                            <field name="instrument_type" readonly="state == 'posted'"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state == 'posted'"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group string="Transfer Amount &amp; Charges">
+                            <field name="amount" widget="monetary" options="{'currency_field': 'currency_id'}"
+                                   readonly="state == 'posted'" class="fw-bold fs-4 text-primary"/>
+                            <field name="has_bank_charge" readonly="state == 'posted'"/>
+                            <field name="bank_charge_amount" widget="monetary" options="{'currency_field': 'currency_id'}"
+                                   invisible="not has_bank_charge" readonly="state == 'posted'"/>
+                            <field name="bank_charge_account_id"
+                                   invisible="not has_bank_charge"
+                                   required="has_bank_charge"
+                                   readonly="state == 'posted'"/>
+                            <field name="total_deducted_amount" widget="monetary" options="{'currency_field': 'currency_id'}"
+                                   invisible="not has_bank_charge" class="fw-bold text-danger"/>
+                            <field name="amount_in_words" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Source (From) &amp; Destination (To) Accounts">
+                        <group string="FROM (Source — Credit / Outflow)">
+                            <field name="source_journal_id" readonly="state == 'posted'"
+                                   options="{'no_create': True}"/>
+                            <field name="source_account_id" readonly="state == 'posted'"
+                                   options="{'no_create': True}"/>
+                            <field name="source_current_balance" widget="monetary" options="{'currency_field': 'currency_id'}"
+                                   readonly="1" decoration-danger="source_current_balance &lt; 0" decoration-bf="1"/>
+                            <field name="source_balance_after" widget="monetary" options="{'currency_field': 'currency_id'}"
+                                   readonly="1" invisible="state == 'posted'"
+                                   decoration-danger="source_balance_after &lt; 0"/>
+                        </group>
+                        <group string="TO (Destination — Debit / Inflow)">
+                            <field name="dest_journal_id" readonly="state == 'posted'"
+                                   options="{'no_create': True}"/>
+                            <field name="dest_account_id" readonly="state == 'posted'"
+                                   options="{'no_create': True}"/>
+                            <field name="dest_current_balance" widget="monetary" options="{'currency_field': 'currency_id'}"
+                                   readonly="1" decoration-success="dest_current_balance &gt; 0" decoration-bf="1"/>
+                            <field name="dest_balance_after" widget="monetary" options="{'currency_field': 'currency_id'}"
+                                   readonly="1" invisible="state == 'posted'"
+                                   decoration-success="dest_balance_after &gt; 0"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Instrument, Cheque &amp; Bearer Details" name="instrument_bearer">
+                            <group>
+                                <group string="Cheque / Deposit Slip / Bank Reference">
+                                    <field name="cheque_number"
+                                           placeholder="e.g. CHQ-100250 or SLIP-88412"
+                                           readonly="state == 'posted'"/>
+                                    <field name="cheque_date" readonly="state == 'posted'"/>
+                                    <field name="is_post_dated" widget="boolean_toggle" readonly="1"
+                                           invisible="not is_post_dated"/>
+                                    <field name="cheque_type"
+                                           invisible="instrument_type != 'cheque'"
+                                           readonly="state == 'posted'"/>
+                                    <field name="cheque_book_ref"
+                                           placeholder="e.g. CB-2026-A (Leaf #50)"
+                                           invisible="instrument_type != 'cheque'"
+                                           readonly="state == 'posted'"/>
+                                    <field name="deposit_slip_number"
+                                           placeholder="e.g. DEP-2026-1109"
+                                           readonly="state == 'posted'"/>
+                                    <field name="transaction_reference"
+                                           placeholder="UTR / RTGS / BEFTN / TrxID"
+                                           readonly="state == 'posted'"/>
+                                </group>
+                                <group string="Bank Branch &amp; Bearer / Depositor">
+                                    <field name="bank_name" placeholder="e.g. BRAC Bank PLC / DBBL"
+                                           readonly="state == 'posted'"/>
+                                    <field name="bank_branch" placeholder="e.g. Gulshan Branch, Dhaka"
+                                           readonly="state == 'posted'"/>
+                                    <field name="routing_number" placeholder="9-Digit Routing No."
+                                           readonly="state == 'posted'"/>
+                                    <field name="bearer_employee_id"
+                                           readonly="state == 'posted'"
+                                           options="{'no_create': True}"/>
+                                    <field name="bearer_name"
+                                           placeholder="Name of Person Depositing / Withdrawing Cash"
+                                           readonly="state == 'posted'"/>
+                                    <field name="bearer_mobile"
+                                           placeholder="017XXXXXXXX"
+                                           readonly="state == 'posted'"/>
+                                    <field name="bearer_nid"
+                                           placeholder="NID / Employee ID"
+                                           readonly="state == 'posted'"/>
+                                </group>
+                            </group>
+                            <group string="Narration / Transfer Purpose">
+                                <field name="narration" nolabel="1" colspan="2"
+                                       placeholder="Write detailed narration or purpose of this Contra transfer..."
+                                       readonly="state == 'posted'"/>
+                            </group>
+                        </page>
+
+                        <page string="Cash Note Denomination (টাকার নোটের হিসাব)" name="cash_denomination">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <button name="action_load_bd_notes"
+                                        string="Load BD Taka Notes (৳1000 - ৳2)"
+                                        type="object"
+                                        class="btn btn-secondary btn-sm"
+                                        icon="fa-money"
+                                        invisible="state == 'posted'"/>
+                                <button name="action_apply_denomination_amount"
+                                        string="Apply Note Total to Transfer Amount"
+                                        type="object"
+                                        class="btn btn-primary btn-sm"
+                                        icon="fa-check"
+                                        invisible="state == 'posted'"/>
+                                <span class="ms-3 text-muted">
+                                    Count physical currency notes for Cash Deposit or Cash Withdrawal and click "Apply Note Total to Transfer Amount".
+                                </span>
+                            </div>
+                            <field name="denomination_line_ids" readonly="state == 'posted'">
+                                <list editable="bottom" string="Cash Note Denominations">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="note_value"/>
+                                    <field name="quantity" sum="Total Notes"/>
+                                    <field name="subtotal" sum="Total Amount (৳)" widget="monetary"
+                                           options="{'currency_field': 'currency_id'}"/>
+                                    <field name="remarks" placeholder="e.g. 2 Packets + Loose"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                </list>
+                            </field>
+                            <group class="oe_subtotal_footer oe_right">
+                                <field name="denomination_total" widget="monetary"
+                                       options="{'currency_field': 'currency_id'}"
+                                       class="oe_subtotal_footer_separator fw-bold"/>
+                            </group>
+                        </page>
+
+                        <page string="Accounting &amp; BRS Audit Trail" name="audit_trail">
+                            <group>
+                                <group string="General Ledger &amp; BRS Status">
+                                    <field name="move_id" readonly="1"/>
+                                    <field name="is_bank_cleared" readonly="1"/>
+                                    <field name="bank_clearance_date" readonly="1"/>
+                                </group>
+                                <group string="Approval &amp; Posting Signatures">
+                                    <field name="prepared_by_id" readonly="1"/>
+                                    <field name="verified_by_id" readonly="1"/>
+                                    <field name="approved_by_id" readonly="1"/>
+                                    <field name="posted_by_id" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- =========================================================
+         2. CONTRA VOUCHER LIST / TREE VIEW
+         ========================================================= -->
+    <record id="view_dsl_contra_voucher_tree" model="ir.ui.view">
+        <field name="name">dsl.contra.voucher.tree</field>
+        <field name="model">dsl.contra.voucher</field>
+        <field name="arch" type="xml">
+            <list string="Contra Vouchers (Bank &amp; Cash Transfers)" sample="1"
+                  decoration-info="state == 'draft'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="name" decoration-bf="1"/>
+                <field name="date"/>
+                <field name="contra_type" widget="badge"
+                       decoration-success="contra_type == 'cash_to_bank'"
+                       decoration-warning="contra_type == 'bank_to_cash'"
+                       decoration-info="contra_type == 'bank_to_bank'"
+                       decoration-primary="contra_type == 'cash_to_cash'"/>
+                <field name="source_journal_id" string="From (Source)"/>
+                <field name="dest_journal_id" string="To (Destination)"/>
+                <field name="instrument_type" widget="badge"/>
+                <field name="cheque_number" string="Cheque / Slip No."/>
+                <field name="bearer_name" optional="show" string="Bearer / Depositor"/>
+                <field name="amount" sum="Total Transfer Amount" widget="monetary"
+                       options="{'currency_field': 'currency_id'}" decoration-bf="1"/>
+                <field name="bank_charge_amount" sum="Total Bank Charges" optional="hide"
+                       widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <field name="move_id" optional="show"/>
+                <field name="is_bank_cleared" string="BRS Cleared" widget="boolean_toggle" readonly="1" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-muted="state == 'draft'"
+                       decoration-warning="state == 'submitted'"
+                       decoration-info="state == 'approved'"
+                       decoration-success="state == 'posted'"
+                       decoration-danger="state == 'cancelled'"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- =========================================================
+         3. CONTRA VOUCHER KANBAN VIEW
+         ========================================================= -->
+    <record id="view_dsl_contra_voucher_kanban" model="ir.ui.view">
+        <field name="name">dsl.contra.voucher.kanban</field>
+        <field name="model">dsl.contra.voucher</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" sample="1">
+                <field name="name"/>
+                <field name="date"/>
+                <field name="contra_type"/>
+                <field name="source_journal_id"/>
+                <field name="dest_journal_id"/>
+                <field name="amount"/>
+                <field name="currency_id"/>
+                <field name="cheque_number"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="fs-5"><field name="name"/></strong>
+                            <field name="state" widget="label_selection"
+                                   options="{'classes': {'draft': 'secondary', 'submitted': 'warning', 'approved': 'info', 'posted': 'success', 'cancelled': 'danger'}}"/>
+                        </div>
+                        <div class="text-muted small mb-1">
+                            <field name="contra_type"/>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>
+                                <field name="source_journal_id"/> &#8594; <field name="dest_journal_id"/>
+                            </span>
+                            <strong class="text-primary">
+                                <field name="amount" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            </strong>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small mt-1">
+                            <span><field name="cheque_number"/></span>
+                            <span><field name="date"/></span>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- =========================================================
+         4. CONTRA VOUCHER PIVOT & GRAPH VIEWS
+         ========================================================= -->
+    <record id="view_dsl_contra_voucher_pivot" model="ir.ui.view">
+        <field name="name">dsl.contra.voucher.pivot</field>
+        <field name="model">dsl.contra.voucher</field>
+        <field name="arch" type="xml">
+            <pivot string="Contra Fund Transfer Analysis" sample="1">
+                <field name="contra_type" type="row"/>
+                <field name="source_journal_id" type="row"/>
+                <field name="dest_journal_id" type="col"/>
+                <field name="amount" type="measure"/>
+                <field name="bank_charge_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_dsl_contra_voucher_graph" model="ir.ui.view">
+        <field name="name">dsl.contra.voucher.graph</field>
+        <field name="model">dsl.contra.voucher</field>
+        <field name="arch" type="xml">
+            <graph string="Contra Fund Transfer Graph" type="bar" sample="1">
+                <field name="contra_type"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- =========================================================
+         5. CONTRA VOUCHER SEARCH VIEW
+         ========================================================= -->
+    <record id="view_dsl_contra_voucher_search" model="ir.ui.view">
+        <field name="name">dsl.contra.voucher.search</field>
+        <field name="model">dsl.contra.voucher</field>
+        <field name="arch" type="xml">
+            <search string="Search Contra Vouchers">
+                <field name="name" string="Contra No. / Cheque / Slip"
+                       filter_domain="['|', '|', '|', ('name', 'ilike', self), ('cheque_number', 'ilike', self), ('deposit_slip_number', 'ilike', self), ('transaction_reference', 'ilike', self)]"/>
+                <field name="source_journal_id"/>
+                <field name="dest_journal_id"/>
+                <field name="bearer_name"/>
+                <field name="bank_name"/>
+                <separator/>
+                <filter string="Cash Deposit to Bank" name="ftr_cash_to_bank" domain="[('contra_type', '=', 'cash_to_bank')]"/>
+                <filter string="Cash Withdrawal from Bank" name="ftr_bank_to_cash" domain="[('contra_type', '=', 'bank_to_cash')]"/>
+                <filter string="Bank to Bank Transfer" name="ftr_bank_to_bank" domain="[('contra_type', '=', 'bank_to_bank')]"/>
+                <filter string="Cash to Petty Cash" name="ftr_cash_to_cash" domain="[('contra_type', '=', 'cash_to_cash')]"/>
+                <separator/>
+                <filter string="Posted" name="ftr_posted" domain="[('state', '=', 'posted')]"/>
+                <filter string="Draft / Pending Approval" name="ftr_draft" domain="[('state', 'in', ('draft', 'submitted', 'approved'))]"/>
+                <filter string="Cleared in BRS" name="ftr_brs_cleared" domain="[('is_bank_cleared', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Transfer Type" name="grp_contra_type" context="{'group_by': 'contra_type'}"/>
+                    <filter string="From Journal (Source)" name="grp_source_journal" context="{'group_by': 'source_journal_id'}"/>
+                    <filter string="To Journal (Destination)" name="grp_dest_journal" context="{'group_by': 'dest_journal_id'}"/>
+                    <filter string="Instrument Mode" name="grp_instrument" context="{'group_by': 'instrument_type'}"/>
+                    <filter string="Status" name="grp_state" context="{'group_by': 'state'}"/>
+                    <filter string="Transfer Date" name="grp_date" context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- =========================================================
+         6. ACTION & MENUITEM
+         ========================================================= -->
+    <record id="action_dsl_contra_voucher" model="ir.actions.act_window">
+        <field name="name">Contra Vouchers (Bank &amp; Cash Transfers)</field>
+        <field name="res_model">dsl.contra.voucher</field>
+        <field name="view_mode">list,kanban,form,pivot,graph</field>
+        <field name="search_view_id" ref="view_dsl_contra_voucher_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Contra Voucher (Bank &amp; Cash Transfer)
+            </p>
+            <p>
+                Record Cash Deposits to Bank, Cash Withdrawals from Bank, Bank-to-Bank Transfers (Cheque / BEFTN / RTGS), and Petty Cash Transfers with automatic GL &amp; BRS synchronization.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_dsl_contra_voucher"
+              name="Contra (Bank/Cash Transfer)"
+              parent="account.menu_finance_entries"
+              action="action_dsl_contra_voucher"
+              sequence="15"/>
+
+    <!-- =========================================================
+         7. INHERIT JOURNAL ENTRY FORM TO SHOW CONTRA VOUCHER LINK
+         ========================================================= -->
+    <record id="view_move_form_inherit_dsl_contra" model="ir.ui.view">
+        <field name="name">account.move.form.inherit.dsl.contra</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_open_contra_voucher"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-random"
+                        invisible="not contra_voucher_id">
+                    <div class="o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="contra_voucher_id" readonly="1" nolabel="1"/>
+                        </span>
+                        <span class="o_stat_text">Contra Voucher</span>
+                    </div>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

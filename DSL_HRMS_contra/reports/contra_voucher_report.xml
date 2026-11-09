@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_report_dsl_contra_voucher" model="ir.actions.report">
+        <field name="name">Contra Voucher (PDF)</field>
+        <field name="model">dsl.contra.voucher</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">DSL_HRMS_contra.report_contra_voucher_document</field>
+        <field name="report_file">DSL_HRMS_contra.report_contra_voucher_document</field>
+        <field name="print_report_name">'Contra_Voucher_%s' % (object.name.replace('/', '_'))</field>
+        <field name="binding_model_id" ref="model_dsl_contra_voucher"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_contra_voucher_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: sans-serif; font-size: 13px;">
+                        <div class="text-center mb-4" style="border-bottom: 2px solid #1e293b; padding-bottom: 10px;">
+                            <h2 style="margin: 0; font-weight: 700; color: #0f172a;">CONTRA VOUCHER (কন্ট্রা ভাউচার)</h2>
+                            <div style="font-size: 14px; color: #475569; margin-top: 4px;">
+                                <span t-field="o.contra_type"/>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Voucher No:</strong> <span t-field="o.name"/><br/>
+                                <strong>Transfer Date:</strong> <span t-field="o.date"/><br/>
+                                <strong>Status:</strong> <span t-field="o.state"/><br/>
+                                <strong>GL Entry Ref:</strong> <span t-field="o.move_id.name"/>
+                            </div>
+                            <div class="col-6 text-end">
+                                <strong>Instrument Mode:</strong> <span t-field="o.instrument_type"/><br/>
+                                <t t-if="o.cheque_number">
+                                    <strong>Cheque / Inst. No:</strong> <span t-field="o.cheque_number"/> (<span t-field="o.cheque_date"/>)<br/>
+                                </t>
+                                <t t-if="o.deposit_slip_number">
+                                    <strong>Deposit Slip No:</strong> <span t-field="o.deposit_slip_number"/><br/>
+                                </t>
+                                <t t-if="o.bearer_name">
+                                    <strong>Bearer / Depositor:</strong> <span t-field="o.bearer_name"/> <span t-if="o.bearer_mobile">(<span t-field="o.bearer_mobile"/>)</span>
+                                </t>
+                            </div>
+                        </div>
+
+                        <table class="table table-sm table-bordered mt-3">
+                            <thead style="background-color: #f1f5f9;">
+                                <tr>
+                                    <th>Particulars / Account Head</th>
+                                    <th>Journal</th>
+                                    <th class="text-end">Debit (৳)</th>
+                                    <th class="text-end">Credit (৳)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <strong>DEBIT (To):</strong> <span t-field="o.dest_account_id.display_name"/>
+                                    </td>
+                                    <td><span t-field="o.dest_journal_id.name"/></td>
+                                    <td class="text-end"><span t-field="o.amount" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                    <td class="text-end">0.00</td>
+                                </tr>
+                                <tr t-if="o.has_bank_charge and o.bank_charge_amount &gt; 0">
+                                    <td>
+                                        <strong>DEBIT (Bank Charge):</strong> <span t-field="o.bank_charge_account_id.display_name"/>
+                                    </td>
+                                    <td><span t-field="o.source_journal_id.name"/></td>
+                                    <td class="text-end"><span t-field="o.bank_charge_amount" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                    <td class="text-end">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>CREDIT (From):</strong> <span t-field="o.source_account_id.display_name"/>
+                                    </td>
+                                    <td><span t-field="o.source_journal_id.name"/></td>
+                                    <td class="text-end">0.00</td>
+                                    <td class="text-end"><span t-field="o.total_deducted_amount" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr style="font-weight: bold; background-color: #f8fafc;">
+                                    <td colspan="2" class="text-end">Total:</td>
+                                    <td class="text-end"><span t-field="o.total_deducted_amount" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                    <td class="text-end"><span t-field="o.total_deducted_amount" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <div class="mb-3">
+                            <strong>In Words:</strong> <span t-field="o.amount_in_words"/><br/>
+                            <strong>Narration:</strong> <span t-field="o.narration"/>
+                        </div>
+
+                        <t t-if="o.denomination_line_ids">
+                            <h5 class="mt-4">Cash Note Denomination Breakdown (টাকার নোটের হিসাব)</h5>
+                            <table class="table table-sm table-bordered" style="width: 60%;">
+                                <thead>
+                                    <tr>
+                                        <th>Note (৳)</th>
+                                        <th class="text-center">Count</th>
+                                        <th class="text-end">Subtotal (৳)</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr t-foreach="o.denomination_line_ids" t-as="line">
+                                        <td>৳ <span t-field="line.note_value"/></td>
+                                        <td class="text-center"><span t-field="line.quantity"/></td>
+                                        <td class="text-end"><span t-field="line.subtotal" t-options='{"widget": "monetary", "display_currency": o.currency_id}'/></td>
+                                        <td><span t-field="line.remarks"/></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+
+                        <div class="row text-center" style="margin-top: 70px;">
+                            <div class="col-3">
+                                <div style="border-top: 1px solid #334155; padding-top: 5px;">
+                                    <strong>Prepared By</strong><br/>
+                                    <span t-field="o.prepared_by_id.name"/>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div style="border-top: 1px solid #334155; padding-top: 5px;">
+                                    <strong>Deposited / Withdrawn By</strong><br/>
+                                    <span t-field="o.bearer_name"/>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div style="border-top: 1px solid #334155; padding-top: 5px;">
+                                    <strong>Verified By (Accounts)</strong><br/>
+                                    <span t-field="o.verified_by_id.name"/>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div style="border-top: 1px solid #334155; padding-top: 5px;">
+                                    <strong>Approved By</strong><br/>
+                                    <span t-field="o.approved_by_id.name"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>
+

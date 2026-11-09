@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dsl_contra_voucher_user,dsl.contra.voucher.user,model_dsl_contra_voucher,base.group_user,1,1,1,1
+access_dsl_contra_denomination_user,dsl.contra.denomination.user,model_dsl_contra_denomination,base.group_user,1,1,1,1
+
